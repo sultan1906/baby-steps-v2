@@ -78,4 +78,7 @@ export const auth = new Proxy({} as ReturnType<typeof betterAuth>, {
   get(_, prop) {
     return Reflect.get(getAuth(), prop);
   },
+  has(_, prop) {
+    return Reflect.has(getAuth(), prop);
+  },
 });
