@@ -2,7 +2,7 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
-import { resend } from "@/lib/resend";
+import { getResend } from "@/lib/resend";
 import { VerifyEmailTemplate } from "@/emails/VerifyEmailTemplate";
 import { ResetPasswordTemplate } from "@/emails/ResetPasswordTemplate";
 import { render } from "@react-email/components";
@@ -25,7 +25,7 @@ export const auth = betterAuth({
 
     sendResetPassword: async ({ user, url }) => {
       const html = await render(ResetPasswordTemplate({ resetUrl: url, userName: user.name }));
-      await resend.emails.send({
+      await getResend().emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: user.email,
         subject: "Reset your Baby Steps password",
@@ -40,7 +40,7 @@ export const auth = betterAuth({
 
     sendVerificationEmail: async ({ user, url }) => {
       const html = await render(VerifyEmailTemplate({ verificationUrl: url, userName: user.name }));
-      await resend.emails.send({
+      await getResend().emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: user.email,
         subject: "Verify your Baby Steps email",
