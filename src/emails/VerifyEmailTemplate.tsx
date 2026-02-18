@@ -92,5 +92,3 @@ export function VerifyEmailTemplate({ verificationUrl, userName }: VerifyEmailTe
     </Html>
   );
 }
-
-export default VerifyEmailTemplate;

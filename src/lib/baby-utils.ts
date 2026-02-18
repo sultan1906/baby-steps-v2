@@ -1,14 +1,14 @@
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import { baby } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 const COOKIE_NAME = "babysteps_current_baby";
 
 /**
  * Read the current baby ID from the cookie (server-side).
  */
-export async function getCurrentBabyId(): Promise<string | null> {
+async function getCurrentBabyId(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(COOKIE_NAME)?.value ?? null;
 }

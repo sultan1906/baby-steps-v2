@@ -38,7 +38,7 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
 
     // Sort by date
     return Array.from(grouped.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [steps, baby.birthdate, selectedMonth]);
+  }, [steps, birthdateDate, selectedMonth]);
 
   const openStory = (date: string, daySteps: Step[]) => {
     setStoryDate(date);

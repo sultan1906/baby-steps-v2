@@ -1,13 +1,5 @@
 // Re-export Drizzle inferred types
-export type {
-  User,
-  Baby,
-  Step,
-  DailyDescription,
-  SavedLocation,
-  NewStep,
-  NewBaby,
-} from "@/db/schema";
+export type { User, Baby, Step, SavedLocation } from "@/db/schema";
 
 // ── Step types ────────────────────────────────────────────────────────────────
 
@@ -51,21 +43,4 @@ export interface PlaceSuggestion {
   placeId: string;
   mainText: string;
   secondaryText: string;
-}
-
-// ── Timeline state ────────────────────────────────────────────────────────────
-
-export interface DayGroup {
-  date: string; // "YYYY-MM-DD"
-  steps: import("@/db/schema").Step[];
-  hasSteps: boolean;
-  isMajor: boolean;
-}
-
-export interface MonthPill {
-  monthIndex: number; // 0 = birth month
-  label: string; // "Birth" | "Month 1" | ...
-  dateRange: string; // "Jan 15 – Feb 14"
-  hasSteps: boolean;
-  isFuture: boolean;
 }

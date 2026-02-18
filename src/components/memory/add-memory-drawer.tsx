@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { X, Camera, Award, Loader2, MapPin } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { X, Award, Loader2, MapPin } from "lucide-react";
+import { Drawer, DrawerContent } from "@/components/ui/drawer";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useBaby } from "@/components/baby/baby-provider";
@@ -27,7 +26,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
   const [queue, setQueue] = useState<UploadQueueItem[]>([]);
   const [date, setDate] = useState(todayString());
   const [isMajor, setIsMajor] = useState(false);
-  const [locationId, setLocationId] = useState<string | undefined>();
+  const [, setLocationId] = useState<string | undefined>();
   const [locationNickname, setLocationNickname] = useState<string | undefined>();
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [saving, setSaving] = useState(false);

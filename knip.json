@@ -1,4 +1,9 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "ignoreDependencies": ["tw-animate-css", "eslint-config-next", "@tailwindcss/postcss"]
+  "ignoreDependencies": [
+    "postcss"
+  ],
+  "ignore": [
+    "public/sw.js"
+  ]
 }

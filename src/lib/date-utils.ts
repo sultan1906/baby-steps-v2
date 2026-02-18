@@ -11,13 +11,12 @@ import {
   parseISO,
   isAfter,
   isBefore,
-  isSameDay,
 } from "date-fns";
 
 /**
  * Number of complete weeks since birthdate.
  */
-export function getAgeInWeeks(birthdate: Date, referenceDate = new Date()): number {
+function getAgeInWeeks(birthdate: Date, referenceDate = new Date()): number {
   return differenceInWeeks(referenceDate, birthdate);
 }
 
@@ -72,17 +71,10 @@ export function formatShortDate(dateStr: string): string {
 }
 
 /**
- * Get the month index (0 = birth month) for a given date relative to birthdate.
- */
-export function getMonthIndex(birthdate: Date, date: Date): number {
-  return differenceInMonths(date, birthdate);
-}
-
-/**
  * Get the start and end dates for a specific month index relative to birthdate.
  * Month 0 = the calendar month containing birthdate.
  */
-export function getMonthRange(birthdate: Date, monthIndex: number): { start: Date; end: Date } {
+function getMonthRange(birthdate: Date, monthIndex: number): { start: Date; end: Date } {
   const referenceMonth = addMonths(birthdate, monthIndex);
   return {
     start: startOfMonth(referenceMonth),
@@ -145,11 +137,4 @@ export function getHeatmapWeeks(
  */
 export function todayString(): string {
   return format(new Date(), "yyyy-MM-dd");
-}
-
-/**
- * Check if two "YYYY-MM-DD" strings represent the same day.
- */
-export function isSameDateString(a: string, b: string): boolean {
-  return isSameDay(parseISO(a), parseISO(b));
 }
