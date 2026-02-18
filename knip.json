@@ -1,9 +1,5 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "ignoreDependencies": [
-    "postcss"
-  ],
-  "ignore": [
-    "public/sw.js"
-  ]
+  "ignoreDependencies": ["postcss"],
+  "ignore": ["public/sw.js"]
 }
