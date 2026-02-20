@@ -17,6 +17,7 @@ export function MapPickerDialog({ open, onClose, onSelect }: MapPickerDialogProp
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [searching, setSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const [savedLocations, setSavedLocations] = useState<SavedLocation[]>([]);
   const [pendingPlace, setPendingPlace] = useState<PlaceSuggestion | null>(null);
   const [nickname, setNickname] = useState("");
@@ -37,6 +38,7 @@ export function MapPickerDialog({ open, onClose, onSelect }: MapPickerDialogProp
 
     const timer = setTimeout(async () => {
       setSearching(true);
+      setSearchError("");
       try {
         const res = await fetch("/api/places/autocomplete", {
           method: "POST",
@@ -44,6 +46,11 @@ export function MapPickerDialog({ open, onClose, onSelect }: MapPickerDialogProp
           body: JSON.stringify({ input: query }),
         });
         const data = await res.json();
+        if (!res.ok) {
+          setSearchError(data.error ?? "Could not search places");
+          setSuggestions([]);
+          return;
+        }
         const items: PlaceSuggestion[] =
           data.suggestions?.map(
             (s: {
@@ -119,6 +126,9 @@ export function MapPickerDialog({ open, onClose, onSelect }: MapPickerDialogProp
             <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 animate-spin" />
           )}
         </div>
+
+        {/* Search error */}
+        {searchError && <p className="mt-2 text-xs text-red-500 px-1">{searchError}</p>}
 
         {/* Search results */}
         {suggestions.length > 0 && (

@@ -18,5 +18,13 @@ export async function POST(request: NextRequest) {
   });
 
   const data = await res.json();
+
+  if (!res.ok) {
+    return NextResponse.json(
+      { suggestions: [], error: data.error?.message ?? "Places API error" },
+      { status: res.status }
+    );
+  }
+
   return NextResponse.json(data);
 }

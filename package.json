@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "format": "prettier --write .",
+    "format:write": "prettier --write .",
     "format:check": "prettier --check .",
     "knip": "knip"
   },
