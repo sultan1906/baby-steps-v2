@@ -177,7 +177,13 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                     <div className="flex-[0_0_65%] p-4 relative">
                       {selectedStep.photoUrl ? (
                         <div className="relative w-full h-full rounded-[2rem] overflow-hidden shadow-inner">
-                          <Image src={selectedStep.photoUrl} alt="" fill sizes="(max-width: 640px) 85vw, 360px" className="object-cover" />
+                          <Image
+                            src={selectedStep.photoUrl}
+                            alt=""
+                            fill
+                            sizes="(max-width: 640px) 85vw, 360px"
+                            className="object-cover"
+                          />
                         </div>
                       ) : (
                         <div className="w-full h-full rounded-[2rem] bg-white/20" />

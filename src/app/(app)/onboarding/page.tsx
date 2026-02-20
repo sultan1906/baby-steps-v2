@@ -139,7 +139,10 @@ export default function OnboardingPage() {
 
                 <div className="flex flex-col gap-4">
                   <div>
-                    <label htmlFor="baby-name" className="text-xs text-stone-500 font-medium block mb-1">
+                    <label
+                      htmlFor="baby-name"
+                      className="text-xs text-stone-500 font-medium block mb-1"
+                    >
                       Baby&apos;s Name
                     </label>
                     <input
@@ -153,7 +156,10 @@ export default function OnboardingPage() {
                   </div>
 
                   <div>
-                    <label htmlFor="birth-date" className="text-xs text-stone-500 font-medium block mb-1">
+                    <label
+                      htmlFor="birth-date"
+                      className="text-xs text-stone-500 font-medium block mb-1"
+                    >
                       Birth Date
                     </label>
                     <input

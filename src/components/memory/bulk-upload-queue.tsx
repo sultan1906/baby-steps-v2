@@ -113,7 +113,13 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
           onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
         >
           {queue[0].status === "done" ? (
-            <Image src={queue[0].preview} alt="Preview" fill sizes="100vw" className="object-cover" />
+            <Image
+              src={queue[0].preview}
+              alt="Preview"
+              fill
+              sizes="100vw"
+              className="object-cover"
+            />
           ) : (
             <div className="w-full h-full bg-stone-100 flex items-center justify-center">
               <Loader2 className="w-6 h-6 text-stone-400 animate-spin" />
