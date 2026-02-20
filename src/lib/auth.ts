@@ -12,6 +12,7 @@ let _auth: ReturnType<typeof betterAuth> | undefined;
 function getAuth() {
   if (!_auth) {
     _auth = betterAuth({
+      baseURL: process.env.NEXT_PUBLIC_APP_URL,
       database: drizzleAdapter(db, {
         provider: "pg",
         schema: {

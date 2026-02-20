@@ -6,11 +6,10 @@ import { BackButton } from "@/components/shared/back-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { getHeatmapWeeks } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
-import type { Step, Baby } from "@/types";
+import type { Step } from "@/types";
 
 interface DashboardClientProps {
   steps: Step[];
-  baby: Baby;
 }
 
 export function DashboardClient({ steps }: DashboardClientProps) {
