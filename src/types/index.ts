@@ -3,10 +3,7 @@ export type {
   User,
   Baby,
   Step,
-  DailyDescription,
   SavedLocation,
-  NewStep,
-  NewBaby,
 } from "@/db/schema";
 
 // ── Step types ────────────────────────────────────────────────────────────────
@@ -55,14 +52,14 @@ export interface PlaceSuggestion {
 
 // ── Timeline state ────────────────────────────────────────────────────────────
 
-export interface DayGroup {
+interface DayGroup {
   date: string; // "YYYY-MM-DD"
   steps: import("@/db/schema").Step[];
   hasSteps: boolean;
   isMajor: boolean;
 }
 
-export interface MonthPill {
+interface MonthPill {
   monthIndex: number; // 0 = birth month
   label: string; // "Birth" | "Month 1" | ...
   dateRange: string; // "Jan 15 – Feb 14"

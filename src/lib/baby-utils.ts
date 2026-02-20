@@ -8,7 +8,7 @@ const COOKIE_NAME = "babysteps_current_baby";
 /**
  * Read the current baby ID from the cookie (server-side).
  */
-export async function getCurrentBabyId(): Promise<string | null> {
+async function getCurrentBabyId(): Promise<string | null> {
   const cookieStore = await cookies();
   return cookieStore.get(COOKIE_NAME)?.value ?? null;
 }

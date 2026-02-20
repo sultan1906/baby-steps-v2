@@ -93,4 +93,3 @@ export function ResetPasswordTemplate({ resetUrl, userName }: ResetPasswordTempl
   );
 }
 
-export default ResetPasswordTemplate;

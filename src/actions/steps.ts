@@ -45,7 +45,7 @@ export async function createBulkSteps(steps: StepInput[]) {
 /**
  * Delete a step by ID.
  */
-export async function deleteStep(stepId: string) {
+async function deleteStep(stepId: string) {
   await getSession();
 
   await db.delete(step).where(eq(step.id, stepId));
