@@ -24,7 +24,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
   const isMobile = useMediaQuery("(max-width: 640px)");
   const [open, setOpen] = useState(false);
   const [queue, setQueue] = useState<UploadQueueItem[]>([]);
-  const [date, setDate] = useState(todayString());
+  const [date, setDate] = useState(() => todayString());
   const [isMajor, setIsMajor] = useState(false);
   const [, setLocationId] = useState<string | undefined>();
   const [locationNickname, setLocationNickname] = useState<string | undefined>();
@@ -104,8 +104,14 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
             {/* Date + Location */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-stone-500 font-medium block mb-1">Date</label>
+                <label
+                  htmlFor="memory-date"
+                  className="text-xs text-stone-500 font-medium block mb-1"
+                >
+                  Date
+                </label>
                 <input
+                  id="memory-date"
                   type="date"
                   value={date}
                   min={baby.birthdate}
@@ -115,8 +121,14 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
                 />
               </div>
               <div>
-                <label className="text-xs text-stone-500 font-medium block mb-1">Location</label>
+                <label
+                  htmlFor="location-btn"
+                  className="text-xs text-stone-500 font-medium block mb-1"
+                >
+                  Location
+                </label>
                 <button
+                  id="location-btn"
                   onClick={() => setShowMapPicker(true)}
                   className="w-full flex items-center gap-2 px-3 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-500 text-sm hover:border-rose-300 transition-colors"
                 >
@@ -186,7 +198,14 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
   return (
     <>
       {/* Trigger */}
-      <div onClick={() => setOpen(true)}>{children}</div>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={() => setOpen(true)}
+        onKeyDown={(e) => e.key === "Enter" && setOpen(true)}
+      >
+        {children}
+      </div>
 
       {/* Map picker */}
       <MapPickerDialog

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Mail, ArrowLeft, Loader2, MailCheck } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
@@ -40,12 +41,12 @@ export default function ForgotPasswordPage() {
           Check your inbox at <span className="font-medium text-stone-700">{email}</span> for the
           reset link.
         </p>
-        <a
+        <Link
           href="/auth"
           className="block mt-6 text-xs text-stone-400 hover:text-stone-600 transition-colors"
         >
           Back to sign in
-        </a>
+        </Link>
       </div>
     );
   }

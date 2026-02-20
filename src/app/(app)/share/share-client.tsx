@@ -93,7 +93,10 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
             {steps.map((s) => (
               <div
                 key={s.id}
+                role="button"
+                tabIndex={0}
                 onClick={() => setSelectedStep(s)}
+                onKeyDown={(e) => e.key === "Enter" && setSelectedStep(s)}
                 className={cn(
                   "relative w-24 h-24 rounded-2xl overflow-hidden cursor-pointer flex-shrink-0 transition-all",
                   selectedStep?.id === s.id
@@ -102,7 +105,7 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                 )}
               >
                 {s.photoUrl ? (
-                  <Image src={s.photoUrl} alt="" fill className="object-cover" />
+                  <Image src={s.photoUrl} alt="" fill sizes="96px" className="object-cover" />
                 ) : (
                   <div className="w-full h-full gradient-bg" />
                 )}
@@ -174,7 +177,13 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                     <div className="flex-[0_0_65%] p-4 relative">
                       {selectedStep.photoUrl ? (
                         <div className="relative w-full h-full rounded-[2rem] overflow-hidden shadow-inner">
-                          <Image src={selectedStep.photoUrl} alt="" fill className="object-cover" />
+                          <Image
+                            src={selectedStep.photoUrl}
+                            alt=""
+                            fill
+                            sizes="(max-width: 640px) 85vw, 360px"
+                            className="object-cover"
+                          />
                         </div>
                       ) : (
                         <div className="w-full h-full rounded-[2rem] bg-white/20" />
