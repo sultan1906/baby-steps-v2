@@ -5,7 +5,6 @@ import { step } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
 import type { StepInput } from "@/types";
 
 async function getSession() {
@@ -40,17 +39,4 @@ export async function createBulkSteps(steps: StepInput[]) {
   revalidatePath("/gallery");
   revalidatePath("/dashboard");
   return created;
-}
-
-/**
- * Delete a step by ID.
- */
-async function deleteStep(stepId: string) {
-  await getSession();
-
-  await db.delete(step).where(eq(step.id, stepId));
-
-  revalidatePath("/timeline");
-  revalidatePath("/gallery");
-  revalidatePath("/dashboard");
 }

@@ -92,4 +92,3 @@ export function ResetPasswordTemplate({ resetUrl, userName }: ResetPasswordTempl
     </Html>
   );
 }
-

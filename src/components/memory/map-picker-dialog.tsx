@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Search, MapPin, Loader2, X, Home, Star } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Search, MapPin, Loader2, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createSavedLocation, getSavedLocations } from "@/actions/locations";
 import type { SavedLocation } from "@/types";

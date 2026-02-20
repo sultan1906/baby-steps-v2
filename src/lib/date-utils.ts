@@ -11,7 +11,6 @@ import {
   parseISO,
   isAfter,
   isBefore,
-  isSameDay,
 } from "date-fns";
 
 /**
@@ -69,13 +68,6 @@ export function formatMemoryDate(dateStr: string): string {
  */
 export function formatShortDate(dateStr: string): string {
   return format(parseISO(dateStr), "MMM d");
-}
-
-/**
- * Get the month index (0 = birth month) for a given date relative to birthdate.
- */
-function getMonthIndex(birthdate: Date, date: Date): number {
-  return differenceInMonths(date, birthdate);
 }
 
 /**
@@ -145,11 +137,4 @@ export function getHeatmapWeeks(
  */
 export function todayString(): string {
   return format(new Date(), "yyyy-MM-dd");
-}
-
-/**
- * Check if two "YYYY-MM-DD" strings represent the same day.
- */
-function isSameDateString(a: string, b: string): boolean {
-  return isSameDay(parseISO(a), parseISO(b));
 }

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { db } from "@/db";
 import { baby } from "@/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 const COOKIE_NAME = "babysteps_current_baby";
 
