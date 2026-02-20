@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Mail,
@@ -228,12 +229,12 @@ export default function AuthPage() {
         {/* Forgot password */}
         {!isSignUp && (
           <div className="text-right">
-            <a
+            <Link
               href="/forgot-password"
               className="text-xs text-stone-400 hover:text-rose-500 transition-colors"
             >
               Forgot password?
-            </a>
+            </Link>
           </div>
         )}
 

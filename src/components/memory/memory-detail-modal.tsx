@@ -52,7 +52,7 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
           {/* Photo area */}
           <div className="relative aspect-[4/3] overflow-hidden">
             {step.photoUrl ? (
-              <Image src={step.photoUrl} alt={dateLabel} fill className="object-cover" />
+              <Image src={step.photoUrl} alt={dateLabel} fill sizes="(max-width: 768px) 100vw, 672px" className="object-cover" />
             ) : (
               <div className="w-full h-full gradient-bg" />
             )}

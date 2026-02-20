@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -138,10 +139,11 @@ export default function OnboardingPage() {
 
                 <div className="flex flex-col gap-4">
                   <div>
-                    <label className="text-xs text-stone-500 font-medium block mb-1">
+                    <label htmlFor="baby-name" className="text-xs text-stone-500 font-medium block mb-1">
                       Baby&apos;s Name
                     </label>
                     <input
+                      id="baby-name"
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -151,10 +153,11 @@ export default function OnboardingPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs text-stone-500 font-medium block mb-1">
+                    <label htmlFor="birth-date" className="text-xs text-stone-500 font-medium block mb-1">
                       Birth Date
                     </label>
                     <input
+                      id="birth-date"
                       type="date"
                       value={birthdate}
                       max={today}
@@ -172,9 +175,9 @@ export default function OnboardingPage() {
                     />
                     <span className="text-sm text-stone-500">
                       I agree to the{" "}
-                      <a href="/terms" className="text-rose-500 hover:underline">
+                      <Link href="/terms" className="text-rose-500 hover:underline">
                         Terms of Use
-                      </a>
+                      </Link>
                     </span>
                   </label>
 

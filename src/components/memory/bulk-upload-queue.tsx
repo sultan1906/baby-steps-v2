@@ -106,11 +106,14 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
         </label>
       ) : (
         <div
+          role="button"
+          tabIndex={0}
           className="aspect-video rounded-[2rem] overflow-hidden relative cursor-pointer group"
           onClick={() => inputRef.current?.click()}
+          onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
         >
           {queue[0].status === "done" ? (
-            <Image src={queue[0].preview} alt="Preview" fill className="object-cover" />
+            <Image src={queue[0].preview} alt="Preview" fill sizes="100vw" className="object-cover" />
           ) : (
             <div className="w-full h-full bg-stone-100 flex items-center justify-center">
               <Loader2 className="w-6 h-6 text-stone-400 animate-spin" />
@@ -155,7 +158,7 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
                 {/* Thumbnail */}
                 <div className="w-16 h-16 rounded-xl overflow-hidden relative flex-shrink-0 bg-stone-100">
                   {item.status === "done" ? (
-                    <Image src={item.preview} alt="" fill className="object-cover" />
+                    <Image src={item.preview} alt="" fill sizes="64px" className="object-cover" />
                   ) : item.status === "uploading" ? (
                     <div className="w-full h-full flex items-center justify-center">
                       <Loader2 className="w-4 h-4 text-stone-400 animate-spin" />

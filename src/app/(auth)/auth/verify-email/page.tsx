@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { MailCheck, Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
@@ -53,12 +54,12 @@ export default function VerifyEmailPage() {
         </button>
       )}
 
-      <a
+      <Link
         href="/auth"
         className="block mt-4 text-xs text-stone-400 hover:text-stone-600 transition-colors"
       >
         Back to sign in
-      </a>
+      </Link>
     </div>
   );
 }

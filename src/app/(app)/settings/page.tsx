@@ -132,8 +132,11 @@ export default function SettingsPage() {
                 )}
               </div>
               <div
+                role="button"
+                tabIndex={0}
                 className="absolute bottom-0 right-0 w-9 h-9 gradient-bg-vibrant rounded-2xl flex items-center justify-center border-2 border-white shadow-md"
                 onClick={() => fileRef.current?.click()}
+                onKeyDown={(e) => e.key === "Enter" && fileRef.current?.click()}
               >
                 <Camera className="w-4 h-4 text-white" />
               </div>
@@ -150,10 +153,11 @@ export default function SettingsPage() {
           {/* Form fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="text-xs text-stone-500 font-medium block mb-1">
+              <label htmlFor="settings-baby-name" className="text-xs text-stone-500 font-medium block mb-1">
                 Baby&apos;s Name
               </label>
               <input
+                id="settings-baby-name"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -161,8 +165,9 @@ export default function SettingsPage() {
               />
             </div>
             <div>
-              <label className="text-xs text-stone-500 font-medium block mb-1">Birth Date</label>
+              <label htmlFor="settings-birth-date" className="text-xs text-stone-500 font-medium block mb-1">Birth Date</label>
               <input
+                id="settings-birth-date"
                 type="date"
                 value={birthdate}
                 max={new Date().toISOString().split("T")[0]}

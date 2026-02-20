@@ -101,6 +101,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
               src={currentStep.photoUrl}
               alt=""
               fill
+              sizes="100vw"
               className="object-cover blur-3xl opacity-50 scale-110"
             />
           </div>
@@ -110,8 +111,8 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
         <div className="relative h-full flex flex-col max-w-lg mx-auto bg-stone-900">
           {/* Progress bars */}
           <div className="absolute top-0 left-0 right-0 z-30 flex gap-1 px-4 pt-4">
-            {steps.map((_, i) => (
-              <div key={i} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
+            {steps.map((s, i) => (
+              <div key={s.id} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
                 <motion.div
                   className="h-full bg-white rounded-full"
                   initial={{ width: i < currentIndex ? "100%" : "0%" }}
@@ -161,6 +162,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
                     src={currentStep.photoUrl}
                     alt={`Step ${currentIndex + 1}`}
                     fill
+                    sizes="(max-width: 1024px) 100vw, 512px"
                     className="object-contain"
                   />
                 ) : (
@@ -172,8 +174,22 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
             </AnimatePresence>
 
             {/* Tap zones */}
-            <div className="absolute inset-y-0 left-0 w-[40%] cursor-pointer" onClick={prevStep} />
-            <div className="absolute inset-y-0 right-0 w-[60%] cursor-pointer" onClick={nextStep} />
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Previous"
+              className="absolute inset-y-0 left-0 w-[40%] cursor-pointer"
+              onClick={prevStep}
+              onKeyDown={(e) => e.key === "Enter" && prevStep()}
+            />
+            <div
+              role="button"
+              tabIndex={0}
+              aria-label="Next"
+              className="absolute inset-y-0 right-0 w-[60%] cursor-pointer"
+              onClick={nextStep}
+              onKeyDown={(e) => e.key === "Enter" && nextStep()}
+            />
 
             {/* Desktop chevrons */}
             <button
@@ -236,9 +252,17 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
               </div>
             ) : (
               <div
+                role="button"
+                tabIndex={0}
                 onClick={() => {
                   setEditingDesc(true);
                   setDraftDesc(description);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setEditingDesc(true);
+                    setDraftDesc(description);
+                  }
                 }}
                 className="cursor-text"
               >

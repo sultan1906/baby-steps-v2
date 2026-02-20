@@ -150,7 +150,7 @@ export function GalleryClient({ steps, baby }: GalleryClientProps) {
               >
                 <div className="w-20 h-20 rounded-2xl overflow-hidden relative flex-shrink-0">
                   {s.photoUrl ? (
-                    <Image src={s.photoUrl} alt="" fill className="object-cover" />
+                    <Image src={s.photoUrl} alt="" fill sizes="80px" className="object-cover" />
                   ) : (
                     <div className="w-full h-full gradient-bg" />
                   )}
