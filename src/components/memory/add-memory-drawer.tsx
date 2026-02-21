@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { X, Award, Loader2, MapPin } from "lucide-react";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
@@ -26,10 +26,19 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
   const [queue, setQueue] = useState<UploadQueueItem[]>([]);
   const [date, setDate] = useState(() => todayString());
   const [isMajor, setIsMajor] = useState(false);
-  const [, setLocationId] = useState<string | undefined>();
+  const [locationId, setLocationId] = useState<string | undefined>();
   const [locationNickname, setLocationNickname] = useState<string | undefined>();
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // When a single photo is uploaded, sync the date picker to the photo's EXIF/file date.
+  // This covers both the initial add and async EXIF extraction updating the date later.
+  useEffect(() => {
+    if (queue.length === 1) {
+      setDate(queue[0].date);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue.length === 1 ? queue[0]?.date : null]);
 
   const handleClose = () => {
     setOpen(false);
@@ -45,13 +54,14 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
     setSaving(true);
 
     try {
+      const isSingle = queue.length === 1;
       const steps = queue.map((item) => ({
         babyId: baby.id,
         photoUrl: item.status === "done" ? item.preview : undefined,
-        date: item.date,
-        isMajor: item.isMajor,
-        locationId: item.locationId,
-        locationNickname: item.locationNickname,
+        date: isSingle ? date : item.date,
+        isMajor: isSingle ? isMajor : item.isMajor,
+        locationId: isSingle ? locationId : item.locationId,
+        locationNickname: isSingle ? locationNickname : item.locationNickname,
         type: "photo" as const,
       }));
 
@@ -207,16 +217,19 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         {children}
       </div>
 
-      {/* Map picker */}
-      <MapPickerDialog
-        open={showMapPicker}
-        onClose={() => setShowMapPicker(false)}
-        onSelect={(id, nickname) => {
-          setLocationId(id);
-          setLocationNickname(nickname);
-          setShowMapPicker(false);
-        }}
-      />
+      {/* Map picker — rendered only when needed so its portal mounts after the
+          Drawer's portal, ensuring it stacks on top at the same z-index. */}
+      {showMapPicker && (
+        <MapPickerDialog
+          open={showMapPicker}
+          onClose={() => setShowMapPicker(false)}
+          onSelect={(id, nickname) => {
+            setLocationId(id);
+            setLocationNickname(nickname);
+            setShowMapPicker(false);
+          }}
+        />
+      )}
 
       {/* Mobile: Drawer / Desktop: Dialog */}
       {isMobile ? (
@@ -225,7 +238,10 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         </Drawer>
       ) : (
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden max-h-[85vh] flex flex-col">
+          <DialogContent
+            className="max-w-xl rounded-[3rem] p-0 overflow-hidden max-h-[85vh] flex flex-col"
+            showCloseButton={false}
+          >
             <DialogHeader className="sr-only">
               <DialogTitle>Capture Memory</DialogTitle>
             </DialogHeader>
