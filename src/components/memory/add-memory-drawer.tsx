@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { X, Award, Loader2, MapPin } from "lucide-react";
 import { Drawer, DrawerContent } from "@/components/ui/drawer";
@@ -26,10 +26,19 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
   const [queue, setQueue] = useState<UploadQueueItem[]>([]);
   const [date, setDate] = useState(() => todayString());
   const [isMajor, setIsMajor] = useState(false);
-  const [, setLocationId] = useState<string | undefined>();
+  const [locationId, setLocationId] = useState<string | undefined>();
   const [locationNickname, setLocationNickname] = useState<string | undefined>();
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // When a single photo is uploaded, sync the date picker to the photo's EXIF/file date.
+  // This covers both the initial add and async EXIF extraction updating the date later.
+  useEffect(() => {
+    if (queue.length === 1) {
+      setDate(queue[0].date);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [queue.length === 1 ? queue[0]?.date : null]);
 
   const handleClose = () => {
     setOpen(false);
@@ -45,13 +54,14 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
     setSaving(true);
 
     try {
+      const isSingle = queue.length === 1;
       const steps = queue.map((item) => ({
         babyId: baby.id,
         photoUrl: item.status === "done" ? item.preview : undefined,
-        date: item.date,
-        isMajor: item.isMajor,
-        locationId: item.locationId,
-        locationNickname: item.locationNickname,
+        date: isSingle ? date : item.date,
+        isMajor: isSingle ? isMajor : item.isMajor,
+        locationId: isSingle ? locationId : item.locationId,
+        locationNickname: isSingle ? locationNickname : item.locationNickname,
         type: "photo" as const,
       }));
 
