@@ -37,7 +37,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
     if (queue.length === 1) {
       setDate(queue[0].date);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [queue.length === 1 ? queue[0]?.date : null]);
 
   const handleClose = () => {
@@ -238,7 +238,10 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         </Drawer>
       ) : (
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden max-h-[85vh] flex flex-col" showCloseButton={false}>
+          <DialogContent
+            className="max-w-xl rounded-[3rem] p-0 overflow-hidden max-h-[85vh] flex flex-col"
+            showCloseButton={false}
+          >
             <DialogHeader className="sr-only">
               <DialogTitle>Capture Memory</DialogTitle>
             </DialogHeader>
