@@ -1,10 +1,12 @@
 "use server";
 
 import { db } from "@/db";
-import { step } from "@/db/schema";
+import { step, baby } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
+import { eq, and } from "drizzle-orm";
+import { del } from "@vercel/blob";
 import type { StepInput } from "@/types";
 
 async function getSession() {
@@ -39,4 +41,30 @@ export async function createBulkSteps(steps: StepInput[]) {
   revalidatePath("/gallery");
   revalidatePath("/dashboard");
   return created;
+}
+
+/**
+ * Delete a single step, verifying ownership via baby.userId.
+ * Also removes the associated blob from Vercel Blob storage.
+ */
+export async function deleteStep(stepId: string) {
+  const session = await getSession();
+
+  const [found] = await db
+    .select({ id: step.id, photoUrl: step.photoUrl })
+    .from(step)
+    .innerJoin(baby, eq(step.babyId, baby.id))
+    .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
+
+  if (!found) throw new Error("Not found or unauthorized");
+
+  if (found.photoUrl) {
+    await del(found.photoUrl);
+  }
+
+  await db.delete(step).where(eq(step.id, stepId));
+
+  revalidatePath("/timeline");
+  revalidatePath("/gallery");
+  revalidatePath("/dashboard");
 }

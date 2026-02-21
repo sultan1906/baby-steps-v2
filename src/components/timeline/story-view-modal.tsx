@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { X, MapPin, Award, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import { X, MapPin, Award, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { parseISO } from "date-fns";
 import { getDayNumber, formatMemoryDate } from "@/lib/date-utils";
 import { upsertDailyDescription, getDailyDescription } from "@/actions/daily-description";
+import { deleteStep } from "@/actions/steps";
 import { useBaby } from "@/components/baby/baby-provider";
 import type { Step } from "@/types";
 
@@ -19,34 +20,39 @@ interface StoryViewModalProps {
 
 export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalProps) {
   const { baby } = useBaby();
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
+  const localSteps = useMemo(() => steps.filter((s) => !deletedIds.has(s.id)), [steps, deletedIds]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [description, setDescription] = useState("");
   const [editingDesc, setEditingDesc] = useState(false);
   const [draftDesc, setDraftDesc] = useState("");
   const [savingDesc, setSavingDesc] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const currentStep = steps[currentIndex];
+  const currentStep = localSteps[currentIndex];
   const dayNumber = getDayNumber(parseISO(baby.birthdate), parseISO(date));
   const dateLabel = formatMemoryDate(date);
 
-  // Load daily description
+  // Load daily description and reset navigation state
   useEffect(() => {
-    if (open) {
-      getDailyDescription(baby.id, date).then((d) => {
-        setDescription(d?.description ?? "");
-        setDraftDesc(d?.description ?? "");
-      });
-    }
+    if (!open) return;
+    getDailyDescription(baby.id, date).then((d) => {
+      setCurrentIndex(0);
+      setConfirmDelete(false);
+      setDescription(d?.description ?? "");
+      setDraftDesc(d?.description ?? "");
+    });
   }, [open, baby.id, date]);
 
   // Auto-advance timer
   useEffect(() => {
-    if (!open || editingDesc) return;
+    if (!open || editingDesc || confirmDelete) return;
 
     timerRef.current = setTimeout(() => {
-      if (currentIndex < steps.length - 1) {
+      if (currentIndex < localSteps.length - 1) {
         setCurrentIndex((i) => i + 1);
       } else {
         onClose();
@@ -56,18 +62,33 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [open, currentIndex, editingDesc, steps.length, onClose]);
+  }, [open, currentIndex, editingDesc, confirmDelete, localSteps.length, onClose]);
 
   const prevStep = () => {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
   };
 
   const nextStep = () => {
-    if (currentIndex < steps.length - 1) {
+    if (currentIndex < localSteps.length - 1) {
       setCurrentIndex((i) => i + 1);
     } else {
       onClose();
     }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    const deletedId = currentStep.id;
+    await deleteStep(deletedId);
+    const updated = localSteps.filter((s) => s.id !== deletedId);
+    if (updated.length === 0) {
+      onClose();
+    } else {
+      setDeletedIds((prev) => new Set([...prev, deletedId]));
+      setCurrentIndex(Math.min(currentIndex, updated.length - 1));
+    }
+    setConfirmDelete(false);
+    setDeleting(false);
   };
 
   const handleSaveDesc = async () => {
@@ -111,7 +132,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
         <div className="relative h-full flex flex-col max-w-lg mx-auto bg-stone-900">
           {/* Progress bars */}
           <div className="absolute top-0 left-0 right-0 z-30 flex gap-1 px-4 pt-4">
-            {steps.map((s, i) => (
+            {localSteps.map((s, i) => (
               <div key={s.id} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
                 <motion.div
                   className="h-full bg-white rounded-full"
@@ -138,12 +159,20 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
                 Day {dayNumber} · {dateLabel}
               </span>
             </div>
-            <button
-              onClick={onClose}
-              className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+              <button
+                onClick={onClose}
+                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Photo area */}
@@ -206,6 +235,25 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
               <ChevronRight className="w-6 h-6" />
             </button>
           </div>
+
+          {/* Delete confirmation banner */}
+          {confirmDelete && (
+            <div className="absolute bottom-0 left-0 right-0 z-40 bg-black/95 px-6 py-5 flex items-center justify-between">
+              <span className="text-white text-sm">Delete this photo?</span>
+              <div className="flex gap-4">
+                <button onClick={() => setConfirmDelete(false)} className="text-white/60 text-sm">
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="text-red-400 font-bold text-sm"
+                >
+                  {deleting ? "Deleting..." : "Delete"}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Bottom overlay */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent px-6 pb-8 pt-20">
