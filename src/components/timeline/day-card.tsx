@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { MapPin } from "lucide-react";
 import { motion } from "framer-motion";
@@ -16,12 +16,11 @@ interface DayCardProps {
 }
 
 export function DayCard({ date, steps, birthdate, onClick }: DayCardProps) {
-  const [imageLoaded, setImageLoaded] = useState(false);
+  // Track which URL has finished loading so imageLoaded resets automatically
+  // when primaryStep.photoUrl changes — no useEffect needed.
+  const [loadedUrl, setLoadedUrl] = useState<string | undefined>(undefined);
   const primaryStep = steps[0];
-
-  useEffect(() => {
-    setImageLoaded(false);
-  }, [primaryStep?.photoUrl]);
+  const imageLoaded = loadedUrl === primaryStep?.photoUrl;
   const hasMore = steps.length > 1;
   const isMajor = steps.some((s) => s.isMajor);
   const location = steps.find((s) => s.locationNickname)?.locationNickname;
@@ -44,7 +43,7 @@ export function DayCard({ date, steps, birthdate, onClick }: DayCardProps) {
             fill
             sizes="280px"
             loading="eager"
-            onLoad={() => setImageLoaded(true)}
+            onLoad={() => setLoadedUrl(primaryStep.photoUrl ?? undefined)}
             className={`object-cover group-hover:scale-110 transition-transform duration-700 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
           />
         </>
