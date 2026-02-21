@@ -217,16 +217,19 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         {children}
       </div>
 
-      {/* Map picker */}
-      <MapPickerDialog
-        open={showMapPicker}
-        onClose={() => setShowMapPicker(false)}
-        onSelect={(id, nickname) => {
-          setLocationId(id);
-          setLocationNickname(nickname);
-          setShowMapPicker(false);
-        }}
-      />
+      {/* Map picker — rendered only when needed so its portal mounts after the
+          Drawer's portal, ensuring it stacks on top at the same z-index. */}
+      {showMapPicker && (
+        <MapPickerDialog
+          open={showMapPicker}
+          onClose={() => setShowMapPicker(false)}
+          onSelect={(id, nickname) => {
+            setLocationId(id);
+            setLocationNickname(nickname);
+            setShowMapPicker(false);
+          }}
+        />
+      )}
 
       {/* Mobile: Drawer / Desktop: Dialog */}
       {isMobile ? (
@@ -235,7 +238,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         </Drawer>
       ) : (
         <Dialog open={open} onOpenChange={setOpen}>
-          <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden max-h-[85vh] flex flex-col">
+          <DialogContent className="max-w-xl rounded-[3rem] p-0 overflow-hidden max-h-[85vh] flex flex-col" showCloseButton={false}>
             <DialogHeader className="sr-only">
               <DialogTitle>Capture Memory</DialogTitle>
             </DialogHeader>

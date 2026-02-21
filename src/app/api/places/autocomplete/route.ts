@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
     headers: {
       "Content-Type": "application/json",
       "X-Goog-Api-Key": process.env.GOOGLE_MAPS_API_KEY,
+      "Referer": process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
     },
     body: JSON.stringify({ input, sessionToken }),
   });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import { MapPin } from "lucide-react";
 import { motion } from "framer-motion";
@@ -15,6 +16,7 @@ interface DayCardProps {
 }
 
 export function DayCard({ date, steps, birthdate, onClick }: DayCardProps) {
+  const [imageLoaded, setImageLoaded] = useState(false);
   const primaryStep = steps[0];
   const hasMore = steps.length > 1;
   const isMajor = steps.some((s) => s.isMajor);
@@ -30,13 +32,18 @@ export function DayCard({ date, steps, birthdate, onClick }: DayCardProps) {
     >
       {/* Background image */}
       {primaryStep?.photoUrl ? (
-        <Image
-          src={primaryStep.photoUrl}
-          alt={`Day ${dayNumber}`}
-          fill
-          sizes="280px"
-          className="object-cover group-hover:scale-110 transition-transform duration-700"
-        />
+        <>
+          {!imageLoaded && <div className="absolute inset-0 gradient-bg animate-pulse" />}
+          <Image
+            src={primaryStep.photoUrl}
+            alt={`Day ${dayNumber}`}
+            fill
+            sizes="280px"
+            loading="eager"
+            onLoad={() => setImageLoaded(true)}
+            className={`object-cover group-hover:scale-110 transition-transform duration-700 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+          />
+        </>
       ) : (
         <div className="w-full h-full gradient-bg" />
       )}

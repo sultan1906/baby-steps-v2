@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { parseISO } from "date-fns";
 import { CalendarX2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,6 +24,25 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
   const [selectedMonth, setSelectedMonth] = useState(currentAgeMonths);
   const [storyDate, setStoryDate] = useState<string | null>(null);
   const [storySteps, setStorySteps] = useState<Step[]>([]);
+
+  // Scroll indicator state
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const [showScrollbar, setShowScrollbar] = useState(false);
+  const [thumbStyle, setThumbStyle] = useState({ left: "0%", width: "100%" });
+
+  const handleCardsScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const { scrollLeft, scrollWidth, clientWidth } = el;
+    if (scrollWidth <= clientWidth) return;
+    const thumbPct = (clientWidth / scrollWidth) * 100;
+    const leftPct = (scrollLeft / (scrollWidth - clientWidth)) * (100 - thumbPct);
+    setThumbStyle({ left: `${leftPct}%`, width: `${thumbPct}%` });
+    setShowScrollbar(true);
+    clearTimeout(hideTimer.current);
+    hideTimer.current = setTimeout(() => setShowScrollbar(false), 1000);
+  }, []);
 
   // Group steps by date for the selected month
   const dayGroups = useMemo(() => {
@@ -51,7 +70,7 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Sticky header */}
       <TimelineHeader />
 
@@ -74,14 +93,16 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
             </motion.div>
           ) : (
             <motion.div
+              ref={scrollRef as React.Ref<HTMLDivElement>}
               key={`cards-${selectedMonth}`}
-              className="flex gap-8 px-6 overflow-x-auto scrollbar-hide overscroll-x-contain py-4 min-w-max"
+              className="flex gap-8 px-6 overflow-x-auto scrollbar-hide overscroll-x-contain py-4"
               initial="hidden"
               animate="visible"
               variants={{
                 hidden: {},
                 visible: { transition: { staggerChildren: 0.07 } },
               }}
+              onScroll={handleCardsScroll}
             >
               {dayGroups.map(([date, daySteps]) => (
                 <motion.div
@@ -103,6 +124,18 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Scroll progress indicator */}
+        {dayGroups.length > 0 && (
+          <div
+            className={`relative mx-6 h-[3px] rounded-full bg-stone-100 overflow-hidden transition-opacity duration-500 ${showScrollbar ? "opacity-100" : "opacity-0"}`}
+          >
+            <div
+              className="absolute top-0 h-full rounded-full gradient-bg-vibrant transition-[left] duration-75 ease-out"
+              style={thumbStyle}
+            />
+          </div>
+        )}
       </div>
 
       {/* Fixed bottom: Month timeline */}

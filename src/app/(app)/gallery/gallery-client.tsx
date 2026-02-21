@@ -117,6 +117,7 @@ export function GalleryClient({ steps, baby }: GalleryClientProps) {
                     alt={s.title ?? s.date}
                     fill
                     sizes="(max-width: 640px) 50vw, 33vw"
+                    loading="eager"
                     className="object-cover group-hover:scale-110 transition-transform duration-500"
                   />
                 ) : (
