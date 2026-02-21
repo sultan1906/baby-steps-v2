@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { MapPin } from "lucide-react";
 import { motion } from "framer-motion";
@@ -18,6 +18,10 @@ interface DayCardProps {
 export function DayCard({ date, steps, birthdate, onClick }: DayCardProps) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const primaryStep = steps[0];
+
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [primaryStep?.photoUrl]);
   const hasMore = steps.length > 1;
   const isMajor = steps.some((s) => s.isMajor);
   const location = steps.find((s) => s.locationNickname)?.locationNickname;

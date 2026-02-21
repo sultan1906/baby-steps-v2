@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { parseISO } from "date-fns";
 import { CalendarX2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -42,6 +42,14 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
     setShowScrollbar(true);
     clearTimeout(hideTimer.current);
     hideTimer.current = setTimeout(() => setShowScrollbar(false), 1000);
+  }, []);
+
+  // Clear pending hide timer on unmount to avoid setState after unmount
+  useEffect(() => {
+    return () => {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = undefined;
+    };
   }, []);
 
   // Group steps by date for the selected month
