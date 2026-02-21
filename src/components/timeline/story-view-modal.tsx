@@ -8,6 +8,7 @@ import { parseISO } from "date-fns";
 import { getDayNumber, formatMemoryDate } from "@/lib/date-utils";
 import { upsertDailyDescription, getDailyDescription } from "@/actions/daily-description";
 import { deleteStep } from "@/actions/steps";
+import { toast } from "sonner";
 import { useBaby } from "@/components/baby/baby-provider";
 import type { Step } from "@/types";
 
@@ -40,6 +41,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   useEffect(() => {
     if (!open) return;
     getDailyDescription(baby.id, date).then((d) => {
+      setDeletedIds(new Set());
       setCurrentIndex(0);
       setConfirmDelete(false);
       setDescription(d?.description ?? "");
@@ -79,16 +81,22 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   const handleDelete = async () => {
     setDeleting(true);
     const deletedId = currentStep.id;
-    await deleteStep(deletedId);
-    const updated = localSteps.filter((s) => s.id !== deletedId);
-    if (updated.length === 0) {
-      onClose();
-    } else {
-      setDeletedIds((prev) => new Set([...prev, deletedId]));
-      setCurrentIndex(Math.min(currentIndex, updated.length - 1));
+    try {
+      await deleteStep(deletedId);
+      const updated = localSteps.filter((s) => s.id !== deletedId);
+      if (updated.length === 0) {
+        onClose();
+      } else {
+        setDeletedIds((prev) => new Set([...prev, deletedId]));
+        setCurrentIndex(Math.min(currentIndex, updated.length - 1));
+      }
+    } catch (err) {
+      console.error("Failed to delete step:", err);
+      toast.error("Failed to delete photo. Please try again.");
+    } finally {
+      setConfirmDelete(false);
+      setDeleting(false);
     }
-    setConfirmDelete(false);
-    setDeleting(false);
   };
 
   const handleSaveDesc = async () => {
@@ -161,12 +169,14 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
             </div>
             <div className="flex items-center gap-2">
               <button
+                aria-label="Delete photo"
                 onClick={() => setConfirmDelete(true)}
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
               >
                 <Trash2 className="w-5 h-5" />
               </button>
               <button
+                aria-label="Close"
                 onClick={onClose}
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
               >
