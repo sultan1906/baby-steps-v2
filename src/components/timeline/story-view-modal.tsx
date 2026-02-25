@@ -123,10 +123,13 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] bg-black"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
       >
         {/* Blurred background */}
         {currentStep?.photoUrl && (
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 pointer-events-none">
             <Image
               src={currentStep.photoUrl}
               alt=""
@@ -186,8 +189,8 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
             </div>
           </div>
 
-          {/* Photo area */}
-          <div className="flex-1 relative overflow-hidden">
+          {/* Photo area — clicking background closes */}
+          <div className="flex-1 relative overflow-hidden" onClick={onClose}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep?.id}
@@ -195,7 +198,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.4 }}
-                className="absolute inset-0"
+                className="absolute inset-0 pointer-events-none"
               >
                 {currentStep?.photoUrl ? (
                   <Image
@@ -213,34 +216,46 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
               </motion.div>
             </AnimatePresence>
 
-            {/* Tap zones */}
+            {/* Tap zones — leaving top/bottom edges as close zones */}
             <div
               role="button"
               tabIndex={0}
               aria-label="Previous"
-              className="absolute inset-y-0 left-0 w-[40%] cursor-pointer"
-              onClick={prevStep}
+              className="absolute top-[10%] bottom-[10%] left-0 w-[40%] cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                prevStep();
+              }}
               onKeyDown={(e) => e.key === "Enter" && prevStep()}
             />
             <div
               role="button"
               tabIndex={0}
               aria-label="Next"
-              className="absolute inset-y-0 right-0 w-[60%] cursor-pointer"
-              onClick={nextStep}
+              className="absolute top-[10%] bottom-[10%] right-0 w-[60%] cursor-pointer"
+              onClick={(e) => {
+                e.stopPropagation();
+                nextStep();
+              }}
               onKeyDown={(e) => e.key === "Enter" && nextStep()}
             />
 
             {/* Desktop chevrons */}
             <button
-              onClick={prevStep}
+              onClick={(e) => {
+                e.stopPropagation();
+                prevStep();
+              }}
               className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
               disabled={currentIndex === 0}
             >
               <ChevronLeft className="w-6 h-6" />
             </button>
             <button
-              onClick={nextStep}
+              onClick={(e) => {
+                e.stopPropagation();
+                nextStep();
+              }}
               className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
             >
               <ChevronRight className="w-6 h-6" />
