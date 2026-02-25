@@ -79,6 +79,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   };
 
   const handleDelete = async () => {
+    if (!currentStep) return;
     setDeleting(true);
     const deletedId = currentStep.id;
     try {
