@@ -28,7 +28,8 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   const [editingDesc, setEditingDesc] = useState(false);
   const [draftDesc, setDraftDesc] = useState("");
   const [savingDesc, setSavingDesc] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const confirmDelete = pendingDeleteId !== null;
   const [deleting, setDeleting] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -43,7 +44,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     getDailyDescription(baby.id, date).then((d) => {
       setDeletedIds(new Set());
       setCurrentIndex(0);
-      setConfirmDelete(false);
+      setPendingDeleteId(null);
       setDescription(d?.description ?? "");
       setDraftDesc(d?.description ?? "");
     });
@@ -79,23 +80,22 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   };
 
   const handleDelete = async () => {
-    if (!currentStep) return;
+    if (!pendingDeleteId) return;
     setDeleting(true);
-    const deletedId = currentStep.id;
     try {
-      await deleteStep(deletedId);
-      const updated = localSteps.filter((s) => s.id !== deletedId);
+      await deleteStep(pendingDeleteId);
+      const updated = localSteps.filter((s) => s.id !== pendingDeleteId);
       if (updated.length === 0) {
         onClose();
       } else {
-        setDeletedIds((prev) => new Set([...prev, deletedId]));
+        setDeletedIds((prev) => new Set([...prev, pendingDeleteId]));
         setCurrentIndex(Math.min(currentIndex, updated.length - 1));
       }
     } catch (err) {
       console.error("Failed to delete step:", err);
       toast.error("Failed to delete photo. Please try again.");
     } finally {
-      setConfirmDelete(false);
+      setPendingDeleteId(null);
       setDeleting(false);
     }
   };
@@ -171,7 +171,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
             <div className="flex items-center gap-2">
               <button
                 aria-label="Delete photo"
-                onClick={() => setConfirmDelete(true)}
+                onClick={() => setPendingDeleteId(currentStep?.id ?? null)}
                 className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
               >
                 <Trash2 className="w-5 h-5" />
@@ -252,7 +252,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
             <div className="absolute bottom-0 left-0 right-0 z-40 bg-black/95 px-6 py-5 flex items-center justify-between">
               <span className="text-white text-sm">Delete this photo?</span>
               <div className="flex gap-4">
-                <button onClick={() => setConfirmDelete(false)} className="text-white/60 text-sm">
+                <button onClick={() => setPendingDeleteId(null)} className="text-white/60 text-sm">
                   Cancel
                 </button>
                 <button
