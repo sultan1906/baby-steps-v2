@@ -123,6 +123,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[100] bg-black"
+        onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       >
         {/* Blurred background */}
         {currentStep?.photoUrl && (
