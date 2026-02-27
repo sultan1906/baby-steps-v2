@@ -73,9 +73,7 @@ export async function deleteStep(stepId: string) {
   if (remaining === 0) {
     await db
       .delete(dailyDescription)
-      .where(
-        and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date)),
-      );
+      .where(and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date)));
   }
 
   revalidatePath("/timeline");

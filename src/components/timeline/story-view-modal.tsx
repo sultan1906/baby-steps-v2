@@ -85,11 +85,13 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     currentStep?.type,
   ]);
 
-  // Reset video state on step change
-  useEffect(() => {
+  // Reset video state on step change (React 19 render-time reset)
+  const [videoStateKey, setVideoStateKey] = useState(currentStep?.id);
+  if (videoStateKey !== currentStep?.id) {
+    setVideoStateKey(currentStep?.id);
     setIsVideoMuted(true);
     setIsVideoPaused(false);
-  }, [currentStep?.id]);
+  }
 
   const prevStep = () => {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
@@ -246,7 +248,10 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
           </div>
 
           {/* Photo area — clicking background closes (or toggles play/pause for videos) */}
-          <div className="flex-1 relative overflow-hidden" onClick={isVideoStep ? handleVideoTap : onClose}>
+          <div
+            className="flex-1 relative overflow-hidden"
+            onClick={isVideoStep ? handleVideoTap : onClose}
+          >
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep?.id}

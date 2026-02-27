@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { X, MapPin, Calendar, Share2, Award, Play, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -19,13 +19,13 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isVideoPaused, setIsVideoPaused] = useState(false);
-  const isVideo = step.type === "video";
-
-  useEffect(() => {
-    if (!open || !isVideo) return;
+  const [videoStateKey, setVideoStateKey] = useState(step.id);
+  if (videoStateKey !== step.id) {
+    setVideoStateKey(step.id);
     setIsVideoMuted(true);
     setIsVideoPaused(false);
-  }, [open, step.id, isVideo]);
+  }
+  const isVideo = step.type === "video";
 
   const handleVideoTap = () => {
     const vid = videoRef.current;
