@@ -33,20 +33,31 @@ export function DayCard({ date, steps, birthdate, onClick }: DayCardProps) {
       whileTap={{ scale: 0.97 }}
       className="relative w-[280px] aspect-[4/5] rounded-[3rem] overflow-hidden cursor-pointer flex-shrink-0 group"
     >
-      {/* Background image */}
+      {/* Background image/video */}
       {primaryStep?.photoUrl ? (
-        <>
-          {!imageLoaded && <div className="absolute inset-0 gradient-bg animate-pulse" />}
-          <Image
+        primaryStep.type === "video" ? (
+          <video
             src={primaryStep.photoUrl}
-            alt={`Day ${dayNumber}`}
-            fill
-            sizes="280px"
-            loading="eager"
-            onLoad={() => setLoadedUrl(primaryStep.photoUrl ?? undefined)}
-            className={`object-cover group-hover:scale-110 transition-transform duration-700 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+            muted
+            autoPlay
+            playsInline
+            loop
+            className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
           />
-        </>
+        ) : (
+          <>
+            {!imageLoaded && <div className="absolute inset-0 gradient-bg animate-pulse" />}
+            <Image
+              src={primaryStep.photoUrl}
+              alt={`Day ${dayNumber}`}
+              fill
+              sizes="280px"
+              loading="eager"
+              onLoad={() => setLoadedUrl(primaryStep.photoUrl ?? undefined)}
+              className={`object-cover group-hover:scale-110 transition-transform duration-700 ${imageLoaded ? "opacity-100" : "opacity-0"}`}
+            />
+          </>
+        )
       ) : (
         <div className="w-full h-full gradient-bg" />
       )}

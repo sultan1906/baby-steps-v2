@@ -54,6 +54,9 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   useEffect(() => {
     if (!open || editingDesc || confirmDelete) return;
 
+    // Don't auto-advance on video steps — let the user control playback
+    if (currentStep?.type === "video") return;
+
     timerRef.current = setTimeout(() => {
       if (currentIndex < localSteps.length - 1) {
         setCurrentIndex((i) => i + 1);
@@ -65,7 +68,15 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [open, currentIndex, editingDesc, confirmDelete, localSteps.length, onClose]);
+  }, [
+    open,
+    currentIndex,
+    editingDesc,
+    confirmDelete,
+    localSteps.length,
+    onClose,
+    currentStep?.type,
+  ]);
 
   const prevStep = () => {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
@@ -130,13 +141,24 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
         {/* Blurred background */}
         {currentStep?.photoUrl && (
           <div className="absolute inset-0 pointer-events-none">
-            <Image
-              src={currentStep.photoUrl}
-              alt=""
-              fill
-              sizes="100vw"
-              className="object-cover blur-3xl opacity-50 scale-110"
-            />
+            {currentStep.type === "video" ? (
+              <video
+                src={currentStep.photoUrl}
+                muted
+                autoPlay
+                playsInline
+                loop
+                className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-50 scale-110"
+              />
+            ) : (
+              <Image
+                src={currentStep.photoUrl}
+                alt=""
+                fill
+                sizes="100vw"
+                className="object-cover blur-3xl opacity-50 scale-110"
+              />
+            )}
           </div>
         )}
 
@@ -201,13 +223,22 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
                 className="absolute inset-0 pointer-events-none"
               >
                 {currentStep?.photoUrl ? (
-                  <Image
-                    src={currentStep.photoUrl}
-                    alt={`Step ${currentIndex + 1}`}
-                    fill
-                    sizes="(max-width: 1024px) 100vw, 512px"
-                    className="object-contain"
-                  />
+                  currentStep.type === "video" ? (
+                    <video
+                      src={currentStep.photoUrl}
+                      controls
+                      playsInline
+                      className="absolute inset-0 w-full h-full object-contain pointer-events-auto"
+                    />
+                  ) : (
+                    <Image
+                      src={currentStep.photoUrl}
+                      alt={`Step ${currentIndex + 1}`}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 512px"
+                      className="object-contain"
+                    />
+                  )
                 ) : (
                   <div className="w-full h-full gradient-bg flex items-center justify-center">
                     <span className="text-6xl">🌱</span>

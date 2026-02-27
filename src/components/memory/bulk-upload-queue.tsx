@@ -23,15 +23,19 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
       const newItems: UploadQueueItem[] = [];
 
       for (const file of Array.from(files)) {
-        // Extract EXIF date
+        const isVideo = file.type.startsWith("video/");
+
+        // Extract EXIF date (images only — exifr doesn't handle video)
         let date = format(new Date(file.lastModified), "yyyy-MM-dd");
-        try {
-          const exif = await exifr.parse(file, { pick: ["DateTimeOriginal"] });
-          if (exif?.DateTimeOriginal) {
-            date = format(new Date(exif.DateTimeOriginal), "yyyy-MM-dd");
+        if (!isVideo) {
+          try {
+            const exif = await exifr.parse(file, { pick: ["DateTimeOriginal"] });
+            if (exif?.DateTimeOriginal) {
+              date = format(new Date(exif.DateTimeOriginal), "yyyy-MM-dd");
+            }
+          } catch {
+            // Ignore EXIF errors, use fallback
           }
-        } catch {
-          // Ignore EXIF errors, use fallback
         }
 
         // Validate date is after baby's birthdate
@@ -52,6 +56,7 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
           progress: 0,
           date,
           isMajor: false,
+          mediaType: isVideo ? "video" : "photo",
         });
       }
 
@@ -113,13 +118,24 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
           onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
         >
           {queue[0].status === "done" ? (
-            <Image
-              src={queue[0].preview}
-              alt="Preview"
-              fill
-              sizes="100vw"
-              className="object-cover"
-            />
+            queue[0].mediaType === "video" ? (
+              <video
+                src={queue[0].preview}
+                muted
+                autoPlay
+                playsInline
+                loop
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            ) : (
+              <Image
+                src={queue[0].preview}
+                alt="Preview"
+                fill
+                sizes="100vw"
+                className="object-cover"
+              />
+            )
           ) : (
             <div className="w-full h-full bg-stone-100 flex items-center justify-center">
               <Loader2 className="w-6 h-6 text-stone-400 animate-spin" />
@@ -164,7 +180,18 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
                 {/* Thumbnail */}
                 <div className="w-16 h-16 rounded-xl overflow-hidden relative flex-shrink-0 bg-stone-100">
                   {item.status === "done" ? (
-                    <Image src={item.preview} alt="" fill sizes="64px" className="object-cover" />
+                    item.mediaType === "video" ? (
+                      <video
+                        src={item.preview}
+                        muted
+                        autoPlay
+                        playsInline
+                        loop
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Image src={item.preview} alt="" fill sizes="64px" className="object-cover" />
+                    )
                   ) : item.status === "uploading" ? (
                     <div className="w-full h-full flex items-center justify-center">
                       <Loader2 className="w-4 h-4 text-stone-400 animate-spin" />

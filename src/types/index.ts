@@ -15,6 +15,7 @@ export interface UploadQueueItem {
   progress: number; // 0-100
   date: string; // "YYYY-MM-DD" from EXIF or fallback
   isMajor: boolean;
+  mediaType: "photo" | "video";
   locationId?: string;
   locationNickname?: string;
   caption?: string;
