@@ -1,11 +1,11 @@
 "use server";
 
 import { db } from "@/db";
-import { step, baby } from "@/db/schema";
+import { step, baby, dailyDescription } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import type { StepInput } from "@/types";
 
@@ -51,7 +51,7 @@ export async function deleteStep(stepId: string) {
   const session = await getSession();
 
   const [found] = await db
-    .select({ id: step.id, photoUrl: step.photoUrl })
+    .select({ id: step.id, babyId: step.babyId, date: step.date, photoUrl: step.photoUrl })
     .from(step)
     .innerJoin(baby, eq(step.babyId, baby.id))
     .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
@@ -63,6 +63,20 @@ export async function deleteStep(stepId: string) {
   }
 
   await db.delete(step).where(eq(step.id, stepId));
+
+  // Clean up orphaned daily description if no steps remain for this date
+  const [{ remaining }] = await db
+    .select({ remaining: count() })
+    .from(step)
+    .where(and(eq(step.babyId, found.babyId), eq(step.date, found.date)));
+
+  if (remaining === 0) {
+    await db
+      .delete(dailyDescription)
+      .where(
+        and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date)),
+      );
+  }
 
   revalidatePath("/timeline");
   revalidatePath("/gallery");

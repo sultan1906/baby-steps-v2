@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { MapPin } from "lucide-react";
+import { MapPin, Play } from "lucide-react";
 import { motion } from "framer-motion";
 import { parseISO } from "date-fns";
 import { getDayNumber, formatShortDate } from "@/lib/date-utils";
@@ -36,14 +36,18 @@ export function DayCard({ date, steps, birthdate, onClick }: DayCardProps) {
       {/* Background image/video */}
       {primaryStep?.photoUrl ? (
         primaryStep.type === "video" ? (
-          <video
-            src={primaryStep.photoUrl}
-            muted
-            autoPlay
-            playsInline
-            loop
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-          />
+          <>
+            <video
+              src={primaryStep.photoUrl}
+              preload="metadata"
+              playsInline
+              muted
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+            />
+            <div className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-black/50 flex items-center justify-center">
+              <Play className="w-4 h-4 text-white fill-white" />
+            </div>
+          </>
         ) : (
           <>
             {!imageLoaded && <div className="absolute inset-0 gradient-bg animate-pulse" />}

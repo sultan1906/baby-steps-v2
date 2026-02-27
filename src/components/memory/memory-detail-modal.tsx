@@ -1,6 +1,7 @@
 "use client";
 
-import { X, MapPin, Calendar, Share2, Award } from "lucide-react";
+import { useRef, useState, useEffect } from "react";
+import { X, MapPin, Calendar, Share2, Award, Play, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { parseISO } from "date-fns";
@@ -15,6 +16,36 @@ interface MemoryDetailModalProps {
 }
 
 export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailModalProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const [isVideoPaused, setIsVideoPaused] = useState(false);
+  const isVideo = step.type === "video";
+
+  useEffect(() => {
+    if (!open || !isVideo) return;
+    setIsVideoMuted(true);
+    setIsVideoPaused(false);
+  }, [open, step.id, isVideo]);
+
+  const handleVideoTap = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+
+    if (vid.muted) {
+      vid.muted = false;
+      setIsVideoMuted(false);
+      return;
+    }
+
+    if (vid.paused) {
+      vid.play();
+      setIsVideoPaused(false);
+    } else {
+      vid.pause();
+      setIsVideoPaused(true);
+    }
+  };
+
   if (!open) return null;
 
   const dayNumber = getDayNumber(parseISO(baby.birthdate), parseISO(step.date));
@@ -50,12 +81,18 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
           </button>
 
           {/* Photo/video area */}
-          <div className="relative aspect-[4/3] overflow-hidden">
+          <div
+            className="relative aspect-[4/3] overflow-hidden"
+            onClick={isVideo ? handleVideoTap : undefined}
+          >
             {step.photoUrl ? (
               step.type === "video" ? (
                 <video
+                  ref={videoRef}
                   src={step.photoUrl}
-                  controls
+                  autoPlay
+                  muted
+                  loop
                   playsInline
                   className="absolute inset-0 w-full h-full object-cover"
                 />
@@ -70,6 +107,24 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
               )
             ) : (
               <div className="w-full h-full gradient-bg" />
+            )}
+            {/* Video indicators */}
+            {isVideo && (
+              <>
+                {isVideoMuted && !isVideoPaused && (
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
+                    <VolumeX className="w-3.5 h-3.5 text-white" />
+                    <span className="text-xs text-white font-medium">Tap for sound</span>
+                  </div>
+                )}
+                {isVideoPaused && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                    <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
+                      <Play className="w-8 h-8 text-white fill-white ml-1" />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             {/* Bottom gradient */}
             <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white via-white/20 to-transparent" />

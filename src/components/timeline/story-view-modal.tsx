@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useMemo } from "react";
-import { X, MapPin, Award, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { X, MapPin, Award, ChevronLeft, ChevronRight, Trash2, Play, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { parseISO } from "date-fns";
@@ -33,18 +33,25 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   const [deleting, setDeleting] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const [isVideoPaused, setIsVideoPaused] = useState(false);
 
   const currentStep = localSteps[currentIndex];
+  const isVideoStep = currentStep?.type === "video";
   const dayNumber = getDayNumber(parseISO(baby.birthdate), parseISO(date));
   const dateLabel = formatMemoryDate(date);
 
   // Load daily description and reset navigation state
   useEffect(() => {
     if (!open) return;
+    // Clear stale state immediately before async fetch
+    setDeletedIds(new Set());
+    setCurrentIndex(0);
+    setPendingDeleteId(null);
+    setDescription("");
+    setDraftDesc("");
     getDailyDescription(baby.id, date).then((d) => {
-      setDeletedIds(new Set());
-      setCurrentIndex(0);
-      setPendingDeleteId(null);
       setDescription(d?.description ?? "");
       setDraftDesc(d?.description ?? "");
     });
@@ -77,6 +84,12 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     onClose,
     currentStep?.type,
   ]);
+
+  // Reset video state on step change
+  useEffect(() => {
+    setIsVideoMuted(true);
+    setIsVideoPaused(false);
+  }, [currentStep?.id]);
 
   const prevStep = () => {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
@@ -122,6 +135,27 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   const handleCancelEdit = () => {
     setDraftDesc(description);
     setEditingDesc(false);
+  };
+
+  const handleVideoTap = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+
+    // First tap: unmute (keep playing so user hears audio immediately)
+    if (vid.muted) {
+      vid.muted = false;
+      setIsVideoMuted(false);
+      return;
+    }
+
+    // Toggle play/pause
+    if (vid.paused) {
+      vid.play();
+      setIsVideoPaused(false);
+    } else {
+      vid.pause();
+      setIsVideoPaused(true);
+    }
   };
 
   if (!open) return null;
@@ -211,8 +245,8 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
             </div>
           </div>
 
-          {/* Photo area — clicking background closes */}
-          <div className="flex-1 relative overflow-hidden" onClick={onClose}>
+          {/* Photo area — clicking background closes (or toggles play/pause for videos) */}
+          <div className="flex-1 relative overflow-hidden" onClick={isVideoStep ? handleVideoTap : onClose}>
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentStep?.id}
@@ -225,10 +259,13 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
                 {currentStep?.photoUrl ? (
                   currentStep.type === "video" ? (
                     <video
+                      ref={videoRef}
                       src={currentStep.photoUrl}
-                      controls
+                      autoPlay
+                      muted
+                      loop
                       playsInline
-                      className="absolute inset-0 w-full h-full object-contain pointer-events-auto"
+                      className="absolute inset-0 w-full h-full object-contain"
                     />
                   ) : (
                     <Image
@@ -247,12 +284,31 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
               </motion.div>
             </AnimatePresence>
 
+            {/* Video indicators */}
+            {isVideoStep && (
+              <>
+                {isVideoMuted && !isVideoPaused && (
+                  <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
+                    <VolumeX className="w-3.5 h-3.5 text-white" />
+                    <span className="text-xs text-white font-medium">Tap for sound</span>
+                  </div>
+                )}
+                {isVideoPaused && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                    <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
+                      <Play className="w-8 h-8 text-white fill-white ml-1" />
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+
             {/* Tap zones — leaving top/bottom edges as close zones */}
             <div
               role="button"
               tabIndex={0}
               aria-label="Previous"
-              className="absolute top-[10%] bottom-[10%] left-0 w-[40%] cursor-pointer"
+              className={`absolute top-[10%] bottom-[10%] left-0 cursor-pointer ${isVideoStep ? "w-[25%]" : "w-[40%]"}`}
               onClick={(e) => {
                 e.stopPropagation();
                 prevStep();
@@ -263,7 +319,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
               role="button"
               tabIndex={0}
               aria-label="Next"
-              className="absolute top-[10%] bottom-[10%] right-0 w-[60%] cursor-pointer"
+              className={`absolute top-[10%] bottom-[10%] right-0 cursor-pointer ${isVideoStep ? "w-[25%]" : "w-[60%]"}`}
               onClick={(e) => {
                 e.stopPropagation();
                 nextStep();
