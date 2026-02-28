@@ -32,8 +32,10 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
     if (!vid) return;
 
     if (vid.paused) {
-      vid.play();
-      setIsVideoPaused(false);
+      vid
+        .play()
+        .then(() => setIsVideoPaused(false))
+        .catch(() => setIsVideoPaused(true));
     } else {
       vid.pause();
       setIsVideoPaused(true);
@@ -41,10 +43,7 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
   };
 
   const toggleMute = () => {
-    const vid = videoRef.current;
-    if (!vid) return;
-    vid.muted = !vid.muted;
-    setIsVideoMuted(vid.muted);
+    setIsVideoMuted((prev) => !prev);
   };
 
   if (!open) return null;
@@ -92,7 +91,7 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
                   ref={videoRef}
                   src={step.photoUrl}
                   autoPlay
-                  muted
+                  muted={isVideoMuted}
                   loop
                   playsInline
                   className="absolute inset-0 w-full h-full object-cover"

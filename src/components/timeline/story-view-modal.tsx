@@ -95,13 +95,11 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     currentStep?.type,
   ]);
 
-  // Reset video state on step change (React 19 render-time reset)
-  const [videoStateKey, setVideoStateKey] = useState(currentStep?.id);
-  if (videoStateKey !== currentStep?.id) {
-    setVideoStateKey(currentStep?.id);
+  // Reset video state on step change
+  useEffect(() => {
     setIsVideoMuted(true);
     setIsVideoPaused(false);
-  }
+  }, [currentStep?.id]);
 
   const prevStep = () => {
     if (currentIndex > 0) setCurrentIndex((i) => i - 1);
@@ -154,8 +152,10 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     if (!vid) return;
 
     if (vid.paused) {
-      vid.play();
-      setIsVideoPaused(false);
+      vid
+        .play()
+        .then(() => setIsVideoPaused(false))
+        .catch(() => setIsVideoPaused(true));
     } else {
       vid.pause();
       setIsVideoPaused(true);
@@ -163,10 +163,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   };
 
   const toggleMute = () => {
-    const vid = videoRef.current;
-    if (!vid) return;
-    vid.muted = !vid.muted;
-    setIsVideoMuted(vid.muted);
+    setIsVideoMuted((prev) => !prev);
   };
 
   if (!open) return null;
@@ -183,27 +180,16 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
           if (e.target === e.currentTarget) onClose();
         }}
       >
-        {/* Blurred background */}
-        {currentStep?.photoUrl && (
+        {/* Blurred background (photos only — skip for video to avoid double decode) */}
+        {currentStep?.photoUrl && currentStep.type !== "video" && (
           <div className="absolute inset-0 pointer-events-none">
-            {currentStep.type === "video" ? (
-              <video
-                src={currentStep.photoUrl}
-                muted
-                autoPlay
-                playsInline
-                loop
-                className="absolute inset-0 w-full h-full object-cover blur-3xl opacity-50 scale-110"
-              />
-            ) : (
-              <Image
-                src={currentStep.photoUrl}
-                alt=""
-                fill
-                sizes="100vw"
-                className="object-cover blur-3xl opacity-50 scale-110"
-              />
-            )}
+            <Image
+              src={currentStep.photoUrl}
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover blur-3xl opacity-50 scale-110"
+            />
           </div>
         )}
 
@@ -276,7 +262,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
                       ref={videoRef}
                       src={currentStep.photoUrl}
                       autoPlay
-                      muted
+                      muted={isVideoMuted}
                       loop
                       playsInline
                       className="absolute inset-0 w-full h-full object-contain"
