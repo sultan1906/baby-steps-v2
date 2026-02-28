@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { X, MapPin, Calendar, Share2, Award, Play, VolumeX } from "lucide-react";
+import { X, MapPin, Calendar, Share2, Award, Play, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { parseISO } from "date-fns";
@@ -31,12 +31,6 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
     const vid = videoRef.current;
     if (!vid) return;
 
-    if (vid.muted) {
-      vid.muted = false;
-      setIsVideoMuted(false);
-      return;
-    }
-
     if (vid.paused) {
       vid.play();
       setIsVideoPaused(false);
@@ -44,6 +38,13 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
       vid.pause();
       setIsVideoPaused(true);
     }
+  };
+
+  const toggleMute = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    vid.muted = !vid.muted;
+    setIsVideoMuted(vid.muted);
   };
 
   if (!open) return null;
@@ -111,12 +112,16 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
             {/* Video indicators */}
             {isVideo && (
               <>
-                {isVideoMuted && !isVideoPaused && (
-                  <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
-                    <VolumeX className="w-3.5 h-3.5 text-white" />
-                    <span className="text-xs text-white font-medium">Tap for sound</span>
-                  </div>
-                )}
+                <button
+                  aria-label={isVideoMuted ? "Unmute" : "Mute"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleMute();
+                  }}
+                  className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+                >
+                  {isVideoMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </button>
                 {isVideoPaused && (
                   <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                     <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
