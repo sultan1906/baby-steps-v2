@@ -62,7 +62,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         isMajor: isSingle ? isMajor : item.isMajor,
         locationId: isSingle ? locationId : item.locationId,
         locationNickname: isSingle ? locationNickname : item.locationNickname,
-        type: "photo" as const,
+        type: item.mediaType ?? "photo",
       }));
 
       if (steps.length === 1) {

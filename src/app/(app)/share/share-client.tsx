@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { Download, Share2, Images } from "lucide-react";
+import { Download, Share2, Images, Play } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { BackButton } from "@/components/shared/back-button";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -105,7 +105,22 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                 )}
               >
                 {s.photoUrl ? (
-                  <Image src={s.photoUrl} alt="" fill sizes="96px" className="object-cover" />
+                  s.type === "video" ? (
+                    <>
+                      <video
+                        src={s.photoUrl}
+                        preload="metadata"
+                        playsInline
+                        muted
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute bottom-1 left-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center">
+                        <Play className="w-2.5 h-2.5 text-white fill-white" />
+                      </div>
+                    </>
+                  ) : (
+                    <Image src={s.photoUrl} alt="" fill sizes="96px" className="object-cover" />
+                  )
                 ) : (
                   <div className="w-full h-full gradient-bg" />
                 )}
@@ -177,13 +192,24 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                     <div className="flex-[0_0_65%] p-4 relative">
                       {selectedStep.photoUrl ? (
                         <div className="relative w-full h-full rounded-[2rem] overflow-hidden shadow-inner">
-                          <Image
-                            src={selectedStep.photoUrl}
-                            alt=""
-                            fill
-                            sizes="(max-width: 640px) 85vw, 360px"
-                            className="object-cover"
-                          />
+                          {selectedStep.type === "video" ? (
+                            <video
+                              src={selectedStep.photoUrl}
+                              muted
+                              autoPlay
+                              playsInline
+                              loop
+                              className="absolute inset-0 w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Image
+                              src={selectedStep.photoUrl}
+                              alt=""
+                              fill
+                              sizes="(max-width: 640px) 85vw, 360px"
+                              className="object-cover"
+                            />
+                          )}
                         </div>
                       ) : (
                         <div className="w-full h-full rounded-[2rem] bg-white/20" />

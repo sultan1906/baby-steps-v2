@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Grid3x3, List, Award, MapPin, Calendar } from "lucide-react";
+import { Grid3x3, List, Award, MapPin, Calendar, Play } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { BackButton } from "@/components/shared/back-button";
@@ -112,14 +112,29 @@ export function GalleryClient({ steps, baby }: GalleryClientProps) {
                 className="aspect-square rounded-3xl overflow-hidden relative group cursor-pointer"
               >
                 {s.photoUrl ? (
-                  <Image
-                    src={s.photoUrl}
-                    alt={s.title ?? s.date}
-                    fill
-                    sizes="(max-width: 640px) 50vw, 33vw"
-                    loading="eager"
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                  />
+                  s.type === "video" ? (
+                    <>
+                      <video
+                        src={s.photoUrl}
+                        preload="metadata"
+                        playsInline
+                        muted
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                      />
+                      <div className="absolute bottom-2 left-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">
+                        <Play className="w-3.5 h-3.5 text-white fill-white" />
+                      </div>
+                    </>
+                  ) : (
+                    <Image
+                      src={s.photoUrl}
+                      alt={s.title ?? s.date}
+                      fill
+                      sizes="(max-width: 640px) 50vw, 33vw"
+                      loading="eager"
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                    />
+                  )
                 ) : (
                   <div className="w-full h-full gradient-bg" />
                 )}
@@ -151,7 +166,22 @@ export function GalleryClient({ steps, baby }: GalleryClientProps) {
               >
                 <div className="w-20 h-20 rounded-2xl overflow-hidden relative flex-shrink-0">
                   {s.photoUrl ? (
-                    <Image src={s.photoUrl} alt="" fill sizes="80px" className="object-cover" />
+                    s.type === "video" ? (
+                      <>
+                        <video
+                          src={s.photoUrl}
+                          preload="metadata"
+                          playsInline
+                          muted
+                          className="absolute inset-0 w-full h-full object-cover"
+                        />
+                        <div className="absolute bottom-1 left-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center">
+                          <Play className="w-2.5 h-2.5 text-white fill-white" />
+                        </div>
+                      </>
+                    ) : (
+                      <Image src={s.photoUrl} alt="" fill sizes="80px" className="object-cover" />
+                    )
                   ) : (
                     <div className="w-full h-full gradient-bg" />
                   )}

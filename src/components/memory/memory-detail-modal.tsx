@@ -1,6 +1,7 @@
 "use client";
 
-import { X, MapPin, Calendar, Share2, Award } from "lucide-react";
+import { useRef, useState } from "react";
+import { X, MapPin, Calendar, Share2, Award, Play, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { parseISO } from "date-fns";
@@ -15,6 +16,36 @@ interface MemoryDetailModalProps {
 }
 
 export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailModalProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+  const [isVideoPaused, setIsVideoPaused] = useState(false);
+  const [videoStateKey, setVideoStateKey] = useState(step.id);
+  if (videoStateKey !== step.id) {
+    setVideoStateKey(step.id);
+    setIsVideoMuted(true);
+    setIsVideoPaused(false);
+  }
+  const isVideo = step.type === "video";
+
+  const handleVideoTap = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+
+    if (vid.paused) {
+      vid
+        .play()
+        .then(() => setIsVideoPaused(false))
+        .catch(() => setIsVideoPaused(true));
+    } else {
+      vid.pause();
+      setIsVideoPaused(true);
+    }
+  };
+
+  const toggleMute = () => {
+    setIsVideoMuted((prev) => !prev);
+  };
+
   if (!open) return null;
 
   const dayNumber = getDayNumber(parseISO(baby.birthdate), parseISO(step.date));
@@ -49,18 +80,55 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
             <X className="w-5 h-5" />
           </button>
 
-          {/* Photo area */}
-          <div className="relative aspect-[4/3] overflow-hidden">
+          {/* Photo/video area */}
+          <div
+            className="relative aspect-[4/3] overflow-hidden"
+            onClick={isVideo ? handleVideoTap : undefined}
+          >
             {step.photoUrl ? (
-              <Image
-                src={step.photoUrl}
-                alt={dateLabel}
-                fill
-                sizes="(max-width: 768px) 100vw, 672px"
-                className="object-cover"
-              />
+              step.type === "video" ? (
+                <video
+                  ref={videoRef}
+                  src={step.photoUrl}
+                  autoPlay
+                  muted={isVideoMuted}
+                  loop
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              ) : (
+                <Image
+                  src={step.photoUrl}
+                  alt={dateLabel}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 672px"
+                  className="object-cover"
+                />
+              )
             ) : (
               <div className="w-full h-full gradient-bg" />
+            )}
+            {/* Video indicators */}
+            {isVideo && (
+              <>
+                <button
+                  aria-label={isVideoMuted ? "Unmute" : "Mute"}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleMute();
+                  }}
+                  className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+                >
+                  {isVideoMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                </button>
+                {isVideoPaused && (
+                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                    <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
+                      <Play className="w-8 h-8 text-white fill-white ml-1" />
+                    </div>
+                  </div>
+                )}
+              </>
             )}
             {/* Bottom gradient */}
             <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white via-white/20 to-transparent" />
