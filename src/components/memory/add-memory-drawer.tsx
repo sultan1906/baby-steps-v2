@@ -12,6 +12,7 @@ import { BulkUploadQueue } from "./bulk-upload-queue";
 import { MapPickerDialog } from "./map-picker-dialog";
 import { todayString } from "@/lib/date-utils";
 import type { UploadQueueItem } from "@/types";
+import { toast } from "sonner";
 import confetti from "canvas-confetti";
 
 interface AddMemoryDrawerProps {
@@ -60,7 +61,9 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
   const handleSave = async () => {
     if (mode === "growth") {
       const w = parseFloat(weight);
-      if (!w || w <= 0) return;
+      if (!Number.isFinite(w) || w <= 0) return;
+      const h = height ? parseFloat(height) : undefined;
+      const validHeight = h !== undefined && Number.isFinite(h) && h > 0 ? h : undefined;
       setSaving(true);
       try {
         await createStep({
@@ -68,7 +71,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
           date,
           type: "growth",
           weight: w,
-          height: height ? parseFloat(height) || undefined : undefined,
+          height: validHeight,
           caption: caption.trim() || undefined,
           isMajor,
           locationId,
@@ -82,8 +85,9 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         });
         handleClose();
         router.refresh();
-      } catch {
-        // TODO: toast error
+      } catch (err) {
+        console.error("Failed to save growth entry:", err);
+        toast.error("Failed to save growth entry. Please try again.");
       } finally {
         setSaving(false);
       }
@@ -332,7 +336,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
           disabled={
             saving ||
             (mode === "memory" && queue.filter((i) => i.status === "done").length === 0) ||
-            (mode === "growth" && (!weight || parseFloat(weight) <= 0))
+            (mode === "growth" && (!Number.isFinite(parseFloat(weight)) || parseFloat(weight) <= 0))
           }
           className="gradient-bg-vibrant w-full py-4 rounded-[1.75rem] text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition"
         >
