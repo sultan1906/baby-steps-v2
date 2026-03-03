@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "skills": {
+    "chart-visualization": {
+      "source": "antvis/chart-visualization-skills",
+      "sourceType": "github",
+      "computedHash": "27a656de2b14e537b6f3a9ef0237bcfb8ded8031fe5711da540c17bc9935f342"
+    }
+  }
+}

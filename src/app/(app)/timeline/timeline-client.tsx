@@ -9,7 +9,7 @@ import { HorizontalMonthTimeline } from "@/components/timeline/horizontal-month-
 import { DayCard } from "@/components/timeline/day-card";
 import { StoryViewModal } from "@/components/timeline/story-view-modal";
 import { EmptyState } from "@/components/shared/empty-state";
-import { getAgeInMonths, isDateInMonth } from "@/lib/date-utils";
+import { getCurrentMonthIndex, isDateInMonth } from "@/lib/date-utils";
 import type { Step, Baby } from "@/types";
 
 interface TimelineClientProps {
@@ -19,7 +19,7 @@ interface TimelineClientProps {
 
 export function TimelineClient({ steps, baby }: TimelineClientProps) {
   const birthdateDate = parseISO(baby.birthdate);
-  const currentAgeMonths = getAgeInMonths(birthdateDate);
+  const currentAgeMonths = getCurrentMonthIndex(birthdateDate);
 
   const [selectedMonth, setSelectedMonth] = useState(currentAgeMonths);
   const [storyDate, setStoryDate] = useState<string | null>(null);

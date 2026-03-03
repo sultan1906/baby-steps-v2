@@ -20,5 +20,5 @@ export default async function DashboardPage() {
     .where(eq(step.babyId, currentBaby.id))
     .orderBy(step.date);
 
-  return <DashboardClient steps={allSteps} />;
+  return <DashboardClient steps={allSteps} babyBirthdate={currentBaby.birthdate} />;
 }

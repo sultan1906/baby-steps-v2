@@ -8,7 +8,7 @@ import {
   getMonthPillLabel,
   getMonthPillDateRange,
   isDateInMonth,
-  getAgeInMonths,
+  getCurrentMonthIndex,
 } from "@/lib/date-utils";
 import type { Step } from "@/types";
 
@@ -28,7 +28,7 @@ export function HorizontalMonthTimeline({
   const scrollRef = useRef<HTMLDivElement>(null);
   const birthdateDate = parseISO(birthdate);
   const totalMonths = getTotalMonths(birthdateDate);
-  const currentAgeMonths = getAgeInMonths(birthdateDate);
+  const currentAgeMonths = getCurrentMonthIndex(birthdateDate);
 
   // Auto-scroll selected month into view
   useEffect(() => {

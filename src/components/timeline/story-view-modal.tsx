@@ -11,6 +11,7 @@ import {
   Play,
   Volume2,
   VolumeX,
+  Ruler,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -276,6 +277,15 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
                       className="object-contain"
                     />
                   )
+                ) : currentStep?.type === "growth" ? (
+                  <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-3 px-6">
+                    <Ruler className="w-14 h-14 text-white/80" />
+                    <div className="text-white font-bold text-3xl">{currentStep.weight} kg</div>
+                    {currentStep.height && (
+                      <div className="text-white/70 text-lg">{currentStep.height} cm</div>
+                    )}
+                    <div className="text-white/50 text-sm font-medium mt-1">Growth Check-in</div>
+                  </div>
                 ) : (
                   <div className="w-full h-full gradient-bg flex items-center justify-center">
                     <span className="text-6xl">🌱</span>

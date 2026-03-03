@@ -1,6 +1,7 @@
 import {
   differenceInWeeks,
   differenceInMonths,
+  differenceInCalendarMonths,
   differenceInDays,
   format,
   startOfMonth,
@@ -86,7 +87,14 @@ function getMonthRange(birthdate: Date, monthIndex: number): { start: Date; end:
  * Total number of months from birth to today (inclusive).
  */
 export function getTotalMonths(birthdate: Date): number {
-  return getAgeInMonths(birthdate) + 1; // +1 to include current month
+  return differenceInCalendarMonths(new Date(), birthdate) + 1;
+}
+
+/**
+ * Month index of the current calendar month relative to birthdate.
+ */
+export function getCurrentMonthIndex(birthdate: Date): number {
+  return differenceInCalendarMonths(new Date(), birthdate);
 }
 
 /**
