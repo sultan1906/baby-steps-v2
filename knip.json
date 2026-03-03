@@ -1,4 +1,4 @@
 {
   "$schema": "https://unpkg.com/knip@latest/schema.json",
-  "ignore": ["public/sw.js"]
+  "ignore": ["public/sw.js", ".agents/**", ".claude/skills/**"]
 }

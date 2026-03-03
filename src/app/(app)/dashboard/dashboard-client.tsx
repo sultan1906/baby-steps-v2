@@ -44,7 +44,8 @@ export function DashboardClient({ steps, babyBirthdate }: DashboardClientProps) 
   const plotH = chartH - padTop - padBottom;
 
   // X position by month number
-  const monthToX = (m: number) => padX + (totalMonths === 0 ? plotW / 2 : (m / totalMonths) * plotW);
+  const monthToX = (m: number) =>
+    padX + (totalMonths === 0 ? plotW / 2 : (m / totalMonths) * plotW);
 
   // Value ranges with 10% padding so dots don't touch edges
   const weights = growthSteps.map((s) => s.weight ?? 0);
@@ -72,7 +73,12 @@ export function DashboardClient({ steps, babyBirthdate }: DashboardClientProps) 
   const heightPoints = growthSteps
     .map((s, i) =>
       s.height
-        ? { x: monthToX(stepMonths[i]), y: toYHeight(s.height), val: s.height, month: stepMonths[i] }
+        ? {
+            x: monthToX(stepMonths[i]),
+            y: toYHeight(s.height),
+            val: s.height,
+            month: stepMonths[i],
+          }
         : null
     )
     .filter(Boolean) as { x: number; y: number; val: number; month: number }[];
@@ -269,9 +275,7 @@ function GrowthChart({
 
       {/* No height data message */}
       {!showWeight && heightPoints.length === 0 ? (
-        <p className="text-sm text-stone-400 text-center py-8">
-          No height data recorded yet
-        </p>
+        <p className="text-sm text-stone-400 text-center py-8">No height data recorded yet</p>
       ) : (
         <svg
           viewBox={`0 0 ${chartW} ${chartH}`}

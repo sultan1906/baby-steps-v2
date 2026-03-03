@@ -151,9 +151,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
           <button
             onClick={() => setMode("memory")}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[0.875rem] text-sm font-medium transition-all ${
-              mode === "memory"
-                ? "bg-white text-stone-800 shadow-sm"
-                : "text-stone-400"
+              mode === "memory" ? "bg-white text-stone-800 shadow-sm" : "text-stone-400"
             }`}
           >
             <Camera className="w-4 h-4" />
@@ -162,9 +160,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
           <button
             onClick={() => setMode("growth")}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-[0.875rem] text-sm font-medium transition-all ${
-              mode === "growth"
-                ? "bg-white text-stone-800 shadow-sm"
-                : "text-stone-400"
+              mode === "growth" ? "bg-white text-stone-800 shadow-sm" : "text-stone-400"
             }`}
           >
             <Ruler className="w-4 h-4" />
@@ -193,7 +189,10 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="growth-weight" className="text-xs text-stone-500 font-medium block mb-1">
+                <label
+                  htmlFor="growth-weight"
+                  className="text-xs text-stone-500 font-medium block mb-1"
+                >
                   Weight (kg) *
                 </label>
                 <input
@@ -209,7 +208,10 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
                 />
               </div>
               <div>
-                <label htmlFor="growth-height" className="text-xs text-stone-500 font-medium block mb-1">
+                <label
+                  htmlFor="growth-height"
+                  className="text-xs text-stone-500 font-medium block mb-1"
+                >
                   Height (cm)
                 </label>
                 <input
@@ -227,7 +229,10 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
             </div>
 
             <div>
-              <label htmlFor="growth-caption" className="text-xs text-stone-500 font-medium block mb-1">
+              <label
+                htmlFor="growth-caption"
+                className="text-xs text-stone-500 font-medium block mb-1"
+              >
                 Note (optional)
               </label>
               <textarea
