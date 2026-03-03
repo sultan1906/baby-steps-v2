@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { MapPin, Play } from "lucide-react";
+import { MapPin, Play, Ruler } from "lucide-react";
 import { motion } from "framer-motion";
 import { parseISO } from "date-fns";
 import { getDayNumber, formatShortDate } from "@/lib/date-utils";
@@ -62,6 +62,15 @@ export function DayCard({ date, steps, birthdate, onClick }: DayCardProps) {
             />
           </>
         )
+      ) : primaryStep?.type === "growth" ? (
+        <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-2 px-6">
+          <Ruler className="w-10 h-10 text-white/80" />
+          <div className="text-white font-bold text-xl">{primaryStep.weight} kg</div>
+          {primaryStep.height && (
+            <div className="text-white/70 text-sm">{primaryStep.height} cm</div>
+          )}
+          <div className="text-white/50 text-xs font-medium mt-1">Growth Check-in</div>
+        </div>
       ) : (
         <div className="w-full h-full gradient-bg" />
       )}
