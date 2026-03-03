@@ -392,7 +392,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
             showCloseButton={false}
           >
             <DialogHeader className="sr-only">
-              <DialogTitle>Capture Memory</DialogTitle>
+              <DialogTitle>{mode === "growth" ? "Growth Check-in" : "Capture Memory"}</DialogTitle>
             </DialogHeader>
             {content}
           </DialogContent>
