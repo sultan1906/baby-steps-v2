@@ -12,6 +12,7 @@ import {
   Volume2,
   VolumeX,
   Ruler,
+  Pencil,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -21,6 +22,7 @@ import { upsertDailyDescription, getDailyDescription } from "@/actions/daily-des
 import { deleteStep } from "@/actions/steps";
 import { toast } from "sonner";
 import { useBaby } from "@/components/baby/baby-provider";
+import { EditGrowthDrawer } from "@/components/memory/edit-growth-drawer";
 import type { Step } from "@/types";
 
 interface StoryViewModalProps {
@@ -33,7 +35,11 @@ interface StoryViewModalProps {
 export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalProps) {
   const { baby } = useBaby();
   const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
-  const localSteps = useMemo(() => steps.filter((s) => !deletedIds.has(s.id)), [steps, deletedIds]);
+  const [editedSteps, setEditedSteps] = useState<Map<string, Step>>(() => new Map());
+  const localSteps = useMemo(
+    () => steps.filter((s) => !deletedIds.has(s.id)).map((s) => editedSteps.get(s.id) ?? s),
+    [steps, deletedIds, editedSteps]
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
   const [description, setDescription] = useState("");
   const [editingDesc, setEditingDesc] = useState(false);
@@ -42,6 +48,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const confirmDelete = pendingDeleteId !== null;
   const [deleting, setDeleting] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -58,6 +65,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     if (!open) return;
     // Clear stale state immediately before async fetch
     setDeletedIds(new Set());
+    setEditedSteps(new Map());
     setCurrentIndex(0);
     setPendingDeleteId(null);
     setDescription("");
@@ -70,7 +78,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
 
   // Auto-advance timer
   useEffect(() => {
-    if (!open || editingDesc || confirmDelete) return;
+    if (!open || editingDesc || confirmDelete || editOpen) return;
 
     // Don't auto-advance on video steps — let the user control playback
     if (currentStep?.type === "video") return;
@@ -91,6 +99,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     currentIndex,
     editingDesc,
     confirmDelete,
+    editOpen,
     localSteps.length,
     onClose,
     currentStep?.type,
@@ -170,287 +179,319 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   if (!open) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        key="story-modal"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[100] bg-black"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose();
-        }}
-      >
-        {/* Blurred background (photos only — skip for video to avoid double decode) */}
-        {currentStep?.photoUrl && currentStep.type !== "video" && (
-          <div className="absolute inset-0 pointer-events-none">
-            <Image
-              src={currentStep.photoUrl}
-              alt=""
-              fill
-              sizes="100vw"
-              className="object-cover blur-3xl opacity-50 scale-110"
-            />
-          </div>
-        )}
-
-        {/* Main container */}
-        <div className="relative h-full flex flex-col max-w-lg mx-auto bg-stone-900">
-          {/* Progress bars */}
-          <div className="absolute top-0 left-0 right-0 z-30 flex gap-1 px-4 pt-4">
-            {localSteps.map((s, i) => (
-              <div key={s.id} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
-                <motion.div
-                  className="h-full bg-white rounded-full"
-                  initial={{ width: i < currentIndex ? "100%" : "0%" }}
-                  animate={{
-                    width: i < currentIndex ? "100%" : i === currentIndex ? "100%" : "0%",
-                  }}
-                  transition={
-                    i === currentIndex ? { duration: 5, ease: "linear" } : { duration: 0 }
-                  }
-                  key={`${i}-${currentIndex}`}
-                />
-              </div>
-            ))}
-          </div>
-
-          {/* Header */}
-          <div className="relative z-30 flex items-center justify-between px-4 py-3 mt-8">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl gradient-bg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                {baby.name[0]}
-              </div>
-              <span className="text-sm text-white/70">
-                Day {dayNumber} · {dateLabel}
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                aria-label="Delete photo"
-                onClick={() => setPendingDeleteId(currentStep?.id ?? null)}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-              >
-                <Trash2 className="w-5 h-5" />
-              </button>
-              <button
-                aria-label="Close"
-                onClick={onClose}
-                className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-
-          {/* Photo area — clicking background closes (or toggles play/pause for videos) */}
-          <div
-            className="flex-1 relative overflow-hidden"
-            onClick={isVideoStep ? handleVideoTap : onClose}
-          >
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={currentStep?.id}
-                initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.4 }}
-                className="absolute inset-0 pointer-events-none"
-              >
-                {currentStep?.photoUrl ? (
-                  currentStep.type === "video" ? (
-                    <video
-                      ref={videoRef}
-                      src={currentStep.photoUrl}
-                      autoPlay
-                      muted={isVideoMuted}
-                      loop
-                      playsInline
-                      className="absolute inset-0 w-full h-full object-contain"
-                    />
-                  ) : (
-                    <Image
-                      src={currentStep.photoUrl}
-                      alt={`Step ${currentIndex + 1}`}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 512px"
-                      className="object-contain"
-                    />
-                  )
-                ) : currentStep?.type === "growth" ? (
-                  <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-3 px-6">
-                    <Ruler className="w-14 h-14 text-white/80" />
-                    <div className="text-white font-bold text-3xl">{currentStep.weight} kg</div>
-                    {currentStep.height && (
-                      <div className="text-white/70 text-lg">{currentStep.height} cm</div>
-                    )}
-                    <div className="text-white/50 text-sm font-medium mt-1">Growth Check-in</div>
-                  </div>
-                ) : (
-                  <div className="w-full h-full gradient-bg flex items-center justify-center">
-                    <span className="text-6xl">🌱</span>
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Video indicators */}
-            {isVideoStep && (
-              <>
-                <button
-                  aria-label={isVideoMuted ? "Unmute" : "Mute"}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleMute();
-                  }}
-                  className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
-                >
-                  {isVideoMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-                </button>
-                {isVideoPaused && (
-                  <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                    <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
-                      <Play className="w-8 h-8 text-white fill-white ml-1" />
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Tap zones — leaving top/bottom edges as close zones */}
-            <div
-              role="button"
-              tabIndex={0}
-              aria-label="Previous"
-              className={`absolute top-[10%] bottom-[10%] left-0 cursor-pointer ${isVideoStep ? "w-[25%]" : "w-[40%]"}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                prevStep();
-              }}
-              onKeyDown={(e) => e.key === "Enter" && prevStep()}
-            />
-            <div
-              role="button"
-              tabIndex={0}
-              aria-label="Next"
-              className={`absolute top-[10%] bottom-[10%] right-0 cursor-pointer ${isVideoStep ? "w-[25%]" : "w-[60%]"}`}
-              onClick={(e) => {
-                e.stopPropagation();
-                nextStep();
-              }}
-              onKeyDown={(e) => e.key === "Enter" && nextStep()}
-            />
-
-            {/* Desktop chevrons */}
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                prevStep();
-              }}
-              className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
-              disabled={currentIndex === 0}
-            >
-              <ChevronLeft className="w-6 h-6" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                nextStep();
-              }}
-              className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
-            >
-              <ChevronRight className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Delete confirmation banner */}
-          {confirmDelete && (
-            <div className="absolute bottom-0 left-0 right-0 z-40 bg-black/95 px-6 py-5 flex items-center justify-between">
-              <span className="text-white text-sm">Delete this photo?</span>
-              <div className="flex gap-4">
-                <button onClick={() => setPendingDeleteId(null)} className="text-white/60 text-sm">
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleting}
-                  className="text-red-400 font-bold text-sm"
-                >
-                  {deleting ? "Deleting..." : "Delete"}
-                </button>
-              </div>
+    <>
+      <AnimatePresence>
+        <motion.div
+          key="story-modal"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] bg-black"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose();
+          }}
+        >
+          {/* Blurred background (photos only — skip for video to avoid double decode) */}
+          {currentStep?.photoUrl && currentStep.type !== "video" && (
+            <div className="absolute inset-0 pointer-events-none">
+              <Image
+                src={currentStep.photoUrl}
+                alt=""
+                fill
+                sizes="100vw"
+                className="object-cover blur-3xl opacity-50 scale-110"
+              />
             </div>
           )}
 
-          {/* Bottom overlay */}
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent px-6 pb-8 pt-20">
-            {/* Tags row */}
-            <div className="flex gap-2 mb-4 flex-wrap">
-              {currentStep?.isMajor && (
-                <div className="flex items-center gap-1 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  <Award className="w-3 h-3" />
-                  Milestone
+          {/* Main container */}
+          <div className="relative h-full flex flex-col max-w-lg mx-auto bg-stone-900">
+            {/* Progress bars */}
+            <div className="absolute top-0 left-0 right-0 z-30 flex gap-1 px-4 pt-4">
+              {localSteps.map((s, i) => (
+                <div key={s.id} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-white rounded-full"
+                    initial={{ width: i < currentIndex ? "100%" : "0%" }}
+                    animate={{
+                      width: i < currentIndex ? "100%" : i === currentIndex ? "100%" : "0%",
+                    }}
+                    transition={
+                      i === currentIndex ? { duration: 5, ease: "linear" } : { duration: 0 }
+                    }
+                    key={`${i}-${currentIndex}`}
+                  />
                 </div>
-              )}
-              {currentStep?.locationNickname && (
-                <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full">
-                  <MapPin className="w-3 h-3" />
-                  {currentStep.locationNickname}
-                </div>
-              )}
+              ))}
             </div>
 
-            {/* Description */}
-            {editingDesc ? (
-              <div className="bg-black/60 backdrop-blur rounded-2xl p-4">
-                <textarea
-                  ref={textareaRef}
-                  value={draftDesc}
-                  onChange={(e) => setDraftDesc(e.target.value)}
-                  rows={3}
-                  autoFocus
-                  placeholder="Write a memory note..."
-                  className="w-full bg-transparent text-white text-base leading-relaxed resize-none focus:outline-none placeholder-white/40"
-                />
-                <div className="flex justify-between items-center mt-2">
-                  <button onClick={handleCancelEdit} className="text-white/60 text-sm">
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveDesc}
-                    disabled={savingDesc}
-                    className="gradient-text font-bold text-sm"
-                  >
-                    Save
-                  </button>
+            {/* Header */}
+            <div className="relative z-30 flex items-center justify-between px-4 py-3 mt-8">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl gradient-bg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  {baby.name[0]}
                 </div>
+                <span className="text-sm text-white/70">
+                  Day {dayNumber} · {dateLabel}
+                </span>
               </div>
-            ) : (
+              <div className="flex items-center gap-2">
+                {currentStep?.type === "growth" && (
+                  <button
+                    aria-label="Edit growth entry"
+                    onClick={() => setEditOpen(true)}
+                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                  >
+                    <Pencil className="w-5 h-5" />
+                  </button>
+                )}
+                <button
+                  aria-label="Delete photo"
+                  onClick={() => setPendingDeleteId(currentStep?.id ?? null)}
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                >
+                  <Trash2 className="w-5 h-5" />
+                </button>
+                <button
+                  aria-label="Close"
+                  onClick={onClose}
+                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Photo area — clicking background closes (or toggles play/pause for videos) */}
+            <div
+              className="flex-1 relative overflow-hidden"
+              onClick={isVideoStep ? handleVideoTap : onClose}
+            >
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentStep?.id}
+                  initial={{ opacity: 0, scale: 1.1 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.4 }}
+                  className="absolute inset-0 pointer-events-none"
+                >
+                  {currentStep?.photoUrl ? (
+                    currentStep.type === "video" ? (
+                      <video
+                        ref={videoRef}
+                        src={currentStep.photoUrl}
+                        autoPlay
+                        muted={isVideoMuted}
+                        loop
+                        playsInline
+                        className="absolute inset-0 w-full h-full object-contain"
+                      />
+                    ) : (
+                      <Image
+                        src={currentStep.photoUrl}
+                        alt={`Step ${currentIndex + 1}`}
+                        fill
+                        sizes="(max-width: 1024px) 100vw, 512px"
+                        className="object-contain"
+                      />
+                    )
+                  ) : currentStep?.type === "growth" ? (
+                    <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-3 px-6">
+                      <Ruler className="w-14 h-14 text-white/80" />
+                      <div className="text-white font-bold text-3xl">{currentStep.weight} kg</div>
+                      {currentStep.height && (
+                        <div className="text-white/70 text-lg">{currentStep.height} cm</div>
+                      )}
+                      <div className="text-white/50 text-sm font-medium mt-1">Growth Check-in</div>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full gradient-bg flex items-center justify-center">
+                      <span className="text-6xl">🌱</span>
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+
+              {/* Video indicators */}
+              {isVideoStep && (
+                <>
+                  <button
+                    aria-label={isVideoMuted ? "Unmute" : "Mute"}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleMute();
+                    }}
+                    className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+                  >
+                    {isVideoMuted ? (
+                      <VolumeX className="w-4 h-4" />
+                    ) : (
+                      <Volume2 className="w-4 h-4" />
+                    )}
+                  </button>
+                  {isVideoPaused && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                      <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
+                        <Play className="w-8 h-8 text-white fill-white ml-1" />
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Tap zones — leaving top/bottom edges as close zones */}
               <div
                 role="button"
                 tabIndex={0}
-                onClick={() => {
-                  setEditingDesc(true);
-                  setDraftDesc(description);
+                aria-label="Previous"
+                className={`absolute top-[10%] bottom-[10%] left-0 cursor-pointer ${isVideoStep ? "w-[25%]" : "w-[40%]"}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevStep();
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    setEditingDesc(true);
-                    setDraftDesc(description);
-                  }
+                onKeyDown={(e) => e.key === "Enter" && prevStep()}
+              />
+              <div
+                role="button"
+                tabIndex={0}
+                aria-label="Next"
+                className={`absolute top-[10%] bottom-[10%] right-0 cursor-pointer ${isVideoStep ? "w-[25%]" : "w-[60%]"}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextStep();
                 }}
-                className="cursor-text"
+                onKeyDown={(e) => e.key === "Enter" && nextStep()}
+              />
+
+              {/* Desktop chevrons */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prevStep();
+                }}
+                className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
+                disabled={currentIndex === 0}
               >
-                {description ? (
-                  <p className="italic text-white/80 text-base leading-relaxed">{description}</p>
-                ) : (
-                  <p className="text-white/40 text-base italic">+ Add a memory note...</p>
-                )}
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  nextStep();
+                }}
+                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Delete confirmation banner */}
+            {confirmDelete && (
+              <div className="absolute bottom-0 left-0 right-0 z-40 bg-black/95 px-6 py-5 flex items-center justify-between">
+                <span className="text-white text-sm">Delete this photo?</span>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setPendingDeleteId(null)}
+                    className="text-white/60 text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleting}
+                    className="text-red-400 font-bold text-sm"
+                  >
+                    {deleting ? "Deleting..." : "Delete"}
+                  </button>
+                </div>
               </div>
             )}
+
+            {/* Bottom overlay */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent px-6 pb-8 pt-20">
+              {/* Tags row */}
+              <div className="flex gap-2 mb-4 flex-wrap">
+                {currentStep?.isMajor && (
+                  <div className="flex items-center gap-1 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    <Award className="w-3 h-3" />
+                    Milestone
+                  </div>
+                )}
+                {currentStep?.locationNickname && (
+                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full">
+                    <MapPin className="w-3 h-3" />
+                    {currentStep.locationNickname}
+                  </div>
+                )}
+              </div>
+
+              {/* Description */}
+              {editingDesc ? (
+                <div className="bg-black/60 backdrop-blur rounded-2xl p-4">
+                  <textarea
+                    ref={textareaRef}
+                    value={draftDesc}
+                    onChange={(e) => setDraftDesc(e.target.value)}
+                    rows={3}
+                    autoFocus
+                    placeholder="Write a memory note..."
+                    className="w-full bg-transparent text-white text-base leading-relaxed resize-none focus:outline-none placeholder-white/40"
+                  />
+                  <div className="flex justify-between items-center mt-2">
+                    <button onClick={handleCancelEdit} className="text-white/60 text-sm">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveDesc}
+                      disabled={savingDesc}
+                      className="gradient-text font-bold text-sm"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => {
+                    setEditingDesc(true);
+                    setDraftDesc(description);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      setEditingDesc(true);
+                      setDraftDesc(description);
+                    }
+                  }}
+                  className="cursor-text"
+                >
+                  {description ? (
+                    <p className="italic text-white/80 text-base leading-relaxed">{description}</p>
+                  ) : (
+                    <p className="text-white/40 text-base italic">+ Add a memory note...</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      </motion.div>
-    </AnimatePresence>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Edit growth drawer — outside AnimatePresence since Drawer/Dialog manage their own animations */}
+      {editOpen && currentStep && (
+        <EditGrowthDrawer
+          step={currentStep}
+          baby={baby}
+          open={editOpen}
+          onClose={() => setEditOpen(false)}
+          onSaved={(updated) => {
+            setEditedSteps((prev) => new Map(prev).set(updated.id, updated));
+          }}
+          elevated
+        />
+      )}
+    </>
   );
 }

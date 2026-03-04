@@ -80,3 +80,53 @@ export async function deleteStep(stepId: string) {
   revalidatePath("/gallery");
   revalidatePath("/dashboard");
 }
+
+/**
+ * Update a single step (e.g. editing a growth entry), verifying ownership via baby.userId.
+ * If the date changes, cleans up orphaned daily descriptions for the old date.
+ */
+export async function updateStep(
+  stepId: string,
+  data: {
+    weight?: number;
+    height?: number | null;
+    caption?: string | null;
+    date?: string;
+    isMajor?: boolean;
+    locationId?: string | null;
+    locationNickname?: string | null;
+  }
+) {
+  const session = await getSession();
+
+  const [found] = await db
+    .select({ id: step.id, babyId: step.babyId, date: step.date })
+    .from(step)
+    .innerJoin(baby, eq(step.babyId, baby.id))
+    .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
+
+  if (!found) throw new Error("Not found or unauthorized");
+
+  const [updated] = await db.update(step).set(data).where(eq(step.id, stepId)).returning();
+
+  // If date changed, clean up orphaned daily description for the old date
+  if (data.date && data.date !== found.date) {
+    const [{ remaining }] = await db
+      .select({ remaining: count() })
+      .from(step)
+      .where(and(eq(step.babyId, found.babyId), eq(step.date, found.date)));
+
+    if (remaining === 0) {
+      await db
+        .delete(dailyDescription)
+        .where(
+          and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date))
+        );
+    }
+  }
+
+  revalidatePath("/timeline");
+  revalidatePath("/gallery");
+  revalidatePath("/dashboard");
+  return updated;
+}
