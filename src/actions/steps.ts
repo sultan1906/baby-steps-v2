@@ -117,11 +117,20 @@ export async function updateStep(
       .where(and(eq(step.babyId, found.babyId), eq(step.date, found.date)));
 
     if (remaining === 0) {
-      await db
-        .delete(dailyDescription)
+      // Only delete if the description is empty — preserve user-authored notes
+      const [desc] = await db
+        .select({ description: dailyDescription.description })
+        .from(dailyDescription)
         .where(
           and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date))
         );
+      if (!desc?.description) {
+        await db
+          .delete(dailyDescription)
+          .where(
+            and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date))
+          );
+      }
     }
   }
 

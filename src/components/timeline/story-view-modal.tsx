@@ -487,7 +487,17 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
           open={editOpen}
           onClose={() => setEditOpen(false)}
           onSaved={(updated) => {
-            setEditedSteps((prev) => new Map(prev).set(updated.id, updated));
+            if (updated.date === date) {
+              setEditedSteps((prev) => new Map(prev).set(updated.id, updated));
+            } else {
+              // Date changed — step no longer belongs to this day's story
+              setEditedSteps((prev) => {
+                const next = new Map(prev);
+                next.delete(updated.id);
+                return next;
+              });
+              setDeletedIds((prev) => new Set([...prev, updated.id]));
+            }
           }}
           elevated
         />

@@ -139,8 +139,10 @@ export function GalleryClient({ steps, baby }: GalleryClientProps) {
                 ) : s.type === "growth" ? (
                   <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-1 px-4">
                     <Ruler className="w-7 h-7 text-white/80" />
-                    <div className="text-white font-bold text-sm">{s.weight} kg</div>
-                    {s.height && <div className="text-white/70 text-xs">{s.height} cm</div>}
+                    {s.weight != null && (
+                      <div className="text-white font-bold text-sm">{s.weight} kg</div>
+                    )}
+                    {s.height != null && <div className="text-white/70 text-xs">{s.height} cm</div>}
                   </div>
                 ) : (
                   <div className="w-full h-full gradient-bg" />
@@ -193,7 +195,9 @@ export function GalleryClient({ steps, baby }: GalleryClientProps) {
                   ) : s.type === "growth" ? (
                     <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-1">
                       <Ruler className="w-6 h-6 text-white/80" />
-                      <div className="text-white font-bold text-xs">{s.weight} kg</div>
+                      {s.weight != null && (
+                        <div className="text-white font-bold text-xs">{s.weight} kg</div>
+                      )}
                     </div>
                   ) : (
                     <div className="w-full h-full gradient-bg" />
