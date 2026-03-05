@@ -77,6 +77,18 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
     setStorySteps([]);
   };
 
+  const goToNextDay = useCallback(() => {
+    if (!storyDate) return;
+    const idx = dayGroups.findIndex(([d]) => d === storyDate);
+    if (idx >= 0 && idx < dayGroups.length - 1) {
+      const [nextDate, nextSteps] = dayGroups[idx + 1];
+      setStoryDate(nextDate);
+      setStorySteps(nextSteps);
+    } else {
+      closeStory();
+    }
+  }, [storyDate, dayGroups]);
+
   return (
     <div className="min-h-screen bg-background overflow-x-hidden">
       {/* Sticky header */}
@@ -161,6 +173,7 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
           date={storyDate}
           open={!!storyDate}
           onClose={closeStory}
+          onNextDay={goToNextDay}
         />
       )}
     </div>
