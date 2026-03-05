@@ -30,9 +30,10 @@ interface StoryViewModalProps {
   date: string;
   open: boolean;
   onClose: () => void;
+  onNextDay?: () => void;
 }
 
-export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalProps) {
+export function StoryViewModal({ steps, date, open, onClose, onNextDay }: StoryViewModalProps) {
   const { baby } = useBaby();
   const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
   const [editedSteps, setEditedSteps] = useState<Map<string, Step>>(() => new Map());
@@ -86,6 +87,8 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     timerRef.current = setTimeout(() => {
       if (currentIndex < localSteps.length - 1) {
         setCurrentIndex((i) => i + 1);
+      } else if (onNextDay) {
+        onNextDay();
       } else {
         onClose();
       }
@@ -102,6 +105,7 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
     editOpen,
     localSteps.length,
     onClose,
+    onNextDay,
     currentStep?.type,
   ]);
 
@@ -118,6 +122,8 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
   const nextStep = () => {
     if (currentIndex < localSteps.length - 1) {
       setCurrentIndex((i) => i + 1);
+    } else if (onNextDay) {
+      onNextDay();
     } else {
       onClose();
     }
