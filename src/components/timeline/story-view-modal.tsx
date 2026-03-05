@@ -491,12 +491,18 @@ export function StoryViewModal({ steps, date, open, onClose }: StoryViewModalPro
               setEditedSteps((prev) => new Map(prev).set(updated.id, updated));
             } else {
               // Date changed — step no longer belongs to this day's story
+              const remaining = localSteps.filter((s) => s.id !== updated.id);
+              if (remaining.length === 0) {
+                onClose();
+                return;
+              }
               setEditedSteps((prev) => {
                 const next = new Map(prev);
                 next.delete(updated.id);
                 return next;
               });
               setDeletedIds((prev) => new Set([...prev, updated.id]));
+              setCurrentIndex(Math.min(currentIndex, remaining.length - 1));
             }
           }}
           elevated
