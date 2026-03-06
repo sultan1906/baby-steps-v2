@@ -1,5 +1,5 @@
 // Re-export Drizzle inferred types
-export type { User, Baby, Step, SavedLocation } from "@/db/schema";
+export type { User, Baby, Step, SavedLocation, DailyDescription } from "@/db/schema";
 
 // ── Step types ────────────────────────────────────────────────────────────────
 

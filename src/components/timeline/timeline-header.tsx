@@ -12,7 +12,7 @@ export function TimelineHeader() {
   const ageLabel = getAgeLabel(parseISO(baby.birthdate));
 
   return (
-    <div className="sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-stone-100/50">
+    <div>
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left: Baby switcher */}
         <div className="flex items-center gap-3">
