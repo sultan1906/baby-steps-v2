@@ -35,6 +35,7 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
   // Refs for each month section (scroll targets)
   const monthRefs = useRef(new Map<number, HTMLElement>());
   const isScrollingTo = useRef(false);
+  const scrollingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Description lookup map
   const descriptionMap = useMemo(() => {
@@ -81,10 +82,7 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
   const allDayGroups = useMemo(() => monthSections.flatMap((s) => s.dayGroups), [monthSections]);
 
   // Total days since birth (for header display)
-  const totalDays =
-    steps.length > 0
-      ? getDayNumber(birthdateDate, new Date())
-      : getDayNumber(birthdateDate, new Date());
+  const totalDays = getDayNumber(birthdateDate, new Date());
 
   // IntersectionObserver to detect which month is in view
   useEffect(() => {
@@ -118,6 +116,7 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
   }, [monthSections]);
 
   // Scroll to a specific month section
+  // Scroll to a specific month section
   const scrollToMonth = useCallback((monthIndex: number) => {
     const el = monthRefs.current.get(monthIndex);
     if (!el) return;
@@ -127,11 +126,18 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
     setActiveMonth(monthIndex);
     el.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    // Re-enable observer after scroll settles
-    const timer = setTimeout(() => {
+    // Clear any previous timer before setting a new one
+    if (scrollingTimerRef.current) clearTimeout(scrollingTimerRef.current);
+    scrollingTimerRef.current = setTimeout(() => {
       isScrollingTo.current = false;
     }, 800);
-    return () => clearTimeout(timer);
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollingTimerRef.current) clearTimeout(scrollingTimerRef.current);
+    };
   }, []);
 
   const openStory = (date: string, daySteps: Step[]) => {

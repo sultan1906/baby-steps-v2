@@ -13,6 +13,8 @@ interface DayPhotoCarouselProps {
 export function DayPhotoCarousel({ steps, onTap }: DayPhotoCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const touchStartX = useRef(0);
+  const didSwipe = useRef(false);
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
@@ -20,6 +22,23 @@ export function DayPhotoCarousel({ steps, onTap }: DayPhotoCarouselProps) {
     const idx = Math.round(el.scrollLeft / el.clientWidth);
     setActiveIndex(idx);
   }, []);
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    touchStartX.current = e.clientX;
+    didSwipe.current = false;
+  }, []);
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (Math.abs(e.clientX - touchStartX.current) > 10) {
+      didSwipe.current = true;
+    }
+  }, []);
+
+  const handleClick = useCallback(() => {
+    if (!didSwipe.current) {
+      onTap();
+    }
+  }, [onTap]);
 
   return (
     <div className="max-w-[240px]">
@@ -29,7 +48,9 @@ export function DayPhotoCarousel({ steps, onTap }: DayPhotoCarouselProps) {
         tabIndex={0}
         aria-label="View day photos"
         onScroll={handleScroll}
-        onClick={onTap}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onClick={handleClick}
         onKeyDown={(e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
