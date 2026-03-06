@@ -3,69 +3,142 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { parseISO } from "date-fns";
 import { CalendarX2 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { TimelineHeader } from "@/components/timeline/timeline-header";
-import { HorizontalMonthTimeline } from "@/components/timeline/horizontal-month-timeline";
-import { DayCard } from "@/components/timeline/day-card";
+import { VerticalMonthSelector } from "@/components/timeline/vertical-month-selector";
+import { MonthDivider } from "@/components/timeline/month-divider";
+import { TimelineDayEntry } from "@/components/timeline/timeline-day-entry";
 import { StoryViewModal } from "@/components/timeline/story-view-modal";
 import { EmptyState } from "@/components/shared/empty-state";
-import { getCurrentMonthIndex, isDateInMonth } from "@/lib/date-utils";
-import type { Step, Baby } from "@/types";
+import {
+  getCurrentMonthIndex,
+  getTotalMonths,
+  isDateInMonth,
+  getDayNumber,
+} from "@/lib/date-utils";
+import type { Step, Baby, DailyDescription } from "@/types";
 
 interface TimelineClientProps {
   steps: Step[];
   baby: Baby;
+  descriptions: DailyDescription[];
 }
 
-export function TimelineClient({ steps, baby }: TimelineClientProps) {
+export function TimelineClient({ steps, baby, descriptions }: TimelineClientProps) {
   const birthdateDate = parseISO(baby.birthdate);
   const currentAgeMonths = getCurrentMonthIndex(birthdateDate);
+  const totalMonths = getTotalMonths(birthdateDate);
 
-  const [selectedMonth, setSelectedMonth] = useState(currentAgeMonths);
   const [storyDate, setStoryDate] = useState<string | null>(null);
   const [storySteps, setStorySteps] = useState<Step[]>([]);
+  const [activeMonth, setActiveMonth] = useState(currentAgeMonths);
 
-  // Scroll indicator state
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const [showScrollbar, setShowScrollbar] = useState(false);
-  const [thumbStyle, setThumbStyle] = useState({ left: "0%", width: "100%" });
+  // Refs for each month section (scroll targets)
+  const monthRefs = useRef(new Map<number, HTMLElement>());
+  const isScrollingTo = useRef(false);
+  const scrollingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const handleCardsScroll = useCallback(() => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const { scrollLeft, scrollWidth, clientWidth } = el;
-    if (scrollWidth <= clientWidth) return;
-    const thumbPct = (clientWidth / scrollWidth) * 100;
-    const leftPct = (scrollLeft / (scrollWidth - clientWidth)) * (100 - thumbPct);
-    setThumbStyle({ left: `${leftPct}%`, width: `${thumbPct}%` });
-    setShowScrollbar(true);
-    clearTimeout(hideTimer.current);
-    hideTimer.current = setTimeout(() => setShowScrollbar(false), 1000);
-  }, []);
+  // Description lookup map
+  const descriptionMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const d of descriptions) {
+      map.set(d.date, d.description);
+    }
+    return map;
+  }, [descriptions]);
 
-  // Clear pending hide timer on unmount to avoid setState after unmount
-  useEffect(() => {
-    return () => {
-      clearTimeout(hideTimer.current);
-      hideTimer.current = undefined;
-    };
-  }, []);
+  // Group ALL steps by month, then by date within each month
+  // Union step dates with description-only dates so days with just a note still appear
+  const monthSections = useMemo(() => {
+    const sections: { monthIndex: number; dayGroups: [string, Step[]][] }[] = [];
 
-  // Group steps by date for the selected month
-  const dayGroups = useMemo(() => {
-    const monthSteps = steps.filter((s) => isDateInMonth(s.date, birthdateDate, selectedMonth));
+    for (let m = 0; m < totalMonths; m++) {
+      const monthSteps = steps.filter((s) => isDateInMonth(s.date, birthdateDate, m));
 
-    // Group by date
-    const grouped = new Map<string, Step[]>();
-    for (const s of monthSteps) {
-      const existing = grouped.get(s.date) ?? [];
-      grouped.set(s.date, [...existing, s]);
+      // Collect description-only dates for this month
+      const descDates = Array.from(descriptionMap.keys()).filter((d) =>
+        isDateInMonth(d, birthdateDate, m)
+      );
+
+      if (monthSteps.length === 0 && descDates.length === 0) continue;
+
+      const grouped = new Map<string, Step[]>();
+      for (const s of monthSteps) {
+        grouped.set(s.date, [...(grouped.get(s.date) ?? []), s]);
+      }
+      // Ensure description-only dates get an empty Step[] entry
+      for (const d of descDates) {
+        if (!grouped.has(d)) {
+          grouped.set(d, []);
+        }
+      }
+      const sorted = Array.from(grouped.entries()).sort(([a], [b]) => a.localeCompare(b));
+      sections.push({ monthIndex: m, dayGroups: sorted });
     }
 
-    // Sort by date
-    return Array.from(grouped.entries()).sort(([a], [b]) => a.localeCompare(b));
-  }, [steps, birthdateDate, selectedMonth]);
+    return sections;
+  }, [steps, birthdateDate, totalMonths, descriptionMap]);
+
+  // Flat dayGroups for StoryViewModal next-day navigation across months
+  const allDayGroups = useMemo(() => monthSections.flatMap((s) => s.dayGroups), [monthSections]);
+
+  // Total days since birth (for header display)
+  const totalDays = getDayNumber(birthdateDate, new Date());
+
+  // IntersectionObserver to detect which month is in view
+  useEffect(() => {
+    const visibleMonths = new Set<number>();
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isScrollingTo.current) return;
+
+        for (const entry of entries) {
+          const monthIdx = Number(entry.target.getAttribute("data-month-idx"));
+          if (isNaN(monthIdx)) continue;
+          if (entry.isIntersecting) {
+            visibleMonths.add(monthIdx);
+          } else {
+            visibleMonths.delete(monthIdx);
+          }
+        }
+
+        // Pick the topmost (smallest index) visible section
+        if (visibleMonths.size > 0) {
+          const topmost = Math.min(...visibleMonths);
+          setActiveMonth(topmost);
+        }
+      },
+      { rootMargin: "-120px 0px -40% 0px", threshold: 0 }
+    );
+
+    monthRefs.current.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
+  }, [monthSections]);
+
+  // Scroll to a specific month section
+  // Scroll to a specific month section
+  const scrollToMonth = useCallback((monthIndex: number) => {
+    const el = monthRefs.current.get(monthIndex);
+    if (!el) return;
+
+    // Suppress observer during programmatic scroll
+    isScrollingTo.current = true;
+    setActiveMonth(monthIndex);
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    // Clear any previous timer before setting a new one
+    if (scrollingTimerRef.current) clearTimeout(scrollingTimerRef.current);
+    scrollingTimerRef.current = setTimeout(() => {
+      isScrollingTo.current = false;
+    }, 800);
+  }, []);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollingTimerRef.current) clearTimeout(scrollingTimerRef.current);
+    };
+  }, []);
 
   const openStory = (date: string, daySteps: Step[]) => {
     setStoryDate(date);
@@ -79,92 +152,64 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
 
   const goToNextDay = useCallback(() => {
     if (!storyDate) return;
-    const idx = dayGroups.findIndex(([d]) => d === storyDate);
-    if (idx >= 0 && idx < dayGroups.length - 1) {
-      const [nextDate, nextSteps] = dayGroups[idx + 1];
+    const idx = allDayGroups.findIndex(([d]) => d === storyDate);
+    if (idx >= 0 && idx < allDayGroups.length - 1) {
+      const [nextDate, nextSteps] = allDayGroups[idx + 1];
       setStoryDate(nextDate);
       setStorySteps(nextSteps);
     } else {
       closeStory();
     }
-  }, [storyDate, dayGroups]);
+  }, [storyDate, allDayGroups]);
 
   return (
-    <div className="min-h-screen bg-background overflow-x-hidden">
-      {/* Sticky header */}
-      <TimelineHeader />
-
-      {/* Scrollable day cards area */}
-      <div className="pb-[220px] pt-4">
-        <AnimatePresence mode="wait">
-          {dayGroups.length === 0 ? (
-            <motion.div
-              key={`empty-${selectedMonth}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-            >
-              <EmptyState
-                icon={CalendarX2}
-                title="No memories yet"
-                description="Tap + to add your first memory for this month"
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              ref={scrollRef as React.Ref<HTMLDivElement>}
-              key={`cards-${selectedMonth}`}
-              className="flex gap-8 px-6 overflow-x-auto scrollbar-hide overscroll-x-contain py-4"
-              initial="hidden"
-              animate="visible"
-              variants={{
-                hidden: {},
-                visible: { transition: { staggerChildren: 0.07 } },
-              }}
-              onScroll={handleCardsScroll}
-            >
-              {dayGroups.map(([date, daySteps]) => (
-                <motion.div
-                  key={date}
-                  variants={{
-                    hidden: { opacity: 0, y: 24, scale: 0.96 },
-                    visible: { opacity: 1, y: 0, scale: 1 },
-                  }}
-                  transition={{ type: "spring", stiffness: 260, damping: 22 }}
-                >
-                  <DayCard
-                    date={date}
-                    steps={daySteps}
-                    birthdate={baby.birthdate}
-                    onClick={() => openStory(date, daySteps)}
-                  />
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Scroll progress indicator */}
-        {dayGroups.length > 0 && (
-          <div
-            className={`relative mx-6 h-[3px] rounded-full bg-stone-100 overflow-hidden transition-opacity duration-500 ${showScrollbar ? "opacity-100" : "opacity-0"}`}
-          >
-            <div
-              className="absolute top-0 h-full rounded-full gradient-bg-vibrant transition-[left] duration-75 ease-out"
-              style={thumbStyle}
-            />
-          </div>
-        )}
+    <div className="min-h-screen bg-background">
+      {/* Sticky header + month selector */}
+      <div className="sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-stone-100/50">
+        <TimelineHeader />
+        <VerticalMonthSelector
+          birthdate={baby.birthdate}
+          navigableMonths={new Set(monthSections.map((s) => s.monthIndex))}
+          activeMonth={activeMonth}
+          onMonthSelect={scrollToMonth}
+          totalDays={totalDays}
+        />
       </div>
 
-      {/* Fixed bottom: Month timeline */}
-      <HorizontalMonthTimeline
-        birthdate={baby.birthdate}
-        steps={steps}
-        selectedMonth={selectedMonth}
-        onMonthSelect={setSelectedMonth}
-      />
+      {/* Vertical timeline */}
+      <div className="px-2 pb-28 pt-2">
+        {monthSections.length === 0 ? (
+          <EmptyState
+            icon={CalendarX2}
+            title="No memories yet"
+            description="Tap + to add your first memory"
+          />
+        ) : (
+          monthSections.map((section) => (
+            <section
+              key={section.monthIndex}
+              ref={(el) => {
+                if (el) monthRefs.current.set(section.monthIndex, el);
+              }}
+              data-month-idx={section.monthIndex}
+            >
+              <MonthDivider monthIndex={section.monthIndex} birthdate={baby.birthdate} />
+              {section.dayGroups.map(([date, daySteps], i) => (
+                <TimelineDayEntry
+                  key={date}
+                  date={date}
+                  steps={daySteps}
+                  birthdate={baby.birthdate}
+                  monthIndex={section.monthIndex}
+                  description={descriptionMap.get(date)}
+                  isLast={i === section.dayGroups.length - 1}
+                  onOpenStory={openStory}
+                />
+              ))}
+            </section>
+          ))
+        )}
+      </div>
 
       {/* Story view modal */}
       {storyDate && (
