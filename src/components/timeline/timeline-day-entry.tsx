@@ -1,7 +1,7 @@
 "use client";
 
 import { parseISO } from "date-fns";
-import { MoreHorizontal, Plus, Pencil, Share2 } from "lucide-react";
+import { MoreHorizontal, Plus, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { getDayNumber, formatShortDate, getMonthPillLabel } from "@/lib/date-utils";
 import { DayPhotoCarousel } from "./day-photo-carousel";
@@ -74,17 +74,9 @@ export function TimelineDayEntry({
               <MoreHorizontal className="w-5 h-5" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom">
-              <DropdownMenuItem>
-                <Plus className="w-4 h-4 mr-2" />
-                Add memory
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit description
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Share2 className="w-4 h-4 mr-2" />
-                Share day
+              <DropdownMenuItem onClick={() => onOpenStory(date, steps)}>
+                <Eye className="w-4 h-4 mr-2" />
+                View day
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -94,15 +86,17 @@ export function TimelineDayEntry({
         {hasMedia ? (
           <DayPhotoCarousel steps={steps} onTap={() => onOpenStory(date, steps)} />
         ) : (
-          <div
+          <button
+            type="button"
             onClick={() => onOpenStory(date, steps)}
-            className="border-2 border-dashed border-stone-200 rounded-2xl p-6 flex items-center gap-3 cursor-pointer hover:border-rose-300 hover:bg-rose-50/30 transition-colors"
+            aria-label={`Add a memory for ${shortDate}`}
+            className="w-full border-2 border-dashed border-stone-200 rounded-2xl p-6 flex items-center gap-3 cursor-pointer hover:border-rose-300 hover:bg-rose-50/30 transition-colors"
           >
             <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center">
               <Plus className="w-4 h-4 text-white" />
             </div>
             <span className="text-sm text-stone-400">Tap to add a memory</span>
-          </div>
+          </button>
         )}
 
         {/* Description */}

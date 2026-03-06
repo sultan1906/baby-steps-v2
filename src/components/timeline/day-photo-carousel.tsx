@@ -25,8 +25,17 @@ export function DayPhotoCarousel({ steps, onTap }: DayPhotoCarouselProps) {
     <div className="max-w-[240px]">
       <div
         ref={scrollRef}
+        role="button"
+        tabIndex={0}
+        aria-label="View day photos"
         onScroll={handleScroll}
         onClick={onTap}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onTap();
+          }
+        }}
         className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide rounded-xl cursor-pointer"
       >
         {steps.map((step) => (

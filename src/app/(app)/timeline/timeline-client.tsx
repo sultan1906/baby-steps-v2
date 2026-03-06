@@ -46,23 +46,36 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
   }, [descriptions]);
 
   // Group ALL steps by month, then by date within each month
+  // Union step dates with description-only dates so days with just a note still appear
   const monthSections = useMemo(() => {
     const sections: { monthIndex: number; dayGroups: [string, Step[]][] }[] = [];
 
     for (let m = 0; m < totalMonths; m++) {
       const monthSteps = steps.filter((s) => isDateInMonth(s.date, birthdateDate, m));
-      if (monthSteps.length === 0) continue;
+
+      // Collect description-only dates for this month
+      const descDates = Array.from(descriptionMap.keys()).filter((d) =>
+        isDateInMonth(d, birthdateDate, m)
+      );
+
+      if (monthSteps.length === 0 && descDates.length === 0) continue;
 
       const grouped = new Map<string, Step[]>();
       for (const s of monthSteps) {
         grouped.set(s.date, [...(grouped.get(s.date) ?? []), s]);
+      }
+      // Ensure description-only dates get an empty Step[] entry
+      for (const d of descDates) {
+        if (!grouped.has(d)) {
+          grouped.set(d, []);
+        }
       }
       const sorted = Array.from(grouped.entries()).sort(([a], [b]) => a.localeCompare(b));
       sections.push({ monthIndex: m, dayGroups: sorted });
     }
 
     return sections;
-  }, [steps, birthdateDate, totalMonths]);
+  }, [steps, birthdateDate, totalMonths, descriptionMap]);
 
   // Flat dayGroups for StoryViewModal next-day navigation across months
   const allDayGroups = useMemo(() => monthSections.flatMap((s) => s.dayGroups), [monthSections]);
@@ -150,7 +163,7 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
         <TimelineHeader />
         <VerticalMonthSelector
           birthdate={baby.birthdate}
-          steps={steps}
+          navigableMonths={new Set(monthSections.map((s) => s.monthIndex))}
           activeMonth={activeMonth}
           onMonthSelect={scrollToMonth}
           totalDays={totalDays}
