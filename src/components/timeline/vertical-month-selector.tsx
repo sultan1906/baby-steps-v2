@@ -3,11 +3,7 @@
 import { useEffect, useRef } from "react";
 import { parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
-import {
-  getTotalMonths,
-  getMonthPillLabel,
-  getCurrentMonthIndex,
-} from "@/lib/date-utils";
+import { getTotalMonths, getMonthPillLabel, getCurrentMonthIndex } from "@/lib/date-utils";
 
 interface VerticalMonthSelectorProps {
   birthdate: string;
