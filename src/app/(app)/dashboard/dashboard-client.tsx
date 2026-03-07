@@ -210,6 +210,7 @@ export function DashboardClient({ steps, babyBirthdate }: DashboardClientProps) 
               {heatmapWeeks.map((week, i) => (
                 <Tooltip key={i}>
                   <TooltipTrigger
+                    aria-label={`${week.count === 0 ? "No memories" : `${week.count} ${week.count === 1 ? "memory" : "memories"}`}, ${format(week.start, "MMM d")} – ${format(week.end, "MMM d")}`}
                     className={cn(
                       "aspect-square w-full rounded-lg border-0 p-0 cursor-default",
                       HEATMAP_STYLES[getIntensity(week.count)]

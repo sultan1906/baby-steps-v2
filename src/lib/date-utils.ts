@@ -12,6 +12,8 @@ import {
   parseISO,
   isAfter,
   isBefore,
+  startOfDay,
+  endOfDay,
 } from "date-fns";
 
 /**
@@ -129,9 +131,11 @@ export function getHeatmapWeeks(
   steps: Array<{ date: string }>,
   referenceDate = new Date()
 ): Array<{ start: Date; end: Date; count: number }> {
+  const normalizedRef = endOfDay(referenceDate);
   return Array.from({ length: 36 }, (_, i) => {
-    const start = subWeeks(referenceDate, 35 - i);
-    const end = addDays(start, 6);
+    const start = startOfDay(subWeeks(normalizedRef, 35 - i));
+    const computedEnd = endOfDay(addDays(start, 6));
+    const end = i === 35 && referenceDate < computedEnd ? referenceDate : computedEnd;
     const count = steps.filter((s) => {
       const d = parseISO(s.date);
       return !isBefore(d, start) && !isAfter(d, end);
