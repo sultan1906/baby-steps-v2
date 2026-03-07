@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { getCurrentBaby } from "@/lib/baby-utils";
 import { listBabies } from "@/actions/baby";
+import { getPendingRequestCount } from "@/actions/social";
 import { BabyProvider } from "@/components/baby/baby-provider";
 import { BottomNav } from "@/components/shared/bottom-nav";
 import { QueryProvider } from "@/components/shared/query-provider";
@@ -34,8 +35,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     );
   }
 
-  // Fetch all babies for the switcher
-  const allBabies = await listBabies();
+  // Fetch all babies for the switcher + pending follow request count
+  const [allBabies, pendingRequestCount] = await Promise.all([
+    listBabies(),
+    getPendingRequestCount(),
+  ]);
 
   return (
     <QueryProvider>
@@ -43,6 +47,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         baby={currentBaby}
         user={{ ...session.user, image: session.user.image ?? null }}
         babies={allBabies}
+        pendingRequestCount={pendingRequestCount}
       >
         <div className="min-h-screen bg-background">
           <main className="pb-24">{children}</main>

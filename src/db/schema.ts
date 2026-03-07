@@ -20,6 +20,8 @@ export const stepTypeEnum = pgEnum("step_type", [
   "milestone",
 ]);
 
+export const followStatusEnum = pgEnum("follow_status", ["pending", "accepted", "rejected"]);
+
 // ── better-auth required tables ───────────────────────────────────────────────
 // These are managed by the better-auth Drizzle adapter.
 // Column names must match exactly what better-auth expects.
@@ -32,6 +34,7 @@ export const user = pgTable("user", {
   image: text("image"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  isPublic: boolean("is_public").notNull().default(true),
 });
 
 export const session = pgTable("session", {
@@ -162,11 +165,36 @@ export const dailyDescription = pgTable(
   })
 );
 
+export const follow = pgTable(
+  "follow",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    followerId: text("follower_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    followingId: text("following_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    status: followStatusEnum("status").notNull().default("pending"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqueFollowerFollowing: unique().on(t.followerId, t.followingId),
+    followingIdx: index("follow_following_idx").on(t.followingId, t.status),
+    followerIdx: index("follow_follower_idx").on(t.followerId, t.status),
+  })
+);
+
 // ── Relations ─────────────────────────────────────────────────────────────────
 
 export const userRelations = relations(user, ({ many }) => ({
   babies: many(baby),
   savedLocations: many(savedLocation),
+  followers: many(follow, { relationName: "following" }),
+  following: many(follow, { relationName: "follower" }),
 }));
 
 export const babyRelations = relations(baby, ({ one, many }) => ({
@@ -191,6 +219,19 @@ export const savedLocationRelations = relations(savedLocation, ({ one }) => ({
   user: one(user, { fields: [savedLocation.userId], references: [user.id] }),
 }));
 
+export const followRelations = relations(follow, ({ one }) => ({
+  follower: one(user, {
+    fields: [follow.followerId],
+    references: [user.id],
+    relationName: "follower",
+  }),
+  following: one(user, {
+    fields: [follow.followingId],
+    references: [user.id],
+    relationName: "following",
+  }),
+}));
+
 // ── Exported types ────────────────────────────────────────────────────────────
 
 export type User = typeof user.$inferSelect;
@@ -200,3 +241,5 @@ export type DailyDescription = typeof dailyDescription.$inferSelect;
 export type SavedLocation = typeof savedLocation.$inferSelect;
 export type NewStep = typeof step.$inferInsert;
 export type NewBaby = typeof baby.$inferInsert;
+export type Follow = typeof follow.$inferSelect;
+export type NewFollow = typeof follow.$inferInsert;

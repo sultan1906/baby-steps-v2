@@ -20,6 +20,7 @@ interface TimelineDayEntryProps {
   monthIndex: number;
   description?: string;
   isLast?: boolean;
+  readOnly?: boolean;
   onOpenStory: (date: string, steps: Step[]) => void;
 }
 
@@ -30,6 +31,7 @@ export function TimelineDayEntry({
   monthIndex,
   description,
   isLast,
+  readOnly,
   onOpenStory,
 }: TimelineDayEntryProps) {
   const dayNumber = getDayNumber(parseISO(birthdate), parseISO(date));
@@ -85,6 +87,10 @@ export function TimelineDayEntry({
         {/* Photo carousel or empty placeholder */}
         {hasMedia ? (
           <DayPhotoCarousel steps={steps} onTap={() => onOpenStory(date, steps)} />
+        ) : readOnly ? (
+          <div className="w-full rounded-2xl p-4 bg-stone-50/50 border border-stone-100">
+            <span className="text-sm text-stone-400">No media for this day</span>
+          </div>
         ) : (
           <button
             type="button"

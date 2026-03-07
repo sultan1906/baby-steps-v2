@@ -1,5 +1,5 @@
 // Re-export Drizzle inferred types
-export type { User, Baby, Step, SavedLocation, DailyDescription } from "@/db/schema";
+export type { Baby, Step, SavedLocation, DailyDescription } from "@/db/schema";
 
 // ── Step types ────────────────────────────────────────────────────────────────
 
@@ -44,4 +44,35 @@ export interface PlaceSuggestion {
   placeId: string;
   mainText: string;
   secondaryText: string;
+}
+
+// ── Social / Follow types ───────────────────────────────────────────────────
+
+export type FollowStatus = "none" | "pending" | "accepted";
+
+export interface UserSearchResult {
+  id: string;
+  name: string;
+  email: string;
+  image: string | null;
+  isPublic: boolean;
+  followStatus: FollowStatus;
+}
+
+export interface FollowRequestItem {
+  id: string;
+  follower: {
+    id: string;
+    name: string;
+    email: string;
+    image: string | null;
+  };
+  createdAt: Date;
+}
+
+export interface FollowedUser {
+  id: string;
+  name: string;
+  image: string | null;
+  babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[];
 }

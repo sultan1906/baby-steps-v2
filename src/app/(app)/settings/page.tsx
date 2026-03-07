@@ -15,12 +15,15 @@ import {
   Baby,
   Check,
   Plus,
+  Globe,
+  Lock,
 } from "lucide-react";
 import Image from "next/image";
 import { BackButton } from "@/components/shared/back-button";
 import { BabyAvatar } from "@/components/baby/baby-avatar";
 import { useBaby } from "@/components/baby/baby-provider";
 import { updateBaby, deleteBaby, switchBaby } from "@/actions/baby";
+import { toggleProfilePrivacy, getProfilePrivacy } from "@/actions/social";
 import { authClient } from "@/lib/auth-client";
 import {
   AlertDialog,
@@ -43,6 +46,8 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
+  const [togglingPrivacy, setTogglingPrivacy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -51,6 +56,10 @@ export default function SettingsPage() {
     setPhotoPreview(baby.photoUrl ?? null);
     setPhotoFile(null);
   }, [baby.id, baby.name, baby.birthdate, baby.photoUrl]);
+
+  useEffect(() => {
+    getProfilePrivacy().then(setIsPublic);
+  }, []);
 
   const hasChanges = name !== baby.name || birthdate !== baby.birthdate || photoFile !== null;
 
@@ -103,6 +112,17 @@ export default function SettingsPage() {
       router.push("/timeline");
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleTogglePrivacy = async () => {
+    setTogglingPrivacy(true);
+    const newValue = !isPublic;
+    try {
+      await toggleProfilePrivacy(newValue);
+      setIsPublic(newValue);
+    } finally {
+      setTogglingPrivacy(false);
     }
   };
 
@@ -278,6 +298,47 @@ export default function SettingsPage() {
           </button>
         </div>
 
+        {/* Profile Visibility Card */}
+        <div className="premium-card p-6">
+          <div className="flex items-center gap-2 mb-4">
+            {isPublic ? (
+              <Globe className="w-5 h-5 text-emerald-500" />
+            ) : (
+              <Lock className="w-5 h-5 text-amber-500" />
+            )}
+            <h2 className="font-bold text-stone-800">Profile Visibility</h2>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex-1 mr-4">
+              <p className="text-sm font-medium text-stone-700">
+                {isPublic ? "Public Profile" : "Private Profile"}
+              </p>
+              <p className="text-xs text-stone-400 mt-1">
+                {isPublic
+                  ? "Anyone can follow you without approval"
+                  : "New followers need your approval"}
+              </p>
+            </div>
+            <button
+              onClick={handleTogglePrivacy}
+              disabled={togglingPrivacy}
+              className={`relative w-12 h-7 rounded-full transition-colors ${
+                isPublic ? "bg-emerald-400" : "bg-amber-400"
+              }`}
+            >
+              <div
+                className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                  isPublic ? "left-5" : "left-0.5"
+                }`}
+              />
+              {togglingPrivacy && (
+                <Loader2 className="absolute inset-0 m-auto w-3 h-3 animate-spin text-white" />
+              )}
+            </button>
+          </div>
+        </div>
+
         {/* Account Card */}
         <div className="premium-card p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
@@ -294,13 +355,18 @@ export default function SettingsPage() {
               <span className="flex-1 text-stone-700 font-medium">Notifications</span>
               <ChevronRight className="w-4 h-4 text-stone-400" />
             </div>
-            <div className="flex items-center py-3 cursor-pointer hover:bg-stone-50 rounded-xl px-2 -mx-2 transition-colors">
+            <button
+              onClick={() => router.push("/settings/privacy")}
+              className="flex items-center w-full py-3 cursor-pointer hover:bg-stone-50 rounded-xl px-2 -mx-2 transition-colors"
+            >
               <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center mr-3">
                 <Shield className="w-4 h-4 text-blue-500" />
               </div>
-              <span className="flex-1 text-stone-700 font-medium">Privacy & Security</span>
+              <span className="flex-1 text-left text-stone-700 font-medium">
+                Privacy & Security
+              </span>
               <ChevronRight className="w-4 h-4 text-stone-400" />
-            </div>
+            </button>
           </div>
 
           {/* Logout */}
