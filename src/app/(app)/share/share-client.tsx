@@ -180,12 +180,12 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                 </p>
                 <div
                   className={cn(
-                    "aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl",
+                    "aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl relative max-w-sm mx-auto",
                     style !== "modern" && styleConfig.bg
                   )}
                 >
                   {style === "modern" ? (
-                    <div className="w-full h-full gradient-bg-vibrant" />
+                    <div className="absolute inset-0 gradient-bg-vibrant" />
                   ) : null}
                   <div className="relative w-full h-full flex flex-col">
                     {/* Photo - top 65% */}

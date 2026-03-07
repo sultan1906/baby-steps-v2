@@ -3,11 +3,27 @@
 import { useState } from "react";
 import { Grid3x3, Camera, Award, MessageCircle, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { format } from "date-fns";
 import { BackButton } from "@/components/shared/back-button";
 import { EmptyState } from "@/components/shared/empty-state";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { getHeatmapWeeks, getAgeInMonths } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import type { Step } from "@/types";
+
+function getIntensity(count: number): 0 | 1 | 2 | 3 {
+  if (count === 0) return 0;
+  if (count === 1) return 1;
+  if (count <= 3) return 2;
+  return 3;
+}
+
+const HEATMAP_STYLES: Record<0 | 1 | 2 | 3, string> = {
+  0: "bg-stone-100",
+  1: "gradient-bg opacity-30",
+  2: "gradient-bg opacity-60",
+  3: "gradient-bg",
+};
 
 interface DashboardClientProps {
   steps: Step[];
@@ -189,18 +205,31 @@ export function DashboardClient({ steps, babyBirthdate }: DashboardClientProps) 
             &ldquo;The days are long, but the years are short.&rdquo;
           </p>
 
-          <div className="grid grid-cols-12 gap-1.5">
-            {heatmapWeeks.map((week, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "aspect-square w-full rounded-lg",
-                  week.hasActivity ? "gradient-bg" : "bg-stone-100"
-                )}
-                title={week.hasActivity ? "Active week" : "No activity"}
-              />
-            ))}
-          </div>
+          <TooltipProvider delay={300} closeDelay={0}>
+            <div className="grid grid-cols-12 gap-1.5">
+              {heatmapWeeks.map((week, i) => (
+                <Tooltip key={i}>
+                  <TooltipTrigger
+                    className={cn(
+                      "aspect-square w-full rounded-lg border-0 p-0 cursor-default",
+                      HEATMAP_STYLES[getIntensity(week.count)]
+                    )}
+                  />
+                  <TooltipContent side="top" sideOffset={6}>
+                    <span className="font-medium">
+                      {week.count === 0
+                        ? "No memories"
+                        : `${week.count} ${week.count === 1 ? "memory" : "memories"}`}
+                    </span>
+                    <br />
+                    <span className="text-stone-400">
+                      {format(week.start, "MMM d")} – {format(week.end, "MMM d")}
+                    </span>
+                  </TooltipContent>
+                </Tooltip>
+              ))}
+            </div>
+          </TooltipProvider>
 
           <p className="text-xs text-stone-400 mt-3 text-right">Activity last 36 weeks</p>
         </div>

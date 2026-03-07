@@ -128,15 +128,15 @@ export function isDateInMonth(dateStr: string, birthdate: Date, monthIndex: numb
 export function getHeatmapWeeks(
   steps: Array<{ date: string }>,
   referenceDate = new Date()
-): Array<{ start: Date; end: Date; hasActivity: boolean }> {
+): Array<{ start: Date; end: Date; count: number }> {
   return Array.from({ length: 36 }, (_, i) => {
     const start = subWeeks(referenceDate, 35 - i);
     const end = addDays(start, 6);
-    const hasActivity = steps.some((s) => {
+    const count = steps.filter((s) => {
       const d = parseISO(s.date);
       return !isBefore(d, start) && !isAfter(d, end);
-    });
-    return { start, end, hasActivity };
+    }).length;
+    return { start, end, count };
   });
 }
 
