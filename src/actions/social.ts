@@ -50,12 +50,7 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
       isPublic: user.isPublic,
     })
     .from(user)
-    .where(
-      and(
-        ne(user.id, session.user.id),
-        ilike(user.name, searchTerm)
-      )
-    )
+    .where(and(ne(user.id, session.user.id), ilike(user.name, searchTerm)))
     .limit(20);
 
   if (results.length === 0) return [];

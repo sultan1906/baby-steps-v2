@@ -36,7 +36,9 @@ export function TimelineHeader() {
           </Link>
           <Link
             href="/following"
-            aria-label={pendingRequestCount > 0 ? `Following, ${pendingRequestCount} pending` : "Following"}
+            aria-label={
+              pendingRequestCount > 0 ? `Following, ${pendingRequestCount} pending` : "Following"
+            }
             className="text-stone-400 hover:text-rose-500 transition-colors relative"
           >
             <Users className="w-5 h-5" />
