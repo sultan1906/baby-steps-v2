@@ -15,6 +15,13 @@
       "when": 1772911681362,
       "tag": "0001_boring_chameleon",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1772916634484,
+      "tag": "0002_woozy_skrulls",
+      "breakpoints": true
     }
   ]
 }

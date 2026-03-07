@@ -20,21 +20,24 @@ export default function PrivacyPage() {
   const [loading, setLoading] = useState(true);
   const [toggling, setToggling] = useState(false);
   const [followers, setFollowers] = useState<
-    { id: string; followerId: string; name: string; email: string; image: string | null }[]
+    { id: string; followerId: string; name: string; image: string | null }[]
   >([]);
   const [following, setFollowing] = useState<FollowedUser[]>([]);
 
   useEffect(() => {
     async function load() {
-      const [privacy, followersList, followingList] = await Promise.all([
-        getProfilePrivacy(),
-        getFollowers(),
-        getFollowedUsers(),
-      ]);
-      setIsPublic(privacy);
-      setFollowers(followersList);
-      setFollowing(followingList);
-      setLoading(false);
+      try {
+        const [privacy, followersList, followingList] = await Promise.all([
+          getProfilePrivacy(),
+          getFollowers(),
+          getFollowedUsers(),
+        ]);
+        setIsPublic(privacy);
+        setFollowers(followersList);
+        setFollowing(followingList);
+      } finally {
+        setLoading(false);
+      }
     }
     load();
   }, []);
@@ -82,6 +85,7 @@ export default function PrivacyPage() {
       <div className="sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-stone-100/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button
+            aria-label="Back to settings"
             onClick={() => router.push("/settings")}
             className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-600 hover:bg-stone-200 transition-colors"
           >
@@ -116,6 +120,9 @@ export default function PrivacyPage() {
               </p>
             </div>
             <button
+              role="switch"
+              aria-checked={isPublic}
+              aria-label="Profile visibility"
               onClick={handleToggle}
               disabled={toggling}
               className={`relative w-12 h-7 rounded-full transition-colors ${
@@ -153,7 +160,6 @@ export default function PrivacyPage() {
                   <UserAvatar name={f.name} image={f.image} size={40} />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-stone-800 truncate text-sm">{f.name}</p>
-                    <p className="text-xs text-stone-400 truncate">{f.email}</p>
                   </div>
                   <button
                     onClick={() => handleRemoveFollower(f.id)}

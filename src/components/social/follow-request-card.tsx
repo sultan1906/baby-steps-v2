@@ -13,15 +13,11 @@ interface FollowRequestCardProps {
 
 export function FollowRequestCard({ request, onHandled }: FollowRequestCardProps) {
   const [loading, setLoading] = useState<"accept" | "reject" | null>(null);
-  const [handled, setHandled] = useState(false);
-
-  if (handled) return null;
 
   const handleAccept = async () => {
     setLoading("accept");
     try {
       await acceptFollowRequest(request.id);
-      setHandled(true);
       onHandled?.();
     } finally {
       setLoading(null);
@@ -32,7 +28,6 @@ export function FollowRequestCard({ request, onHandled }: FollowRequestCardProps
     setLoading("reject");
     try {
       await rejectFollowRequest(request.id);
-      setHandled(true);
       onHandled?.();
     } finally {
       setLoading(null);
@@ -50,6 +45,7 @@ export function FollowRequestCard({ request, onHandled }: FollowRequestCardProps
       </div>
       <div className="flex items-center gap-2">
         <button
+          aria-label="Accept follow request"
           onClick={handleAccept}
           disabled={!!loading}
           className="w-9 h-9 rounded-xl gradient-bg-vibrant flex items-center justify-center text-white transition-transform active:scale-95 disabled:opacity-50"
@@ -61,6 +57,7 @@ export function FollowRequestCard({ request, onHandled }: FollowRequestCardProps
           )}
         </button>
         <button
+          aria-label="Reject follow request"
           onClick={handleReject}
           disabled={!!loading}
           className="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center text-stone-500 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-50"

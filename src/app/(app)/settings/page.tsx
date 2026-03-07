@@ -46,7 +46,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [isPublic, setIsPublic] = useState(true);
+  const [isPublic, setIsPublic] = useState<boolean | null>(null);
   const [togglingPrivacy, setTogglingPrivacy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -321,8 +321,11 @@ export default function SettingsPage() {
               </p>
             </div>
             <button
+              role="switch"
+              aria-checked={isPublic ?? false}
+              aria-label="Profile visibility"
               onClick={handleTogglePrivacy}
-              disabled={togglingPrivacy}
+              disabled={isPublic === null || togglingPrivacy}
               className={`relative w-12 h-7 rounded-full transition-colors ${
                 isPublic ? "bg-emerald-400" : "bg-amber-400"
               }`}

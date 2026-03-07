@@ -13,8 +13,10 @@ export function UserSearch() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const requestIdRef = useRef(0);
 
   const doSearch = useCallback(async (q: string) => {
+    const id = ++requestIdRef.current;
     if (q.trim().length < 2) {
       setResults([]);
       setSearched(false);
@@ -23,10 +25,11 @@ export function UserSearch() {
     setLoading(true);
     try {
       const data = await searchUsers(q);
+      if (id !== requestIdRef.current) return;
       setResults(data);
       setSearched(true);
     } finally {
-      setLoading(false);
+      if (id === requestIdRef.current) setLoading(false);
     }
   }, []);
 
@@ -70,7 +73,6 @@ export function UserSearch() {
             <UserAvatar name={user.name} image={user.image} size={44} />
             <div className="flex-1 min-w-0">
               <p className="font-medium text-stone-800 truncate">{user.name}</p>
-              <p className="text-xs text-stone-400 truncate">{user.email}</p>
             </div>
             <FollowButton userId={user.id} initialStatus={user.followStatus} />
           </div>

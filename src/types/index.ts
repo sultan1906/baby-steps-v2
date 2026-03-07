@@ -53,7 +53,6 @@ export type FollowStatus = "none" | "pending" | "accepted";
 export interface UserSearchResult {
   id: string;
   name: string;
-  email: string;
   image: string | null;
   isPublic: boolean;
   followStatus: FollowStatus;
@@ -64,7 +63,6 @@ export interface FollowRequestItem {
   follower: {
     id: string;
     name: string;
-    email: string;
     image: string | null;
   };
   createdAt: Date;

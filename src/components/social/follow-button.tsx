@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Loader2, UserPlus, UserCheck, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { sendFollowRequest, unfollowUser } from "@/actions/social";
+import { toast } from "sonner";
 import type { FollowStatus } from "@/types";
 
 interface FollowButtonProps {
@@ -37,7 +38,7 @@ export function FollowButton({
         onStatusChange?.("none");
       }
     } catch {
-      // Error handled silently — state stays as-is
+      toast.error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

@@ -7,8 +7,9 @@ import {
   real,
   index,
   unique,
+  check,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
@@ -185,6 +186,7 @@ export const follow = pgTable(
     uniqueFollowerFollowing: unique().on(t.followerId, t.followingId),
     followingIdx: index("follow_following_idx").on(t.followingId, t.status),
     followerIdx: index("follow_follower_idx").on(t.followerId, t.status),
+    noSelfFollow: check("follow_no_self_follow_check", sql`${t.followerId} <> ${t.followingId}`),
   })
 );
 

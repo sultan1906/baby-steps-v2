@@ -32,6 +32,7 @@ interface StoryViewModalProps {
   onClose: () => void;
   onNextDay?: () => void;
   readOnly?: boolean;
+  baby?: { id: string; name: string; birthdate: string };
 }
 
 export function StoryViewModal({
@@ -41,8 +42,10 @@ export function StoryViewModal({
   onClose,
   onNextDay,
   readOnly,
+  baby: babyProp,
 }: StoryViewModalProps) {
-  const { baby } = useBaby();
+  const { baby: contextBaby } = useBaby();
+  const baby = babyProp ?? contextBaby;
   const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
   const [editedSteps, setEditedSteps] = useState<Map<string, Step>>(() => new Map());
   const localSteps = useMemo(
@@ -285,7 +288,7 @@ export function StoryViewModal({
               className="flex-1 relative overflow-hidden"
               onClick={isVideoStep ? handleVideoTap : onClose}
               onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
+                if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) {
                   e.preventDefault();
                   (isVideoStep ? handleVideoTap : onClose)();
                 }
@@ -510,10 +513,10 @@ export function StoryViewModal({
       </AnimatePresence>
 
       {/* Edit growth drawer — outside AnimatePresence since Drawer/Dialog manage their own animations */}
-      {editOpen && currentStep && (
+      {!readOnly && editOpen && currentStep && (
         <EditGrowthDrawer
           step={currentStep}
-          baby={baby}
+          baby={contextBaby}
           open={editOpen}
           onClose={() => setEditOpen(false)}
           onSaved={(updated) => {

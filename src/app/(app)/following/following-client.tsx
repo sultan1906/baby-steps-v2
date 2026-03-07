@@ -24,7 +24,7 @@ export function FollowingClient({
   const [activeTab, setActiveTab] = useState<Tab>(
     initialRequests.length > 0 ? "requests" : "following"
   );
-  const [requestCount, setRequestCount] = useState(initialRequests.length);
+  const [requests, setRequests] = useState(initialRequests);
 
   const tabs: { id: Tab; label: string; icon: typeof Search; badge?: number }[] = [
     { id: "search", label: "Search", icon: Search },
@@ -33,7 +33,7 @@ export function FollowingClient({
       id: "requests",
       label: "Requests",
       icon: Bell,
-      badge: requestCount > 0 ? requestCount : undefined,
+      badge: requests.length > 0 ? requests.length : undefined,
     },
   ];
 
@@ -111,7 +111,7 @@ export function FollowingClient({
         {/* Requests tab */}
         {activeTab === "requests" && (
           <div>
-            {initialRequests.length === 0 ? (
+            {requests.length === 0 ? (
               <div className="flex flex-col items-center py-12 text-stone-400">
                 <UserX className="w-12 h-12 mb-3" />
                 <p className="font-medium text-stone-500">No pending requests</p>
@@ -121,11 +121,11 @@ export function FollowingClient({
               </div>
             ) : (
               <div className="divide-y divide-stone-100">
-                {initialRequests.map((request) => (
+                {requests.map((request) => (
                   <FollowRequestCard
                     key={request.id}
                     request={request}
-                    onHandled={() => setRequestCount((c) => Math.max(0, c - 1))}
+                    onHandled={() => setRequests((prev) => prev.filter((r) => r.id !== request.id))}
                   />
                 ))}
               </div>

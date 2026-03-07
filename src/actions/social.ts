@@ -5,7 +5,7 @@ import { user, follow, baby, step, dailyDescription } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq, and, or, ilike, count, desc, ne, inArray } from "drizzle-orm";
+import { eq, and, ilike, count, desc, ne, inArray } from "drizzle-orm";
 import type { UserSearchResult, FollowRequestItem, FollowedUser } from "@/types";
 
 async function getSession() {
@@ -46,7 +46,6 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
     .select({
       id: user.id,
       name: user.name,
-      email: user.email,
       image: user.image,
       isPublic: user.isPublic,
     })
@@ -54,7 +53,7 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
     .where(
       and(
         ne(user.id, session.user.id),
-        or(ilike(user.name, searchTerm), ilike(user.email, searchTerm))
+        ilike(user.name, searchTerm)
       )
     )
     .limit(20);
@@ -76,7 +75,6 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
   return results.map((r) => ({
     id: r.id,
     name: r.name,
-    email: r.email,
     image: r.image ?? null,
     isPublic: r.isPublic,
     followStatus:
@@ -205,7 +203,6 @@ export async function getFollowRequests(): Promise<FollowRequestItem[]> {
       createdAt: follow.createdAt,
       followerId: follow.followerId,
       followerName: user.name,
-      followerEmail: user.email,
       followerImage: user.image,
     })
     .from(follow)
@@ -218,7 +215,6 @@ export async function getFollowRequests(): Promise<FollowRequestItem[]> {
     follower: {
       id: r.followerId,
       name: r.followerName,
-      email: r.followerEmail,
       image: r.followerImage ?? null,
     },
     createdAt: r.createdAt,
@@ -287,7 +283,7 @@ export async function getFollowedUsers(): Promise<FollowedUser[]> {
 }
 
 export async function getFollowers(): Promise<
-  { id: string; followerId: string; name: string; email: string; image: string | null }[]
+  { id: string; followerId: string; name: string; image: string | null }[]
 > {
   const session = await getSession();
 
@@ -296,7 +292,6 @@ export async function getFollowers(): Promise<
       id: follow.id,
       followerId: follow.followerId,
       name: user.name,
-      email: user.email,
       image: user.image,
     })
     .from(follow)
@@ -338,7 +333,7 @@ export async function getFollowedUserTimeline(targetUserId: string, babyId: stri
   if (!targetBaby) throw new Error("Baby not found");
 
   const [allSteps, allDescriptions] = await Promise.all([
-    db.select().from(step).where(eq(step.babyId, babyId)).orderBy(step.date),
+    db.select().from(step).where(eq(step.babyId, babyId)).orderBy(step.date, step.createdAt),
     db.select().from(dailyDescription).where(eq(dailyDescription.babyId, babyId)),
   ]);
 

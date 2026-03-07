@@ -216,6 +216,7 @@ export function FollowedTimelineClient({
           onClose={closeStory}
           onNextDay={goToNextDay}
           readOnly
+          baby={baby}
         />
       )}
     </div>
