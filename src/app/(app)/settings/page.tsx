@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Heart,
@@ -12,11 +12,15 @@ import {
   User,
   ChevronRight,
   Loader2,
+  Baby,
+  Check,
+  Plus,
 } from "lucide-react";
 import Image from "next/image";
 import { BackButton } from "@/components/shared/back-button";
+import { BabyAvatar } from "@/components/baby/baby-avatar";
 import { useBaby } from "@/components/baby/baby-provider";
-import { updateBaby, deleteBaby } from "@/actions/baby";
+import { updateBaby, deleteBaby, switchBaby } from "@/actions/baby";
 import { authClient } from "@/lib/auth-client";
 import {
   AlertDialog,
@@ -30,7 +34,7 @@ import {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { baby } = useBaby();
+  const { baby, babies } = useBaby();
 
   const [name, setName] = useState(baby.name);
   const [birthdate, setBirthdate] = useState(baby.birthdate);
@@ -41,7 +45,19 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  useEffect(() => {
+    setName(baby.name);
+    setBirthdate(baby.birthdate);
+    setPhotoPreview(baby.photoUrl ?? null);
+    setPhotoFile(null);
+  }, [baby.id, baby.name, baby.birthdate, baby.photoUrl]);
+
   const hasChanges = name !== baby.name || birthdate !== baby.birthdate || photoFile !== null;
+
+  const handleSwitchBaby = async (babyId: string) => {
+    await switchBaby(babyId);
+    router.refresh();
+  };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -228,6 +244,38 @@ export default function SettingsPage() {
               </AlertDialogContent>
             </AlertDialog>
           </div>
+        </div>
+
+        {/* Your Babies Card */}
+        <div className="premium-card p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Baby className="w-5 h-5 text-rose-400" />
+            <h2 className="font-bold text-stone-800">Your Babies</h2>
+          </div>
+
+          <div className="divide-y divide-stone-100">
+            {babies.map((b) => (
+              <button
+                key={b.id}
+                onClick={() => b.id !== baby.id && handleSwitchBaby(b.id)}
+                className="flex items-center w-full py-3 hover:bg-stone-50 rounded-xl px-2 -mx-2 transition-colors"
+              >
+                <BabyAvatar name={b.name} photoUrl={b.photoUrl} size={32} />
+                <span className="flex-1 text-left text-stone-700 font-medium ml-3">{b.name}</span>
+                {b.id === baby.id && <Check className="w-4 h-4 text-rose-500" />}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => router.push("/onboarding")}
+            className="w-full mt-3 flex items-center gap-3 py-3 px-2 -mx-2 rounded-xl hover:bg-stone-50 transition-colors text-rose-500 font-medium"
+          >
+            <div className="w-8 h-8 rounded-xl border-2 border-dashed border-rose-200 flex items-center justify-center">
+              <Plus className="w-4 h-4" />
+            </div>
+            Add another baby
+          </button>
         </div>
 
         {/* Account Card */}
