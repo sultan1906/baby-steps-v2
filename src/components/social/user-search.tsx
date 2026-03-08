@@ -7,7 +7,11 @@ import { FollowButton } from "./follow-button";
 import { searchUsers } from "@/actions/social";
 import type { UserSearchResult } from "@/types";
 
-export function UserSearch() {
+interface UserSearchProps {
+  onFollowChange?: () => void;
+}
+
+export function UserSearch({ onFollowChange }: UserSearchProps) {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<UserSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -74,7 +78,7 @@ export function UserSearch() {
             <div className="flex-1 min-w-0">
               <p className="font-medium text-stone-800 truncate">{user.name}</p>
             </div>
-            <FollowButton userId={user.id} initialStatus={user.followStatus} />
+            <FollowButton userId={user.id} initialStatus={user.followStatus} onStatusChange={onFollowChange ? () => onFollowChange() : undefined} />
           </div>
         ))}
       </div>

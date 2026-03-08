@@ -89,7 +89,7 @@ export function FollowingClient({
 
       <div className="px-4 pb-28 pt-4">
         {/* Search tab */}
-        {activeTab === "search" && <UserSearch />}
+        {activeTab === "search" && <UserSearch onFollowChange={() => router.refresh()} />}
 
         {/* Following tab */}
         {activeTab === "following" && (
