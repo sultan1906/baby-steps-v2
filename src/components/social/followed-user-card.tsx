@@ -1,16 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ChevronRight, Baby } from "lucide-react";
+import { Baby, UserMinus } from "lucide-react";
 import { UserAvatar } from "./user-avatar";
+import { unfollowUser } from "@/actions/social";
 import type { FollowedUser } from "@/types";
 
 interface FollowedUserCardProps {
   user: FollowedUser;
+  onUnfollow?: (userId: string) => void;
 }
 
-export function FollowedUserCard({ user }: FollowedUserCardProps) {
+export function FollowedUserCard({ user, onUnfollow }: FollowedUserCardProps) {
+  const [unfollowing, setUnfollowing] = useState(false);
   const babyCount = user.babies.length;
+
+  const handleUnfollow = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setUnfollowing(true);
+    onUnfollow?.(user.id);
+    await unfollowUser(user.id);
+  };
 
   return (
     <Link
@@ -27,7 +39,14 @@ export function FollowedUserCard({ user }: FollowedUserCardProps) {
           </span>
         </div>
       </div>
-      <ChevronRight className="w-4 h-4 text-stone-400" />
+      <button
+        onClick={handleUnfollow}
+        disabled={unfollowing}
+        aria-label={`Unfollow ${user.name}`}
+        className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+      >
+        <UserMinus className="w-4 h-4" />
+      </button>
     </Link>
   );
 }

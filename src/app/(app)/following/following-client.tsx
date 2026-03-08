@@ -25,6 +25,7 @@ export function FollowingClient({
     initialRequests.length > 0 ? "requests" : "following"
   );
   const [requests, setRequests] = useState(initialRequests);
+  const [followed, setFollowed] = useState(followedUsers);
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
@@ -93,7 +94,7 @@ export function FollowingClient({
         {/* Following tab */}
         {activeTab === "following" && (
           <div>
-            {followedUsers.length === 0 ? (
+            {followed.length === 0 ? (
               <div className="flex flex-col items-center py-12 text-stone-400">
                 <Users className="w-12 h-12 mb-3" />
                 <p className="font-medium text-stone-500">Not following anyone yet</p>
@@ -107,8 +108,12 @@ export function FollowingClient({
               </div>
             ) : (
               <div className="divide-y divide-stone-100">
-                {followedUsers.map((user) => (
-                  <FollowedUserCard key={user.id} user={user} />
+                {followed.map((user) => (
+                  <FollowedUserCard
+                    key={user.id}
+                    user={user}
+                    onUnfollow={(id) => setFollowed((prev) => prev.filter((u) => u.id !== id))}
+                  />
                 ))}
               </div>
             )}
