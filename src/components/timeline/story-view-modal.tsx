@@ -31,10 +31,21 @@ interface StoryViewModalProps {
   open: boolean;
   onClose: () => void;
   onNextDay?: () => void;
+  readOnly?: boolean;
+  baby?: { id: string; name: string; birthdate: string };
 }
 
-export function StoryViewModal({ steps, date, open, onClose, onNextDay }: StoryViewModalProps) {
-  const { baby } = useBaby();
+export function StoryViewModal({
+  steps,
+  date,
+  open,
+  onClose,
+  onNextDay,
+  readOnly,
+  baby: babyProp,
+}: StoryViewModalProps) {
+  const { baby: contextBaby } = useBaby();
+  const baby = babyProp ?? contextBaby;
   const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
   const [editedSteps, setEditedSteps] = useState<Map<string, Step>>(() => new Map());
   const localSteps = useMemo(
@@ -225,7 +236,7 @@ export function StoryViewModal({ steps, date, open, onClose, onNextDay }: StoryV
                     transition={
                       i === currentIndex ? { duration: 5, ease: "linear" } : { duration: 0 }
                     }
-                    key={`${i}-${currentIndex}`}
+                    key={`${s.id}-${currentIndex}`}
                   />
                 </div>
               ))}
@@ -242,7 +253,7 @@ export function StoryViewModal({ steps, date, open, onClose, onNextDay }: StoryV
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {currentStep?.type === "growth" && (
+                {!readOnly && currentStep?.type === "growth" && (
                   <button
                     aria-label="Edit growth entry"
                     onClick={() => setEditOpen(true)}
@@ -251,13 +262,15 @@ export function StoryViewModal({ steps, date, open, onClose, onNextDay }: StoryV
                     <Pencil className="w-5 h-5" />
                   </button>
                 )}
-                <button
-                  aria-label="Delete photo"
-                  onClick={() => setPendingDeleteId(currentStep?.id ?? null)}
-                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-                >
-                  <Trash2 className="w-5 h-5" />
-                </button>
+                {!readOnly && (
+                  <button
+                    aria-label="Delete photo"
+                    onClick={() => setPendingDeleteId(currentStep?.id ?? null)}
+                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                )}
                 <button
                   aria-label="Close"
                   onClick={onClose}
@@ -270,8 +283,16 @@ export function StoryViewModal({ steps, date, open, onClose, onNextDay }: StoryV
 
             {/* Photo area — clicking background closes (or toggles play/pause for videos) */}
             <div
+              role="button"
+              tabIndex={0}
               className="flex-1 relative overflow-hidden"
               onClick={isVideoStep ? handleVideoTap : onClose}
+              onKeyDown={(e) => {
+                if ((e.key === "Enter" || e.key === " ") && e.target === e.currentTarget) {
+                  e.preventDefault();
+                  (isVideoStep ? handleVideoTap : onClose)();
+                }
+              }}
             >
               <AnimatePresence mode="wait">
                 <motion.div
@@ -433,14 +454,20 @@ export function StoryViewModal({ steps, date, open, onClose, onNextDay }: StoryV
               </div>
 
               {/* Description */}
-              {editingDesc ? (
+              {readOnly ? (
+                description ? (
+                  <p className="italic text-white/80 text-base leading-relaxed">{description}</p>
+                ) : null
+              ) : editingDesc ? (
                 <div className="bg-black/60 backdrop-blur rounded-2xl p-4">
                   <textarea
-                    ref={textareaRef}
+                    ref={(el) => {
+                      (textareaRef as React.RefObject<HTMLTextAreaElement | null>).current = el;
+                      el?.focus();
+                    }}
                     value={draftDesc}
                     onChange={(e) => setDraftDesc(e.target.value)}
                     rows={3}
-                    autoFocus
                     placeholder="Write a memory note..."
                     className="w-full bg-transparent text-white text-base leading-relaxed resize-none focus:outline-none placeholder-white/40"
                   />
@@ -486,10 +513,10 @@ export function StoryViewModal({ steps, date, open, onClose, onNextDay }: StoryV
       </AnimatePresence>
 
       {/* Edit growth drawer — outside AnimatePresence since Drawer/Dialog manage their own animations */}
-      {editOpen && currentStep && (
+      {!readOnly && editOpen && currentStep && (
         <EditGrowthDrawer
           step={currentStep}
-          baby={baby}
+          baby={contextBaby}
           open={editOpen}
           onClose={() => setEditOpen(false)}
           onSaved={(updated) => {

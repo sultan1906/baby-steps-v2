@@ -16,7 +16,11 @@ export default async function TimelinePage() {
 
   // Fetch all steps and daily descriptions for this baby
   const [allSteps, allDescriptions] = await Promise.all([
-    db.select().from(step).where(eq(step.babyId, currentBaby.id)).orderBy(step.date),
+    db
+      .select()
+      .from(step)
+      .where(eq(step.babyId, currentBaby.id))
+      .orderBy(step.date, step.createdAt),
     db.select().from(dailyDescription).where(eq(dailyDescription.babyId, currentBaby.id)),
   ]);
 
