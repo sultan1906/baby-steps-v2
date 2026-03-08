@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Baby, UserMinus } from "lucide-react";
 import { UserAvatar } from "./user-avatar";
 import { unfollowUser } from "@/actions/social";
+import { toast } from "sonner";
 import type { FollowedUser } from "@/types";
 
 interface FollowedUserCardProps {
@@ -20,8 +21,13 @@ export function FollowedUserCard({ user, onUnfollow }: FollowedUserCardProps) {
     e.preventDefault();
     e.stopPropagation();
     setUnfollowing(true);
-    onUnfollow?.(user.id);
-    await unfollowUser(user.id);
+    try {
+      await unfollowUser(user.id);
+      onUnfollow?.(user.id);
+    } catch {
+      setUnfollowing(false);
+      toast.error("Failed to unfollow. Please try again.");
+    }
   };
 
   return (
