@@ -78,7 +78,11 @@ export function UserSearch({ onFollowChange }: UserSearchProps) {
             <div className="flex-1 min-w-0">
               <p className="font-medium text-stone-800 truncate">{user.name}</p>
             </div>
-            <FollowButton userId={user.id} initialStatus={user.followStatus} onStatusChange={onFollowChange ? () => onFollowChange() : undefined} />
+            <FollowButton
+              userId={user.id}
+              initialStatus={user.followStatus}
+              onStatusChange={onFollowChange ? () => onFollowChange() : undefined}
+            />
           </div>
         ))}
       </div>
