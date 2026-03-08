@@ -1,42 +1,64 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowLeft, Search, Users, Bell, UserX } from "lucide-react";
+import { ArrowLeft, Search, Users, UserCheck, Bell, UserX, UserMinus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { UserSearch } from "@/components/social/user-search";
 import { FollowedUserCard } from "@/components/social/followed-user-card";
 import { FollowRequestCard } from "@/components/social/follow-request-card";
+import { UserAvatar } from "@/components/social/user-avatar";
+import { removeFollower } from "@/actions/social";
+import { toast } from "sonner";
 import type { FollowedUser, FollowRequestItem } from "@/types";
 
-type Tab = "search" | "following" | "requests";
+type Tab = "search" | "following" | "followers" | "requests";
+
+type Follower = { id: string; followerId: string; name: string; image: string | null };
 
 interface FollowingClientProps {
   followedUsers: FollowedUser[];
   followRequests: FollowRequestItem[];
+  followers: Follower[];
 }
 
 export function FollowingClient({
   followedUsers,
   followRequests: initialRequests,
+  followers: initialFollowers,
 }: FollowingClientProps) {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>(
     initialRequests.length > 0 ? "requests" : "following"
   );
   const [requests, setRequests] = useState(initialRequests);
-  const [followed, setFollowed] = useState(followedUsers);
+  const [followed, setFollowed] = useState(() => followedUsers);
+  const [followers, setFollowers] = useState(initialFollowers);
+  const [removingId, setRemovingId] = useState<string | null>(null);
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
-    if (tab === "following") {
+    if (tab === "following" || tab === "followers") {
       router.refresh();
+    }
+  };
+
+  const handleRemoveFollower = async (followId: string) => {
+    setRemovingId(followId);
+    try {
+      await removeFollower(followId);
+      setFollowers((prev) => prev.filter((f) => f.id !== followId));
+    } catch {
+      toast.error("Failed to remove follower. Please try again.");
+    } finally {
+      setRemovingId(null);
     }
   };
 
   const tabs: { id: Tab; label: string; icon: typeof Search; badge?: number }[] = [
     { id: "search", label: "Search", icon: Search },
     { id: "following", label: "Following", icon: Users },
+    { id: "followers", label: "Followers", icon: UserCheck },
     {
       id: "requests",
       label: "Requests",
@@ -114,6 +136,38 @@ export function FollowingClient({
                     user={user}
                     onUnfollow={(id) => setFollowed((prev) => prev.filter((u) => u.id !== id))}
                   />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Followers tab */}
+        {activeTab === "followers" && (
+          <div>
+            {followers.length === 0 ? (
+              <div className="flex flex-col items-center py-12 text-stone-400">
+                <UserCheck className="w-12 h-12 mb-3" />
+                <p className="font-medium text-stone-500">No followers yet</p>
+                <p className="text-sm mt-1">When someone follows you, they&apos;ll appear here</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-stone-100">
+                {followers.map((follower) => (
+                  <div key={follower.id} className="flex items-center gap-3 py-3">
+                    <UserAvatar name={follower.name} image={follower.image} size={44} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-stone-800 truncate">{follower.name}</p>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveFollower(follower.id)}
+                      disabled={removingId === follower.id}
+                      aria-label={`Remove ${follower.name}`}
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                    >
+                      <UserMinus className="w-4 h-4" />
+                    </button>
+                  </div>
                 ))}
               </div>
             )}
