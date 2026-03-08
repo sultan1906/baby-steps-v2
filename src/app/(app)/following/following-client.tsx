@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Search, Users, UserCheck, Bell, UserX, UserMinus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,10 @@ export function FollowingClient({
   const [followed, setFollowed] = useState(() => followedUsers);
   const [followers, setFollowers] = useState(initialFollowers);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  useEffect(() => setRequests(initialRequests), [initialRequests]);
+  useEffect(() => setFollowed(followedUsers), [followedUsers]);
+  useEffect(() => setFollowers(initialFollowers), [initialFollowers]);
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
