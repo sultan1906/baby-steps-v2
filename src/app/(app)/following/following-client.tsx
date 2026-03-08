@@ -26,6 +26,13 @@ export function FollowingClient({
   );
   const [requests, setRequests] = useState(initialRequests);
 
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    if (tab === "following") {
+      router.refresh();
+    }
+  };
+
   const tabs: { id: Tab; label: string; icon: typeof Search; badge?: number }[] = [
     { id: "search", label: "Search", icon: Search },
     { id: "following", label: "Following", icon: Users },
@@ -58,7 +65,7 @@ export function FollowingClient({
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={cn(
                   "flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-medium border-b-2 transition-colors relative",
                   activeTab === tab.id
@@ -92,7 +99,7 @@ export function FollowingClient({
                 <p className="font-medium text-stone-500">Not following anyone yet</p>
                 <p className="text-sm mt-1">Search for people to follow</p>
                 <button
-                  onClick={() => setActiveTab("search")}
+                  onClick={() => handleTabChange("search")}
                   className="mt-4 px-6 py-2.5 gradient-bg-vibrant text-white rounded-xl font-medium text-sm transition-transform active:scale-95"
                 >
                   Find People

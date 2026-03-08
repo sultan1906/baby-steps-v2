@@ -76,9 +76,12 @@ export function FollowButton({
   if (status === "accepted") {
     return (
       <button
+        aria-label="Unfollow"
         onClick={handleClick}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
+        onFocus={() => setHovering(true)}
+        onBlur={() => setHovering(false)}
         className={cn(
           "flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium border transition-colors",
           hovering
