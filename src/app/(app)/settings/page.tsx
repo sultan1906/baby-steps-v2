@@ -12,18 +12,24 @@ import {
   User,
   ChevronRight,
   Loader2,
-  Baby,
+  Baby as BabyIcon,
   Check,
   Plus,
   Globe,
   Lock,
+  MapPin,
 } from "lucide-react";
 import Image from "next/image";
 import { BackButton } from "@/components/shared/back-button";
 import { BabyAvatar } from "@/components/baby/baby-avatar";
-import { useBaby } from "@/components/baby/baby-provider";
+import { useBabyOptional } from "@/components/baby/baby-provider";
 import { updateBaby, deleteBaby, switchBaby } from "@/actions/baby";
-import { toggleProfilePrivacy, getProfilePrivacy } from "@/actions/social";
+import {
+  toggleProfilePrivacy,
+  getProfilePrivacy,
+  getParentProfile,
+  updateParentProfile,
+} from "@/actions/social";
 import { authClient } from "@/lib/auth-client";
 import {
   AlertDialog,
@@ -37,11 +43,13 @@ import {
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { baby, babies } = useBaby();
+  const ctx = useBabyOptional();
+  const baby = ctx?.baby ?? null;
+  const babies = ctx?.babies ?? [];
 
-  const [name, setName] = useState(baby.name);
-  const [birthdate, setBirthdate] = useState(baby.birthdate);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(baby.photoUrl ?? null);
+  const [name, setName] = useState(baby?.name ?? "");
+  const [birthdate, setBirthdate] = useState(baby?.birthdate ?? "");
+  const [photoPreview, setPhotoPreview] = useState<string | null>(baby?.photoUrl ?? null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -50,18 +58,45 @@ export default function SettingsPage() {
   const [togglingPrivacy, setTogglingPrivacy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // Parent profile state
+  const [parentName, setParentName] = useState("");
+  const [parentImage, setParentImage] = useState<string | null>(null);
+  const [parentBio, setParentBio] = useState("");
+  const [parentLocation, setParentLocation] = useState("");
+  const [parentPhotoFile, setParentPhotoFile] = useState<File | null>(null);
+  const [parentPhotoPreview, setParentPhotoPreview] = useState<string | null>(null);
+  const [parentSaving, setParentSaving] = useState(false);
+  const [parentSaved, setParentSaved] = useState(false);
+  const [parentLoaded, setParentLoaded] = useState(false);
+  const parentFileRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
-    setName(baby.name);
-    setBirthdate(baby.birthdate);
-    setPhotoPreview(baby.photoUrl ?? null);
-    setPhotoFile(null);
-  }, [baby.id, baby.name, baby.birthdate, baby.photoUrl]);
+    if (baby) {
+      setName(baby.name);
+      setBirthdate(baby.birthdate);
+      setPhotoPreview(baby.photoUrl ?? null);
+      setPhotoFile(null);
+    }
+  }, [baby]);
 
   useEffect(() => {
     getProfilePrivacy().then(setIsPublic);
   }, []);
 
-  const hasChanges = name !== baby.name || birthdate !== baby.birthdate || photoFile !== null;
+  useEffect(() => {
+    getParentProfile().then((p) => {
+      setParentName(p.name);
+      setParentImage(p.image ?? null);
+      setParentPhotoPreview(p.image ?? null);
+      setParentBio(p.bio ?? "");
+      setParentLocation(p.location ?? "");
+      setParentLoaded(true);
+    });
+  }, []);
+
+  const hasChanges = baby
+    ? name !== baby.name || birthdate !== baby.birthdate || photoFile !== null
+    : false;
 
   const handleSwitchBaby = async (babyId: string) => {
     await switchBaby(babyId);
@@ -76,6 +111,7 @@ export default function SettingsPage() {
   };
 
   const handleSave = async () => {
+    if (!baby) return;
     setSaving(true);
     try {
       let photoUrl = baby.photoUrl ?? undefined;
@@ -106,10 +142,11 @@ export default function SettingsPage() {
   };
 
   const handleDelete = async () => {
+    if (!baby) return;
     setDeleting(true);
     try {
       await deleteBaby(baby.id);
-      router.push("/timeline");
+      router.push("/following");
     } finally {
       setDeleting(false);
     }
@@ -123,6 +160,46 @@ export default function SettingsPage() {
       setIsPublic(newValue);
     } finally {
       setTogglingPrivacy(false);
+    }
+  };
+
+  const handleParentPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setParentPhotoFile(file);
+    setParentPhotoPreview(URL.createObjectURL(file));
+  };
+
+  const handleParentSave = async () => {
+    if (!parentName.trim()) return;
+    setParentSaving(true);
+    try {
+      let imageUrl = parentImage ?? undefined;
+
+      if (parentPhotoFile) {
+        const fd = new FormData();
+        fd.append("file", parentPhotoFile);
+        const res = await fetch("/api/upload", { method: "POST", body: fd });
+        if (res.ok) {
+          const data = await res.json();
+          imageUrl = data.url;
+        }
+      }
+
+      await updateParentProfile({
+        name: parentName.trim(),
+        image: imageUrl ?? "",
+        bio: parentBio,
+        location: parentLocation,
+      });
+
+      setParentImage(imageUrl ?? null);
+      setParentPhotoFile(null);
+      setParentSaved(true);
+      setTimeout(() => setParentSaved(false), 2000);
+      router.refresh();
+    } finally {
+      setParentSaving(false);
     }
   };
 
@@ -142,150 +219,275 @@ export default function SettingsPage() {
       </div>
 
       <div className="px-4 pb-28 pt-4 space-y-4">
-        {/* Baby Profile Card */}
+        {/* My Profile Card */}
         <div className="premium-card p-6">
           <div className="flex items-center gap-2 mb-5">
-            <Heart className="w-5 h-5 text-rose-500" />
-            <h2 className="font-bold text-stone-800">Baby Profile</h2>
+            <User className="w-5 h-5 text-rose-500" />
+            <h2 className="font-bold text-stone-800">My Profile</h2>
           </div>
 
           {/* Avatar editor */}
           <div className="flex justify-center mb-6">
-            <label className="relative cursor-pointer group">
-              <div className="w-32 h-32 rounded-[2.5rem] overflow-hidden ring-4 ring-stone-50 shadow-lg">
-                {photoPreview ? (
+            <div className="relative">
+              <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-stone-50 shadow-lg">
+                {parentPhotoPreview ? (
                   <Image
-                    src={photoPreview}
-                    alt={baby.name}
-                    width={128}
-                    height={128}
+                    src={parentPhotoPreview}
+                    alt={parentName || "Profile"}
+                    width={112}
+                    height={112}
                     className="object-cover w-full h-full"
                   />
                 ) : (
-                  <div className="w-full h-full gradient-bg flex items-center justify-center text-white font-bold text-4xl">
-                    {baby.name[0]?.toUpperCase()}
+                  <div className="w-full h-full gradient-bg flex items-center justify-center text-white font-bold text-3xl">
+                    {parentName?.[0]?.toUpperCase() ?? "?"}
                   </div>
                 )}
               </div>
-              <div
-                role="button"
-                tabIndex={0}
-                className="absolute bottom-0 right-0 w-9 h-9 gradient-bg-vibrant rounded-2xl flex items-center justify-center border-2 border-white shadow-md"
-                onClick={() => fileRef.current?.click()}
-                onKeyDown={(e) => e.key === "Enter" && fileRef.current?.click()}
+              <button
+                type="button"
+                onClick={() => parentFileRef.current?.click()}
+                className="absolute bottom-0 right-0 w-8 h-8 gradient-bg-vibrant rounded-full flex items-center justify-center border-2 border-white shadow-md"
               >
-                <Camera className="w-4 h-4 text-white" />
-              </div>
+                <Camera className="w-3.5 h-3.5 text-white" />
+              </button>
               <input
-                ref={fileRef}
+                ref={parentFileRef}
                 type="file"
                 accept="image/*"
                 className="hidden"
-                onChange={handlePhotoChange}
+                onChange={handleParentPhotoChange}
               />
-            </label>
+            </div>
           </div>
 
           {/* Form fields */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-4">
             <div>
               <label
-                htmlFor="settings-baby-name"
+                htmlFor="settings-parent-name"
                 className="text-xs text-stone-500 font-medium block mb-1"
               >
-                Baby&apos;s Name
+                Display Name
               </label>
               <input
-                id="settings-baby-name"
+                id="settings-parent-name"
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={parentName}
+                onChange={(e) => setParentName(e.target.value)}
+                maxLength={100}
+                placeholder="Your name"
                 className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-300"
               />
             </div>
             <div>
               <label
-                htmlFor="settings-birth-date"
+                htmlFor="settings-parent-bio"
                 className="text-xs text-stone-500 font-medium block mb-1"
               >
-                Birth Date
+                Bio
               </label>
-              <input
-                id="settings-birth-date"
-                type="date"
-                value={birthdate}
-                max={new Date().toISOString().split("T")[0]}
-                onChange={(e) => setBirthdate(e.target.value)}
-                className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-700 focus:outline-none focus:ring-2 focus:ring-rose-300"
+              <textarea
+                id="settings-parent-bio"
+                value={parentBio}
+                onChange={(e) => setParentBio(e.target.value)}
+                maxLength={160}
+                rows={2}
+                placeholder="A few words about yourself..."
+                className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-300 resize-none text-sm"
               />
+              <p className="text-xs text-stone-400 text-right mt-1">{parentBio.length}/160</p>
+            </div>
+            <div>
+              <label
+                htmlFor="settings-parent-location"
+                className="text-xs text-stone-500 font-medium block mb-1"
+              >
+                Location
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                <input
+                  id="settings-parent-location"
+                  type="text"
+                  value={parentLocation}
+                  onChange={(e) => setParentLocation(e.target.value)}
+                  maxLength={100}
+                  placeholder="City, Country"
+                  className="w-full pl-10 pr-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex gap-3 mt-5">
-            <button
-              onClick={handleSave}
-              disabled={!hasChanges || saving}
-              className="flex-1 gradient-bg-vibrant text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition"
-            >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : saved ? (
-                "Saved ✓"
-              ) : (
-                "Save Changes"
-              )}
-            </button>
-
-            <AlertDialog>
-              <AlertDialogTrigger className="flex items-center gap-2 px-4 py-3 bg-stone-50 text-stone-600 rounded-2xl border border-stone-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition-colors text-sm font-medium">
-                <Trash2 className="w-4 h-4" />
-                Delete
-              </AlertDialogTrigger>
-              <AlertDialogContent className="rounded-3xl">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Delete {baby.name}&apos;s Journey?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This will permanently delete all memories and cannot be undone.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <button className="px-4 py-2 rounded-xl text-stone-600 hover:bg-stone-100 transition-colors">
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="px-4 py-2 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
-                  >
-                    {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
-                  </button>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
+          {/* Save */}
+          <button
+            onClick={handleParentSave}
+            disabled={!parentLoaded || parentSaving || !parentName.trim()}
+            className="w-full mt-5 gradient-bg-vibrant text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition"
+          >
+            {parentSaving ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : parentSaved ? (
+              "Saved ✓"
+            ) : (
+              "Save Profile"
+            )}
+          </button>
         </div>
+
+        {/* Baby Profile Card — only shown when user has a baby */}
+        {baby && (
+          <div className="premium-card p-6">
+            <div className="flex items-center gap-2 mb-5">
+              <Heart className="w-5 h-5 text-rose-500" />
+              <h2 className="font-bold text-stone-800">Baby Profile</h2>
+            </div>
+
+            {/* Avatar editor */}
+            <div className="flex justify-center mb-6">
+              <label className="relative cursor-pointer group">
+                <div className="w-32 h-32 rounded-[2.5rem] overflow-hidden ring-4 ring-stone-50 shadow-lg">
+                  {photoPreview ? (
+                    <Image
+                      src={photoPreview}
+                      alt={baby.name}
+                      width={128}
+                      height={128}
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <div className="w-full h-full gradient-bg flex items-center justify-center text-white font-bold text-4xl">
+                      {baby.name[0]?.toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  className="absolute bottom-0 right-0 w-9 h-9 gradient-bg-vibrant rounded-2xl flex items-center justify-center border-2 border-white shadow-md"
+                  onClick={() => fileRef.current?.click()}
+                  onKeyDown={(e) => e.key === "Enter" && fileRef.current?.click()}
+                >
+                  <Camera className="w-4 h-4 text-white" />
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handlePhotoChange}
+                />
+              </label>
+            </div>
+
+            {/* Form fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="settings-baby-name"
+                  className="text-xs text-stone-500 font-medium block mb-1"
+                >
+                  Baby&apos;s Name
+                </label>
+                <input
+                  id="settings-baby-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-800 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="settings-birth-date"
+                  className="text-xs text-stone-500 font-medium block mb-1"
+                >
+                  Birth Date
+                </label>
+                <input
+                  id="settings-birth-date"
+                  type="date"
+                  value={birthdate}
+                  max={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setBirthdate(e.target.value)}
+                  className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-700 focus:outline-none focus:ring-2 focus:ring-rose-300"
+                />
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 mt-5">
+              <button
+                onClick={handleSave}
+                disabled={!hasChanges || saving}
+                className="flex-1 gradient-bg-vibrant text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition"
+              >
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : saved ? (
+                  "Saved ✓"
+                ) : (
+                  "Save Changes"
+                )}
+              </button>
+
+              <AlertDialog>
+                <AlertDialogTrigger className="flex items-center gap-2 px-4 py-3 bg-stone-50 text-stone-600 rounded-2xl border border-stone-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition-colors text-sm font-medium">
+                  <Trash2 className="w-4 h-4" />
+                  Delete
+                </AlertDialogTrigger>
+                <AlertDialogContent className="rounded-3xl">
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Delete {baby.name}&apos;s Journey?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete all memories and cannot be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <button className="px-4 py-2 rounded-xl text-stone-600 hover:bg-stone-100 transition-colors">
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="px-4 py-2 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
+                    >
+                      {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+                    </button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </div>
+        )}
 
         {/* Your Babies Card */}
         <div className="premium-card p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Baby className="w-5 h-5 text-rose-400" />
+            <BabyIcon className="w-5 h-5 text-rose-400" />
             <h2 className="font-bold text-stone-800">Your Babies</h2>
           </div>
 
-          <div className="divide-y divide-stone-100">
-            {babies.map((b) => (
-              <button
-                key={b.id}
-                onClick={() => b.id !== baby.id && handleSwitchBaby(b.id)}
-                className="flex items-center w-full py-3 hover:bg-stone-50 rounded-xl px-2 -mx-2 transition-colors"
-              >
-                <BabyAvatar name={b.name} photoUrl={b.photoUrl} size={32} />
-                <span className="flex-1 text-left text-stone-700 font-medium ml-3">{b.name}</span>
-                {b.id === baby.id && <Check className="w-4 h-4 text-rose-500" />}
-              </button>
-            ))}
-          </div>
+          {babies.length > 0 ? (
+            <div className="divide-y divide-stone-100">
+              {babies.map((b) => (
+                <button
+                  key={b.id}
+                  onClick={() => baby && b.id !== baby.id && handleSwitchBaby(b.id)}
+                  className="flex items-center w-full py-3 hover:bg-stone-50 rounded-xl px-2 -mx-2 transition-colors"
+                >
+                  <BabyAvatar name={b.name} photoUrl={b.photoUrl} size={32} />
+                  <span className="flex-1 text-left text-stone-700 font-medium ml-3">{b.name}</span>
+                  {baby && b.id === baby.id && <Check className="w-4 h-4 text-rose-500" />}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-stone-400 mb-2">
+              You haven&apos;t added any babies yet. Add one to start capturing memories!
+            </p>
+          )}
 
           <button
             onClick={() => router.push("/onboarding")}
@@ -294,7 +496,7 @@ export default function SettingsPage() {
             <div className="w-8 h-8 rounded-xl border-2 border-dashed border-rose-200 flex items-center justify-center">
               <Plus className="w-4 h-4" />
             </div>
-            Add another baby
+            {babies.length > 0 ? "Add another baby" : "Add a baby"}
           </button>
         </div>
 

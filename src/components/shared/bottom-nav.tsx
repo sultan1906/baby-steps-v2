@@ -2,24 +2,57 @@
 
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Home, Images, BarChart2, Settings } from "lucide-react";
+import { Home, Images, BarChart2, Settings, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AddMemoryDrawer } from "@/components/memory/add-memory-drawer";
 
-const navItems = [
+const fullNavItems = [
   { href: "/timeline", icon: Home, label: "Timeline" },
   { href: "/gallery", icon: Images, label: "Gallery" },
   { href: "/dashboard", icon: BarChart2, label: "Stats" },
   { href: "/settings", icon: Settings, label: "Settings" },
 ];
 
-export function BottomNav() {
+const followerNavItems = [
+  { href: "/following", icon: Users, label: "Following" },
+  { href: "/settings", icon: Settings, label: "Settings" },
+];
+
+interface BottomNavProps {
+  followerMode?: boolean;
+}
+
+export function BottomNav({ followerMode = false }: BottomNavProps) {
   const pathname = usePathname();
+
+  if (followerMode) {
+    return (
+      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-t border-stone-100/50 safe-area-inset-bottom">
+        <div className="flex items-center justify-around px-4 py-2 max-w-lg mx-auto">
+          {followerNavItems.map(({ href, icon: Icon, label }) => (
+            <Link
+              key={href}
+              href={href}
+              className={cn(
+                "flex flex-col items-center gap-0.5 py-1 px-3 text-xs transition-colors",
+                pathname === href || pathname.startsWith(href + "/")
+                  ? "text-primary"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Icon className="w-5 h-5" />
+              <span>{label}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-t border-stone-100/50 safe-area-inset-bottom">
       <div className="flex items-center justify-around px-4 py-2 max-w-lg mx-auto">
-        {navItems.slice(0, 2).map(({ href, icon: Icon, label }) => (
+        {fullNavItems.slice(0, 2).map(({ href, icon: Icon, label }) => (
           <Link
             key={href}
             href={href}
@@ -54,7 +87,7 @@ export function BottomNav() {
           </button>
         </AddMemoryDrawer>
 
-        {navItems.slice(2).map(({ href, icon: Icon, label }) => (
+        {fullNavItems.slice(2).map(({ href, icon: Icon, label }) => (
           <Link
             key={href}
             href={href}

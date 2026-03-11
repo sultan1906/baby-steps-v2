@@ -11,7 +11,7 @@ interface SessionUser {
 }
 
 interface BabyContextValue {
-  baby: Baby;
+  baby: Baby | null;
   user: SessionUser;
   babies: Baby[];
   pendingRequestCount: number;
@@ -33,8 +33,15 @@ export function BabyProvider({
   );
 }
 
-export function useBaby(): BabyContextValue {
+/** Returns context or throws — use in pages that REQUIRE a baby */
+export function useBaby(): BabyContextValue & { baby: Baby } {
   const ctx = useContext(BabyContext);
   if (!ctx) throw new Error("useBaby must be used within a BabyProvider");
-  return ctx;
+  if (!ctx.baby) throw new Error("useBaby requires a baby to be selected");
+  return ctx as BabyContextValue & { baby: Baby };
+}
+
+/** Returns context or null — safe for pages that work without a baby */
+export function useBabyOptional(): BabyContextValue | null {
+  return useContext(BabyContext);
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Baby, UserMinus } from "lucide-react";
+import { Baby, UserMinus, MapPin } from "lucide-react";
 import { UserAvatar } from "./user-avatar";
 import { unfollowUser } from "@/actions/social";
 import { toast } from "sonner";
@@ -38,6 +38,12 @@ export function FollowedUserCard({ user, onUnfollow }: FollowedUserCardProps) {
       <UserAvatar name={user.name} image={user.image} size={44} />
       <div className="flex-1 min-w-0">
         <p className="font-medium text-stone-800 truncate">{user.name}</p>
+        {user.location && (
+          <p className="flex items-center gap-1 text-xs text-stone-400">
+            <MapPin className="w-3 h-3 shrink-0" />
+            <span className="truncate">{user.location}</span>
+          </p>
+        )}
         <div className="flex items-center gap-1 text-xs text-stone-400">
           <Baby className="w-3 h-3" />
           <span>

@@ -194,6 +194,17 @@ export default function OnboardingPage() {
                   >
                     Next <ArrowRight className="w-4 h-4" />
                   </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (termsAccepted) router.push("/following");
+                    }}
+                    disabled={!termsAccepted}
+                    className="w-full text-center text-sm text-stone-400 hover:text-stone-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors mt-1"
+                  >
+                    I&apos;m just here to follow
+                  </button>
                 </div>
               </motion.div>
             ) : (
