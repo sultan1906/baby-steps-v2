@@ -69,7 +69,7 @@ export function StoryViewModal({
 
   const currentStep = localSteps[currentIndex];
   const isVideoStep = currentStep?.type === "video";
-  const dayNumber = getDayNumber(parseISO(baby.birthdate), parseISO(date));
+  const dayNumber = baby ? getDayNumber(parseISO(baby.birthdate), parseISO(date)) : 0;
   const dateLabel = formatMemoryDate(date);
 
   // Load daily description and reset navigation state
@@ -82,11 +82,12 @@ export function StoryViewModal({
     setPendingDeleteId(null);
     setDescription("");
     setDraftDesc("");
+    if (!baby) return;
     getDailyDescription(baby.id, date).then((d) => {
       setDescription(d?.description ?? "");
       setDraftDesc(d?.description ?? "");
     });
-  }, [open, baby.id, date]);
+  }, [open, baby, date]);
 
   // Auto-advance timer
   useEffect(() => {
@@ -163,6 +164,7 @@ export function StoryViewModal({
 
   const handleSaveDesc = async () => {
     setSavingDesc(true);
+    if (!baby) return;
     await upsertDailyDescription(baby.id, date, draftDesc);
     setDescription(draftDesc);
     setEditingDesc(false);
@@ -246,7 +248,7 @@ export function StoryViewModal({
             <div className="relative z-30 flex items-center justify-between px-4 py-3 mt-8">
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-xl gradient-bg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                  {baby.name[0]}
+                  {baby?.name[0]}
                 </div>
                 <span className="text-sm text-white/70">
                   Day {dayNumber} · {dateLabel}
@@ -513,10 +515,10 @@ export function StoryViewModal({
       </AnimatePresence>
 
       {/* Edit growth drawer — outside AnimatePresence since Drawer/Dialog manage their own animations */}
-      {!readOnly && editOpen && currentStep && (
+      {!readOnly && editOpen && currentStep && ctx?.baby && (
         <EditGrowthDrawer
           step={currentStep}
-          baby={ctx!.baby!}
+          baby={ctx.baby}
           open={editOpen}
           onClose={() => setEditOpen(false)}
           onSaved={(updated) => {

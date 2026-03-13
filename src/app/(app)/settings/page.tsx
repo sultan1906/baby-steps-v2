@@ -215,7 +215,7 @@ export default function SettingsPage() {
 
       await updateParentProfile({
         name: parentName.trim(),
-        image: imageUrl ?? "",
+        image: imageUrl,
         bio: parentBio,
         location: parentLocation,
       });
