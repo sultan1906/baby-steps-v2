@@ -20,6 +20,7 @@ import {
   MapPin,
 } from "lucide-react";
 import Image from "next/image";
+import { toast } from "sonner";
 import { BackButton } from "@/components/shared/back-button";
 import { BabyAvatar } from "@/components/baby/baby-avatar";
 import { useBabyOptional } from "@/components/baby/baby-provider";
@@ -84,14 +85,34 @@ export default function SettingsPage() {
   }, []);
 
   useEffect(() => {
-    getParentProfile().then((p) => {
-      setParentName(p.name);
-      setParentImage(p.image ?? null);
-      setParentPhotoPreview(p.image ?? null);
-      setParentBio(p.bio ?? "");
-      setParentLocation(p.location ?? "");
-      setParentLoaded(true);
-    });
+    getParentProfile()
+      .then((p) => {
+        setParentName(p.name);
+        setParentImage(p.image ?? null);
+        setParentPhotoPreview(p.image ?? null);
+        setParentBio(p.bio ?? "");
+        setParentLocation(p.location ?? "");
+      })
+      .catch((err) => {
+        console.error("Failed to load parent profile:", err);
+      })
+      .finally(() => {
+        setParentLoaded(true);
+      });
+  }, []);
+
+  const photoPreviewRef = useRef(photoPreview);
+  photoPreviewRef.current = photoPreview;
+  const parentPhotoPreviewRef = useRef(parentPhotoPreview);
+  parentPhotoPreviewRef.current = parentPhotoPreview;
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewRef.current?.startsWith("blob:"))
+        URL.revokeObjectURL(photoPreviewRef.current);
+      if (parentPhotoPreviewRef.current?.startsWith("blob:"))
+        URL.revokeObjectURL(parentPhotoPreviewRef.current);
+    };
   }, []);
 
   const hasChanges = baby
@@ -107,7 +128,10 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
+    setPhotoPreview((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
   };
 
   const handleSave = async () => {
@@ -120,10 +144,9 @@ export default function SettingsPage() {
         const fd = new FormData();
         fd.append("file", photoFile);
         const res = await fetch("/api/upload", { method: "POST", body: fd });
-        if (res.ok) {
-          const data = await res.json();
-          photoUrl = data.url;
-        }
+        if (!res.ok) throw new Error("Photo upload failed");
+        const data = await res.json();
+        photoUrl = data.url;
       }
 
       await updateBaby(baby.id, {
@@ -136,6 +159,8 @@ export default function SettingsPage() {
       setPhotoFile(null);
       setTimeout(() => setSaved(false), 2000);
       router.refresh();
+    } catch {
+      toast.error("Failed to save changes");
     } finally {
       setSaving(false);
     }
@@ -167,7 +192,10 @@ export default function SettingsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
     setParentPhotoFile(file);
-    setParentPhotoPreview(URL.createObjectURL(file));
+    setParentPhotoPreview((prev) => {
+      if (prev?.startsWith("blob:")) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
   };
 
   const handleParentSave = async () => {
@@ -180,10 +208,9 @@ export default function SettingsPage() {
         const fd = new FormData();
         fd.append("file", parentPhotoFile);
         const res = await fetch("/api/upload", { method: "POST", body: fd });
-        if (res.ok) {
-          const data = await res.json();
-          imageUrl = data.url;
-        }
+        if (!res.ok) throw new Error("Photo upload failed");
+        const data = await res.json();
+        imageUrl = data.url;
       }
 
       await updateParentProfile({
@@ -198,6 +225,8 @@ export default function SettingsPage() {
       setParentSaved(true);
       setTimeout(() => setParentSaved(false), 2000);
       router.refresh();
+    } catch {
+      toast.error("Failed to save profile");
     } finally {
       setParentSaving(false);
     }

@@ -21,7 +21,7 @@ import { getDayNumber, formatMemoryDate } from "@/lib/date-utils";
 import { upsertDailyDescription, getDailyDescription } from "@/actions/daily-description";
 import { deleteStep } from "@/actions/steps";
 import { toast } from "sonner";
-import { useBaby } from "@/components/baby/baby-provider";
+import { useBabyOptional } from "@/components/baby/baby-provider";
 import { EditGrowthDrawer } from "@/components/memory/edit-growth-drawer";
 import type { Step } from "@/types";
 
@@ -44,8 +44,8 @@ export function StoryViewModal({
   readOnly,
   baby: babyProp,
 }: StoryViewModalProps) {
-  const { baby: contextBaby } = useBaby();
-  const baby = babyProp ?? contextBaby;
+  const ctx = useBabyOptional();
+  const baby = babyProp ?? ctx?.baby ?? null;
   const [deletedIds, setDeletedIds] = useState<Set<string>>(() => new Set());
   const [editedSteps, setEditedSteps] = useState<Map<string, Step>>(() => new Map());
   const localSteps = useMemo(
@@ -516,7 +516,7 @@ export function StoryViewModal({
       {!readOnly && editOpen && currentStep && (
         <EditGrowthDrawer
           step={currentStep}
-          baby={contextBaby}
+          baby={ctx!.baby!}
           open={editOpen}
           onClose={() => setEditOpen(false)}
           onSaved={(updated) => {
