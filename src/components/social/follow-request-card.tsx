@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Check, X, Loader2 } from "lucide-react";
 import { UserAvatar } from "./user-avatar";
 import { acceptFollowRequest, rejectFollowRequest } from "@/actions/social";
@@ -38,9 +39,16 @@ export function FollowRequestCard({ request, onHandled }: FollowRequestCardProps
 
   return (
     <div className="flex items-center gap-3 py-3">
-      <UserAvatar name={request.follower.name} image={request.follower.image} size={44} />
+      <Link href={`/profile/${request.follower.id}`}>
+        <UserAvatar name={request.follower.name} image={request.follower.image} size={44} />
+      </Link>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-stone-800 truncate">{request.follower.name}</p>
+        <Link
+          href={`/profile/${request.follower.id}`}
+          className="font-medium text-stone-800 truncate block hover:underline"
+        >
+          {request.follower.name}
+        </Link>
         <p className="text-xs text-stone-400">{timeAgo}</p>
       </div>
       <div className="flex items-center gap-2">

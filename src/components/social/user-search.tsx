@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
-import { Search, Loader2, UserX } from "lucide-react";
+import Link from "next/link";
+import { Search, Loader2, UserX, MapPin } from "lucide-react";
 import { UserAvatar } from "./user-avatar";
 import { FollowButton } from "./follow-button";
 import { searchUsers } from "@/actions/social";
@@ -52,7 +53,7 @@ export function UserSearch({ onFollowChange }: UserSearchProps) {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
         <input
           type="text"
-          placeholder="Search by name or email..."
+          placeholder="Search by name or location..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           className="w-full pl-10 pr-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300 text-sm"
@@ -74,10 +75,19 @@ export function UserSearch({ onFollowChange }: UserSearchProps) {
       <div className="divide-y divide-stone-100">
         {results.map((user) => (
           <div key={user.id} className="flex items-center gap-3 py-3">
-            <UserAvatar name={user.name} image={user.image} size={44} />
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-stone-800 truncate">{user.name}</p>
-            </div>
+            <Link href={`/profile/${user.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+              <UserAvatar name={user.name} image={user.image} size={44} />
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-stone-800 truncate">{user.name}</p>
+                {user.location && (
+                  <p className="flex items-center gap-1 text-xs text-stone-400">
+                    <MapPin className="w-3 h-3 shrink-0" />
+                    <span className="truncate">{user.location}</span>
+                  </p>
+                )}
+                {user.bio && <p className="text-xs text-stone-400 truncate">{user.bio}</p>}
+              </div>
+            </Link>
             <FollowButton
               userId={user.id}
               initialStatus={user.followStatus}

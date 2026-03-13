@@ -36,6 +36,8 @@ export const user = pgTable("user", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   isPublic: boolean("is_public").notNull().default(true),
+  bio: text("bio"),
+  location: text("location"),
 });
 
 export const session = pgTable("session", {

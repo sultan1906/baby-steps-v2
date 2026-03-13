@@ -19,7 +19,7 @@ export default async function RootPage() {
     if (currentBaby) {
       redirect("/timeline");
     } else {
-      redirect("/onboarding");
+      redirect("/following");
     }
   }
 

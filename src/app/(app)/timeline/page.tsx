@@ -12,7 +12,7 @@ export default async function TimelinePage() {
   if (!session) redirect("/auth");
 
   const currentBaby = await getCurrentBaby(session.user.id);
-  if (!currentBaby) redirect("/onboarding");
+  if (!currentBaby) redirect("/following");
 
   // Fetch all steps and daily descriptions for this baby
   const [allSteps, allDescriptions] = await Promise.all([

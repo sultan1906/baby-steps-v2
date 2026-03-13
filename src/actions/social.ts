@@ -5,8 +5,8 @@ import { user, follow, baby, step, dailyDescription } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq, and, ilike, count, desc, ne, inArray } from "drizzle-orm";
-import type { UserSearchResult, FollowRequestItem, FollowedUser } from "@/types";
+import { eq, and, or, ilike, count, desc, ne, inArray } from "drizzle-orm";
+import type { UserSearchResult, FollowRequestItem, FollowedUser, UserProfile } from "@/types";
 
 async function getSession() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -33,6 +33,119 @@ export async function getProfilePrivacy(): Promise<boolean> {
   return u?.isPublic ?? true;
 }
 
+// ── Parent Profile ──────────────────────────────────────────────────────────
+
+export async function getParentProfile() {
+  const session = await getSession();
+  const [u] = await db
+    .select({
+      name: user.name,
+      image: user.image,
+      bio: user.bio,
+      location: user.location,
+    })
+    .from(user)
+    .where(eq(user.id, session.user.id))
+    .limit(1);
+  return u ?? { name: "", image: null, bio: null, location: null };
+}
+
+export async function updateParentProfile(data: {
+  name?: string;
+  image?: string;
+  bio?: string;
+  location?: string;
+}) {
+  const session = await getSession();
+  const updates: Record<string, unknown> = { updatedAt: new Date() };
+
+  if (data.name !== undefined) {
+    const trimmed = data.name.trim();
+    if (!trimmed || trimmed.length > 100) throw new Error("Invalid name");
+    updates.name = trimmed;
+  }
+  if (data.image !== undefined) updates.image = data.image || null;
+  if (data.bio !== undefined) updates.bio = data.bio.trim().slice(0, 160) || null;
+  if (data.location !== undefined) updates.location = data.location.trim().slice(0, 100) || null;
+
+  await db.update(user).set(updates).where(eq(user.id, session.user.id));
+  revalidatePath("/settings");
+  revalidatePath("/following");
+}
+
+export async function getUserProfile(targetUserId: string): Promise<UserProfile | null> {
+  const session = await getSession();
+
+  const [targetUser] = await db
+    .select({
+      id: user.id,
+      name: user.name,
+      image: user.image,
+      bio: user.bio,
+      location: user.location,
+      isPublic: user.isPublic,
+    })
+    .from(user)
+    .where(eq(user.id, targetUserId))
+    .limit(1);
+
+  if (!targetUser) return null;
+
+  // Follow status
+  const [followRow] = await db
+    .select({ status: follow.status })
+    .from(follow)
+    .where(and(eq(follow.followerId, session.user.id), eq(follow.followingId, targetUserId)))
+    .limit(1);
+
+  const followStatus =
+    followRow?.status === "accepted"
+      ? ("accepted" as const)
+      : followRow?.status === "pending"
+        ? ("pending" as const)
+        : ("none" as const);
+
+  // Follower and following counts
+  const [[followerResult], [followingResult]] = await Promise.all([
+    db
+      .select({ count: count() })
+      .from(follow)
+      .where(and(eq(follow.followingId, targetUserId), eq(follow.status, "accepted"))),
+    db
+      .select({ count: count() })
+      .from(follow)
+      .where(and(eq(follow.followerId, targetUserId), eq(follow.status, "accepted"))),
+  ]);
+
+  // Babies — only visible if following or public
+  let babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[] = [];
+  if (followStatus === "accepted" || targetUser.isPublic) {
+    babies = await db
+      .select({
+        id: baby.id,
+        name: baby.name,
+        photoUrl: baby.photoUrl,
+        birthdate: baby.birthdate,
+      })
+      .from(baby)
+      .where(eq(baby.userId, targetUserId))
+      .orderBy(desc(baby.createdAt));
+  }
+
+  return {
+    id: targetUser.id,
+    name: targetUser.name,
+    image: targetUser.image ?? null,
+    bio: targetUser.bio ?? null,
+    location: targetUser.location ?? null,
+    isPublic: targetUser.isPublic,
+    followStatus,
+    babies,
+    followerCount: followerResult?.count ?? 0,
+    followingCount: followingResult?.count ?? 0,
+  };
+}
+
 // ── Search ──────────────────────────────────────────────────────────────────
 
 export async function searchUsers(query: string): Promise<UserSearchResult[]> {
@@ -48,9 +161,16 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
       name: user.name,
       image: user.image,
       isPublic: user.isPublic,
+      bio: user.bio,
+      location: user.location,
     })
     .from(user)
-    .where(and(ne(user.id, session.user.id), ilike(user.name, searchTerm)))
+    .where(
+      and(
+        ne(user.id, session.user.id),
+        or(ilike(user.name, searchTerm), ilike(user.location, searchTerm))
+      )
+    )
     .limit(20);
 
   if (results.length === 0) return [];
@@ -72,6 +192,8 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
     name: r.name,
     image: r.image ?? null,
     isPublic: r.isPublic,
+    bio: r.bio ?? null,
+    location: r.location ?? null,
     followStatus:
       followMap.get(r.id) === "accepted"
         ? ("accepted" as const)
@@ -236,6 +358,7 @@ export async function getFollowedUsers(): Promise<FollowedUser[]> {
       userId: user.id,
       userName: user.name,
       userImage: user.image,
+      userLocation: user.location,
     })
     .from(follow)
     .innerJoin(user, eq(follow.followingId, user.id))
@@ -268,6 +391,7 @@ export async function getFollowedUsers(): Promise<FollowedUser[]> {
     id: u.userId,
     name: u.userName,
     image: u.userImage ?? null,
+    location: u.userLocation ?? null,
     babies: (babyMap.get(u.userId) ?? []).map((b) => ({
       id: b.id,
       name: b.name,

@@ -12,7 +12,7 @@ export default async function SharePage() {
   if (!session) redirect("/auth");
 
   const currentBaby = await getCurrentBaby(session.user.id);
-  if (!currentBaby) redirect("/onboarding");
+  if (!currentBaby) redirect("/following");
 
   const allSteps = await db
     .select()
