@@ -503,7 +503,7 @@ export default function SettingsPage() {
               {babies.map((b) => (
                 <button
                   key={b.id}
-                  onClick={() => baby && b.id !== baby.id && handleSwitchBaby(b.id)}
+                  onClick={() => b.id !== baby?.id && handleSwitchBaby(b.id)}
                   className="flex items-center w-full py-3 hover:bg-stone-50 rounded-xl px-2 -mx-2 transition-colors"
                 >
                   <BabyAvatar name={b.name} photoUrl={b.photoUrl} size={32} />
