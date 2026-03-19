@@ -44,7 +44,10 @@ export async function POST(request: NextRequest) {
     })
   );
 
-  const created = await db.insert(step).values(sanitized).returning();
+  const created = await db
+    .insert(step)
+    .values(sanitized as (typeof step.$inferInsert)[])
+    .returning();
 
   return NextResponse.json(created, { status: 201 });
 }
