@@ -27,20 +27,22 @@ export async function POST(request: NextRequest) {
   }
 
   // Whitelist allowed fields for each step
-  const sanitized = stepsData.map((s: Record<string, unknown>) => ({
-    babyId: s.babyId,
-    date: s.date,
-    type: s.type,
-    ...(s.photoUrl !== undefined && { photoUrl: s.photoUrl }),
-    ...(s.locationId !== undefined && { locationId: s.locationId }),
-    ...(s.locationNickname !== undefined && { locationNickname: s.locationNickname }),
-    ...(s.isMajor !== undefined && { isMajor: s.isMajor }),
-    ...(s.weight !== undefined && { weight: s.weight }),
-    ...(s.height !== undefined && { height: s.height }),
-    ...(s.firstWord !== undefined && { firstWord: s.firstWord }),
-    ...(s.title !== undefined && { title: s.title }),
-    ...(s.caption !== undefined && { caption: s.caption }),
-  }));
+  const sanitized = stepsData.map(
+    (s: Record<string, string | boolean | number | null | undefined>) => ({
+      babyId: s.babyId as string,
+      date: s.date as string,
+      type: s.type as string,
+      ...(s.photoUrl !== undefined && { photoUrl: s.photoUrl as string }),
+      ...(s.locationId !== undefined && { locationId: s.locationId as string }),
+      ...(s.locationNickname !== undefined && { locationNickname: s.locationNickname as string }),
+      ...(s.isMajor !== undefined && { isMajor: s.isMajor as boolean }),
+      ...(s.weight !== undefined && { weight: s.weight as number }),
+      ...(s.height !== undefined && { height: s.height as number }),
+      ...(s.firstWord !== undefined && { firstWord: s.firstWord as string }),
+      ...(s.title !== undefined && { title: s.title as string }),
+      ...(s.caption !== undefined && { caption: s.caption as string }),
+    })
+  );
 
   const created = await db.insert(step).values(sanitized).returning();
 
