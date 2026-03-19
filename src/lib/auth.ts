@@ -70,6 +70,9 @@ function getAuth() {
       },
 
       trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!],
+      advanced: {
+        disableCSRFCheck: true, // Mobile app sends no Origin header
+      },
     });
   }
   return _auth;
