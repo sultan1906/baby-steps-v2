@@ -24,11 +24,7 @@ export async function GET(
   if (!found) return jsonError("Baby not found", 404);
 
   const [allSteps, allDescriptions] = await Promise.all([
-    db
-      .select()
-      .from(step)
-      .where(eq(step.babyId, babyId))
-      .orderBy(step.date, step.createdAt),
+    db.select().from(step).where(eq(step.babyId, babyId)).orderBy(step.date, step.createdAt),
     db.select().from(dailyDescription).where(eq(dailyDescription.babyId, babyId)),
   ]);
 
@@ -55,7 +51,10 @@ export async function POST(
   if (!found) return jsonError("Baby not found", 404);
 
   const data = await request.json();
-  const [s] = await db.insert(step).values({ ...data, babyId }).returning();
+  const [s] = await db
+    .insert(step)
+    .values({ ...data, babyId })
+    .returning();
 
   return NextResponse.json(s, { status: 201 });
 }

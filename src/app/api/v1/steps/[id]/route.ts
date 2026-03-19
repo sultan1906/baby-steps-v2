@@ -6,10 +6,7 @@ import { del } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 
 /** Update a step */
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await getApiSession();
   if (error) return error;
 
