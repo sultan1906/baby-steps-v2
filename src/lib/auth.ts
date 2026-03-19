@@ -69,7 +69,14 @@ function getAuth() {
         cookieCache: { enabled: true, maxAge: 5 * 60 },
       },
 
-      trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!],
+      trustedOrigins: [
+        process.env.NEXT_PUBLIC_APP_URL!,
+        "capacitor://localhost",
+        "http://localhost",
+      ],
+      advanced: {
+        disableCSRFCheck: true,
+      },
     });
   }
   return _auth;
