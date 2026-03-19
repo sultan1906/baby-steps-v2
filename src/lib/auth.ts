@@ -69,12 +69,9 @@ function getAuth() {
         cookieCache: { enabled: true, maxAge: 5 * 60 },
       },
 
-      trustedOrigins: (origin: string) => {
-        // Allow requests with no origin (mobile apps / non-browser clients)
-        if (!origin) return true;
-        // Allow the web app
-        if (origin === process.env.NEXT_PUBLIC_APP_URL) return true;
-        return false;
+      trustedOrigins: [process.env.NEXT_PUBLIC_APP_URL!, "capacitor://localhost", "http://localhost"],
+      advanced: {
+        disableCSRFCheck: true,
       },
     });
   }
