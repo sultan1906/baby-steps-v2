@@ -95,13 +95,13 @@ export async function DELETE(
     const [desc] = await db
       .select({ description: dailyDescription.description })
       .from(dailyDescription)
-      .where(
-        and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date))
-      );
+      .where(and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date)));
     if (!desc?.description) {
       await db
         .delete(dailyDescription)
-        .where(and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date)));
+        .where(
+          and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date))
+        );
     }
   }
 

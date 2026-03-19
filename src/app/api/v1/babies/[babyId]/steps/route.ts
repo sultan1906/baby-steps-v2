@@ -67,10 +67,7 @@ export async function POST(
     ...(data.caption !== undefined && { caption: data.caption }),
   };
 
-  const [s] = await db
-    .insert(step)
-    .values(allowedFields)
-    .returning();
+  const [s] = await db.insert(step).values(allowedFields).returning();
 
   return NextResponse.json(s, { status: 201 });
 }

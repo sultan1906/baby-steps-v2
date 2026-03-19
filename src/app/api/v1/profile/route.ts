@@ -42,7 +42,8 @@ export async function PUT(request: NextRequest) {
     updates.name = trimmed;
   }
   if (data.image !== undefined) {
-    if (data.image !== null && typeof data.image !== "string") return jsonError("image must be a string or null");
+    if (data.image !== null && typeof data.image !== "string")
+      return jsonError("image must be a string or null");
     updates.image = data.image || null;
   }
   if (data.bio !== undefined) {
