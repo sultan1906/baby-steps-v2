@@ -30,7 +30,11 @@ export async function POST(request: NextRequest) {
 
   const [loc] = await db
     .insert(savedLocation)
-    .values({ ...data, userId: session.user.id })
+    .values({
+      nickname: data.nickname,
+      address: data.address,
+      userId: session.user.id,
+    })
     .returning();
 
   return NextResponse.json(loc, { status: 201 });

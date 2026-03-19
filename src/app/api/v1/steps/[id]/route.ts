@@ -21,7 +21,18 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   if (!found) return jsonError("Not found or unauthorized", 404);
 
-  const [updated] = await db.update(step).set(data).where(eq(step.id, stepId)).returning();
+  const allowedFields: Record<string, unknown> = {};
+  if (data.date !== undefined) allowedFields.date = data.date;
+  if (data.photoUrl !== undefined) allowedFields.photoUrl = data.photoUrl;
+  if (data.locationId !== undefined) allowedFields.locationId = data.locationId;
+  if (data.locationNickname !== undefined) allowedFields.locationNickname = data.locationNickname;
+  if (data.weight !== undefined) allowedFields.weight = data.weight;
+  if (data.height !== undefined) allowedFields.height = data.height;
+  if (data.firstWord !== undefined) allowedFields.firstWord = data.firstWord;
+  if (data.title !== undefined) allowedFields.title = data.title;
+  if (data.caption !== undefined) allowedFields.caption = data.caption;
+
+  const [updated] = await db.update(step).set(allowedFields).where(eq(step.id, stepId)).returning();
 
   // If date changed, clean up orphaned daily description for the old date
   if (data.date && data.date !== found.date) {
@@ -81,9 +92,17 @@ export async function DELETE(
     .where(and(eq(step.babyId, found.babyId), eq(step.date, found.date)));
 
   if (remaining === 0) {
-    await db
-      .delete(dailyDescription)
-      .where(and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date)));
+    const [desc] = await db
+      .select({ description: dailyDescription.description })
+      .from(dailyDescription)
+      .where(
+        and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date))
+      );
+    if (!desc?.description) {
+      await db
+        .delete(dailyDescription)
+        .where(and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date)));
+    }
   }
 
   return NextResponse.json({ success: true });

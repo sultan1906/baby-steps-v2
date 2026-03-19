@@ -30,32 +30,35 @@ export async function POST(request: NextRequest) {
     return jsonError("name and birthdate are required");
   }
 
-  const [newBaby] = await db
-    .insert(baby)
-    .values({
-      userId: session.user.id,
-      name: data.name,
-      birthdate: data.birthdate,
-      photoUrl: data.photoUrl,
-    })
-    .returning();
+  const babyId = crypto.randomUUID();
 
-  // Auto-create "Arrival" milestone step
-  await db.insert(step).values({
-    babyId: newBaby.id,
-    date: data.birthdate,
-    isMajor: true,
-    type: "milestone",
-    title: "Arrival",
-    caption: "The journey begins today.",
-  });
-
-  // Auto-create first daily description
-  await db.insert(dailyDescription).values({
-    babyId: newBaby.id,
-    date: data.birthdate,
-    description: "The journey begins today.",
-  });
+  const [[newBaby]] = await db.batch([
+    db
+      .insert(baby)
+      .values({
+        id: babyId,
+        userId: session.user.id,
+        name: data.name,
+        birthdate: data.birthdate,
+        photoUrl: data.photoUrl,
+      })
+      .returning(),
+    // Auto-create "Arrival" milestone step
+    db.insert(step).values({
+      babyId,
+      date: data.birthdate,
+      isMajor: true,
+      type: "milestone",
+      title: "Arrival",
+      caption: "The journey begins today.",
+    }),
+    // Auto-create first daily description
+    db.insert(dailyDescription).values({
+      babyId,
+      date: data.birthdate,
+      description: "The journey begins today.",
+    }),
+  ]);
 
   // Set current baby cookie
   const cookieStore = await cookies();

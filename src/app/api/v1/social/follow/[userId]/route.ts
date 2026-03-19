@@ -43,11 +43,24 @@ export async function POST(
   }
 
   const status = target.isPublic ? "accepted" : "pending";
-  await db.insert(follow).values({
-    followerId: session.user.id,
-    followingId: targetUserId,
-    status,
-  });
+  try {
+    await db.insert(follow).values({
+      followerId: session.user.id,
+      followingId: targetUserId,
+      status,
+    });
+  } catch (err: unknown) {
+    // Unique constraint violation — concurrent duplicate request
+    if (err instanceof Error && err.message.includes("unique")) {
+      const [current] = await db
+        .select({ status: follow.status })
+        .from(follow)
+        .where(and(eq(follow.followerId, session.user.id), eq(follow.followingId, targetUserId)))
+        .limit(1);
+      if (current) return NextResponse.json({ status: current.status });
+    }
+    throw err;
+  }
 
   return NextResponse.json({ status }, { status: 201 });
 }

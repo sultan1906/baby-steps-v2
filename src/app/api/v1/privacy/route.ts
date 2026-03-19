@@ -24,6 +24,9 @@ export async function PUT(request: NextRequest) {
   if (error) return error;
 
   const { isPublic } = await request.json();
+  if (typeof isPublic !== "boolean") {
+    return NextResponse.json({ error: "isPublic must be a boolean" }, { status: 400 });
+  }
   await db.update(user).set({ isPublic }).where(eq(user.id, session.user.id));
 
   return NextResponse.json({ success: true });

@@ -16,9 +16,15 @@ export async function PUT(
   const { babyId } = await params;
   const data = await request.json();
 
+  const allowedFields = {
+    ...(data.name !== undefined && { name: data.name }),
+    ...(data.birthdate !== undefined && { birthdate: data.birthdate }),
+    ...(data.photoUrl !== undefined && { photoUrl: data.photoUrl }),
+  };
+
   const [updated] = await db
     .update(baby)
-    .set(data)
+    .set(allowedFields)
     .where(and(eq(baby.id, babyId), eq(baby.userId, session.user.id)))
     .returning();
 

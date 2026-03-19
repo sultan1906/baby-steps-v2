@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { dailyDescription } from "@/db/schema";
-import { getApiSession } from "@/lib/api-utils";
+import { baby, dailyDescription } from "@/db/schema";
+import { getApiSession, jsonError } from "@/lib/api-utils";
 import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -9,10 +9,18 @@ export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ babyId: string; date: string }> }
 ) {
-  const { error } = await getApiSession();
+  const { session, error } = await getApiSession();
   if (error) return error;
 
   const { babyId, date } = await params;
+
+  // Verify ownership
+  const [found] = await db
+    .select()
+    .from(baby)
+    .where(and(eq(baby.id, babyId), eq(baby.userId, session.user.id)))
+    .limit(1);
+  if (!found) return jsonError("Baby not found", 404);
 
   const result = await db.query.dailyDescription.findFirst({
     where: and(eq(dailyDescription.babyId, babyId), eq(dailyDescription.date, date)),
@@ -26,10 +34,19 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ babyId: string; date: string }> }
 ) {
-  const { error } = await getApiSession();
+  const { session, error } = await getApiSession();
   if (error) return error;
 
   const { babyId, date } = await params;
+
+  // Verify ownership
+  const [found] = await db
+    .select()
+    .from(baby)
+    .where(and(eq(baby.id, babyId), eq(baby.userId, session.user.id)))
+    .limit(1);
+  if (!found) return jsonError("Baby not found", 404);
+
   const { description } = await request.json();
 
   await db

@@ -51,9 +51,25 @@ export async function POST(
   if (!found) return jsonError("Baby not found", 404);
 
   const data = await request.json();
+
+  const allowedFields = {
+    babyId,
+    date: data.date,
+    type: data.type,
+    ...(data.photoUrl !== undefined && { photoUrl: data.photoUrl }),
+    ...(data.locationId !== undefined && { locationId: data.locationId }),
+    ...(data.locationNickname !== undefined && { locationNickname: data.locationNickname }),
+    ...(data.isMajor !== undefined && { isMajor: data.isMajor }),
+    ...(data.weight !== undefined && { weight: data.weight }),
+    ...(data.height !== undefined && { height: data.height }),
+    ...(data.firstWord !== undefined && { firstWord: data.firstWord }),
+    ...(data.title !== undefined && { title: data.title }),
+    ...(data.caption !== undefined && { caption: data.caption }),
+  };
+
   const [s] = await db
     .insert(step)
-    .values({ ...data, babyId })
+    .values(allowedFields)
     .returning();
 
   return NextResponse.json(s, { status: 201 });
