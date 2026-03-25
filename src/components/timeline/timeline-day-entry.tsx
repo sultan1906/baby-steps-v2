@@ -72,9 +72,9 @@ export function TimelineDayEntry({
             {/* Three-dot menu */}
             <DropdownMenu>
               <DropdownMenuTrigger
-              aria-label={`Open actions for ${shortDate}`}
-              className="p-1 text-stone-400 hover:text-stone-600 transition-colors rounded-full hover:bg-stone-100"
-            >
+                aria-label={`Open actions for ${shortDate}`}
+                className="p-1 text-stone-400 hover:text-stone-600 transition-colors rounded-full hover:bg-stone-100"
+              >
                 <MoreHorizontal className="w-5 h-5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="bottom">
