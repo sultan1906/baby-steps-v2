@@ -140,6 +140,69 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
     };
   }, []);
 
+  // --- Timeline scrub/drag on green line ---
+  const timelineRef = useRef<HTMLDivElement>(null);
+  const scrubStartY = useRef(0);
+  const scrubStartScroll = useRef(0);
+  const isScrubbing = useRef(false);
+
+  // Multiplier: dragging the full visible height of the scrub zone
+  // scrolls through the full document. This gives a natural scrollbar feel.
+  const getScrubMultiplier = useCallback(() => {
+    if (!timelineRef.current) return 3;
+    const totalScrollable = document.documentElement.scrollHeight - window.innerHeight;
+    const timelineHeight = timelineRef.current.offsetHeight;
+    if (timelineHeight <= 0) return 3;
+    return Math.max(1, totalScrollable / timelineHeight);
+  }, []);
+
+  const onScrubStart = useCallback((e: React.TouchEvent) => {
+    isScrubbing.current = true;
+    scrubStartY.current = e.touches[0].clientY;
+    scrubStartScroll.current = window.scrollY;
+  }, []);
+
+  const onScrubMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isScrubbing.current) return;
+      e.preventDefault();
+      const deltaY = e.touches[0].clientY - scrubStartY.current;
+      const multiplier = getScrubMultiplier();
+      window.scrollTo(0, scrubStartScroll.current + deltaY * multiplier);
+    },
+    [getScrubMultiplier]
+  );
+
+  const onScrubEnd = useCallback(() => {
+    isScrubbing.current = false;
+  }, []);
+
+  const onScrubMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      isScrubbing.current = true;
+      scrubStartY.current = e.clientY;
+      scrubStartScroll.current = window.scrollY;
+
+      const onMouseMove = (ev: MouseEvent) => {
+        if (!isScrubbing.current) return;
+        ev.preventDefault();
+        const deltaY = ev.clientY - scrubStartY.current;
+        const multiplier = getScrubMultiplier();
+        window.scrollTo(0, scrubStartScroll.current + deltaY * multiplier);
+      };
+
+      const onMouseUp = () => {
+        isScrubbing.current = false;
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+      };
+
+      window.addEventListener("mousemove", onMouseMove);
+      window.addEventListener("mouseup", onMouseUp);
+    },
+    [getScrubMultiplier]
+  );
+
   const openStory = (date: string, daySteps: Step[]) => {
     setStoryDate(date);
     setStorySteps(daySteps);
@@ -177,7 +240,7 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
       </div>
 
       {/* Vertical timeline */}
-      <div className="px-2 pb-28 pt-2">
+      <div className="relative px-2 pb-28 pt-2" ref={timelineRef}>
         {monthSections.length === 0 ? (
           <EmptyState
             icon={CalendarX2}
@@ -185,29 +248,40 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
             description="Tap + to add your first memory"
           />
         ) : (
-          monthSections.map((section) => (
-            <section
-              key={section.monthIndex}
-              ref={(el) => {
-                if (el) monthRefs.current.set(section.monthIndex, el);
-              }}
-              data-month-idx={section.monthIndex}
-            >
-              <MonthDivider monthIndex={section.monthIndex} birthdate={baby.birthdate} />
-              {section.dayGroups.map(([date, daySteps], i) => (
-                <TimelineDayEntry
-                  key={date}
-                  date={date}
-                  steps={daySteps}
-                  birthdate={baby.birthdate}
-                  monthIndex={section.monthIndex}
-                  description={descriptionMap.get(date)}
-                  isLast={i === section.dayGroups.length - 1}
-                  onOpenStory={openStory}
-                />
-              ))}
-            </section>
-          ))
+          <>
+            {/* Scrub overlay on the green line area */}
+            <div
+              className="absolute left-0 top-0 bottom-0 w-14 z-20 cursor-grab active:cursor-grabbing"
+              style={{ touchAction: "none" }}
+              onTouchStart={onScrubStart}
+              onTouchMove={onScrubMove}
+              onTouchEnd={onScrubEnd}
+              onMouseDown={onScrubMouseDown}
+            />
+            {monthSections.map((section) => (
+              <section
+                key={section.monthIndex}
+                ref={(el) => {
+                  if (el) monthRefs.current.set(section.monthIndex, el);
+                }}
+                data-month-idx={section.monthIndex}
+              >
+                <MonthDivider monthIndex={section.monthIndex} birthdate={baby.birthdate} />
+                {section.dayGroups.map(([date, daySteps], i) => (
+                  <TimelineDayEntry
+                    key={date}
+                    date={date}
+                    steps={daySteps}
+                    birthdate={baby.birthdate}
+                    description={descriptionMap.get(date)}
+                    isFirst={i === 0}
+                    isLast={i === section.dayGroups.length - 1}
+                    onOpenStory={openStory}
+                  />
+                ))}
+              </section>
+            ))}
+          </>
         )}
       </div>
 

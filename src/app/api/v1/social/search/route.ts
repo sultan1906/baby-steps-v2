@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { user, follow } from "@/db/schema";
-import { getApiSession, jsonError } from "@/lib/api-utils";
+import { getApiSession } from "@/lib/api-utils";
 import { eq, and, or, ilike, ne, inArray } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 

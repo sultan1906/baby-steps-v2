@@ -195,8 +195,8 @@ export function FollowedTimelineClient({
                   date={date}
                   steps={daySteps}
                   birthdate={baby.birthdate}
-                  monthIndex={section.monthIndex}
                   description={descriptionMap.get(date)}
+                  isFirst={i === 0}
                   isLast={i === section.dayGroups.length - 1}
                   readOnly
                   onOpenStory={openStory}
