@@ -145,6 +145,9 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
   const scrubStartY = useRef(0);
   const scrubStartScroll = useRef(0);
   const isScrubbing = useRef(false);
+  const mouseCleanupRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => () => mouseCleanupRef.current?.(), []);
 
   // Multiplier: dragging the full visible height of the scrub zone
   // scrolls through the full document. This gives a natural scrollbar feel.
@@ -191,14 +194,20 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
         window.scrollTo(0, scrubStartScroll.current + deltaY * multiplier);
       };
 
-      const onMouseUp = () => {
-        isScrubbing.current = false;
+      const cleanupMouseListeners = () => {
         window.removeEventListener("mousemove", onMouseMove);
         window.removeEventListener("mouseup", onMouseUp);
+        mouseCleanupRef.current = null;
+      };
+
+      const onMouseUp = () => {
+        isScrubbing.current = false;
+        cleanupMouseListeners();
       };
 
       window.addEventListener("mousemove", onMouseMove);
       window.addEventListener("mouseup", onMouseUp);
+      mouseCleanupRef.current = cleanupMouseListeners;
     },
     [getScrubMultiplier]
   );
