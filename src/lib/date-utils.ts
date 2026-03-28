@@ -26,7 +26,7 @@ function getAgeInWeeks(birthdate: Date, referenceDate = new Date()): number {
 /**
  * Number of complete months since birthdate.
  */
-export function getAgeInMonths(birthdate: Date, referenceDate = new Date()): number {
+function getAgeInMonths(birthdate: Date, referenceDate = new Date()): number {
   return differenceInMonths(referenceDate, birthdate);
 }
 

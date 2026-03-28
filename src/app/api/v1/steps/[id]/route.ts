@@ -26,8 +26,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (data.photoUrl !== undefined) allowedFields.photoUrl = data.photoUrl;
   if (data.locationId !== undefined) allowedFields.locationId = data.locationId;
   if (data.locationNickname !== undefined) allowedFields.locationNickname = data.locationNickname;
-  if (data.weight !== undefined) allowedFields.weight = data.weight;
-  if (data.height !== undefined) allowedFields.height = data.height;
   if (data.firstWord !== undefined) allowedFields.firstWord = data.firstWord;
   if (data.title !== undefined) allowedFields.title = data.title;
   if (data.caption !== undefined) allowedFields.caption = data.caption;

@@ -4,7 +4,7 @@ import { useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { parseISO, differenceInCalendarMonths } from "date-fns";
-import { MoreHorizontal, Plus, Play, Ruler, Eye, Trash2 } from "lucide-react";
+import { MoreHorizontal, Plus, Play, Eye, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { getDayNumber, formatShortDate, getMonthPillLabel } from "@/lib/date-utils";
 import { deleteStep } from "@/actions/steps";
@@ -109,13 +109,6 @@ function CardCarousel({
                   className="object-cover"
                 />
               )
-            ) : step.type === "growth" ? (
-              <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-1.5">
-                <Ruler className="w-8 h-8 text-white/80" />
-                <div className="text-white font-bold text-lg">{step.weight} kg</div>
-                {step.height && <div className="text-white/70 text-sm">{step.height} cm</div>}
-                <div className="text-white/50 text-xs font-medium mt-0.5">Growth Check-in</div>
-              </div>
             ) : (
               <div className="w-full h-full gradient-bg" />
             )}
@@ -156,7 +149,7 @@ export function MobileDayCard({
   const shortDate = formatShortDate(date);
   const monthIndex = differenceInCalendarMonths(dateDate, birthdateDate);
   const monthLabel = getMonthPillLabel(monthIndex);
-  const hasMedia = steps.some((s) => s.photoUrl || s.type === "growth");
+  const hasMedia = steps.some((s) => s.photoUrl);
   const displayDescription = description || steps.find((s) => s.caption)?.caption;
   const activeStep = steps[activeIndex];
   const canDelete = !readOnly && activeStep?.photoUrl;
