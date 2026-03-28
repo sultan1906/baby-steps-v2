@@ -4,7 +4,9 @@ import { parseISO } from "date-fns";
 import { MoreHorizontal, Plus, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { getDayNumber, formatShortDate, getMonthPillLabel } from "@/lib/date-utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { DayPhotoCarousel } from "./day-photo-carousel";
+import { MobileDayCard } from "./mobile-day-card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +36,22 @@ export function TimelineDayEntry({
   readOnly,
   onOpenStory,
 }: TimelineDayEntryProps) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
+  if (isMobile) {
+    return (
+      <MobileDayCard
+        date={date}
+        steps={steps}
+        birthdate={birthdate}
+        monthIndex={monthIndex}
+        description={description}
+        readOnly={readOnly}
+        onOpenStory={onOpenStory}
+      />
+    );
+  }
+
   const dayNumber = getDayNumber(parseISO(birthdate), parseISO(date));
   const shortDate = formatShortDate(date);
   const monthLabel = getMonthPillLabel(monthIndex);
