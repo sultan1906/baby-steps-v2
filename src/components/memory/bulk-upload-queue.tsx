@@ -105,7 +105,7 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
           role="button"
           tabIndex={0}
           onClick={() => inputRef.current?.click()}
-          onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), inputRef.current?.click())}
           className="flex flex-col items-center justify-center aspect-video rounded-[2rem] border-2 border-dashed border-stone-200 hover:border-rose-300 hover:bg-rose-50/30 cursor-pointer transition-colors"
         >
           <Camera className="w-8 h-8 text-rose-300 mb-2" />
@@ -118,7 +118,7 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
           tabIndex={0}
           className="aspect-video rounded-[2rem] overflow-hidden relative cursor-pointer group"
           onClick={() => inputRef.current?.click()}
-          onKeyDown={(e) => e.key === "Enter" && inputRef.current?.click()}
+          onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), inputRef.current?.click())}
         >
           {queue[0].status === "done" ? (
             queue[0].mediaType === "video" ? (

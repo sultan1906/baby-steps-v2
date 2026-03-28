@@ -11,10 +11,11 @@ interface MapPickerContentProps {
   open: boolean;
   onClose: () => void;
   onSelect: (locationId: string, nickname: string) => void;
+  showHeader?: boolean;
 }
 
 /** The inner location picker UI — used both inline (mobile drawer) and inside a Dialog (desktop). */
-function MapPickerContent({ open, onClose, onSelect }: MapPickerContentProps) {
+function MapPickerContent({ open, onClose, onSelect, showHeader = true }: MapPickerContentProps) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<PlaceSuggestion[]>([]);
   const [searching, setSearching] = useState(false);
@@ -108,16 +109,18 @@ function MapPickerContent({ open, onClose, onSelect }: MapPickerContentProps) {
 
   return (
     <>
-      {/* Header with back button */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onClose}
-          className="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center text-stone-500"
-        >
-          <ArrowLeft className="w-4 h-4" />
-        </button>
-        <h2 className="text-lg font-bold text-stone-800">Choose Location</h2>
-      </div>
+      {/* Header with back button — only shown for inline (mobile) variant */}
+      {showHeader && (
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onClose}
+            className="w-9 h-9 rounded-xl bg-stone-100 flex items-center justify-center text-stone-500"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <h2 className="text-lg font-bold text-stone-800">Choose Location</h2>
+        </div>
+      )}
 
       {/* Search input */}
       <div className="relative mt-2">
@@ -224,7 +227,7 @@ function MapPickerDialog({ open, onClose, onSelect }: MapPickerDialogProps) {
         <DialogHeader>
           <DialogTitle className="text-lg font-bold text-stone-800">Choose Location</DialogTitle>
         </DialogHeader>
-        <MapPickerContent open={open} onClose={onClose} onSelect={onSelect} />
+        <MapPickerContent open={open} onClose={onClose} onSelect={onSelect} showHeader={false} />
       </DialogContent>
     </Dialog>
   );
