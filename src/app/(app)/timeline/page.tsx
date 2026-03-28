@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { getCurrentBaby } from "@/lib/baby-utils";
 import { db } from "@/db";
 import { step, dailyDescription } from "@/db/schema";
-import { eq, and, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { TimelineClient } from "./timeline-client";
 
 export default async function TimelinePage() {
@@ -19,7 +19,7 @@ export default async function TimelinePage() {
     db
       .select()
       .from(step)
-      .where(and(eq(step.babyId, currentBaby.id), sql`${step.type} != 'growth'`))
+      .where(eq(step.babyId, currentBaby.id))
       .orderBy(step.date, step.createdAt),
     db.select().from(dailyDescription).where(eq(dailyDescription.babyId, currentBaby.id)),
   ]);

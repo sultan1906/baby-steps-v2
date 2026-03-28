@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { step, baby, dailyDescription } from "@/db/schema";
 import { getApiSession, jsonError } from "@/lib/api-utils";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 /** Get all steps and descriptions for a baby */
@@ -24,7 +24,7 @@ export async function GET(
   if (!found) return jsonError("Baby not found", 404);
 
   const [allSteps, allDescriptions] = await Promise.all([
-    db.select().from(step).where(and(eq(step.babyId, babyId), sql`${step.type} != 'growth'`)).orderBy(step.date, step.createdAt),
+    db.select().from(step).where(eq(step.babyId, babyId)).orderBy(step.date, step.createdAt),
     db.select().from(dailyDescription).where(eq(dailyDescription.babyId, babyId)),
   ]);
 

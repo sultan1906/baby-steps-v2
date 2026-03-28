@@ -5,7 +5,7 @@ import { user, follow, baby, step, dailyDescription } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq, and, or, ilike, count, desc, ne, inArray, sql } from "drizzle-orm";
+import { eq, and, or, ilike, count, desc, ne, inArray } from "drizzle-orm";
 import type { UserSearchResult, FollowRequestItem, FollowedUser, UserProfile } from "@/types";
 
 async function getSession() {
@@ -452,7 +452,7 @@ export async function getFollowedUserTimeline(targetUserId: string, babyId: stri
   if (!targetBaby) throw new Error("Baby not found");
 
   const [allSteps, allDescriptions] = await Promise.all([
-    db.select().from(step).where(and(eq(step.babyId, babyId), sql`${step.type} != 'growth'`)).orderBy(step.date, step.createdAt),
+    db.select().from(step).where(eq(step.babyId, babyId)).orderBy(step.date, step.createdAt),
     db.select().from(dailyDescription).where(eq(dailyDescription.babyId, babyId)),
   ]);
 

@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { getCurrentBaby } from "@/lib/baby-utils";
 import { db } from "@/db";
 import { step } from "@/db/schema";
-import { eq, desc, and, sql } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { ShareClient } from "./share-client";
 
 export default async function SharePage() {
@@ -17,7 +17,7 @@ export default async function SharePage() {
   const allSteps = await db
     .select()
     .from(step)
-    .where(and(eq(step.babyId, currentBaby.id), sql`${step.type} != 'growth'`))
+    .where(eq(step.babyId, currentBaby.id))
     .orderBy(desc(step.date));
 
   const photoSteps = allSteps.filter((s) => s.photoUrl);
