@@ -2,11 +2,13 @@
 
 import { useRef, useState, useCallback } from "react";
 import Image from "next/image";
-import { parseISO } from "date-fns";
-import { MoreHorizontal, Plus, Play, Ruler, Eye } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { parseISO, differenceInCalendarMonths } from "date-fns";
+import { MoreHorizontal, Plus, Play, Ruler, Eye, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { differenceInCalendarMonths } from "date-fns";
 import { getDayNumber, formatShortDate, getMonthPillLabel } from "@/lib/date-utils";
+import { deleteStep } from "@/actions/steps";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -137,6 +139,7 @@ export function MobileDayCard({
   readOnly,
   onOpenStory,
 }: MobileDayCardProps) {
+  const router = useRouter();
   const birthdateDate = parseISO(birthdate);
   const dateDate = parseISO(date);
   const dayNumber = getDayNumber(birthdateDate, dateDate);
@@ -220,9 +223,36 @@ export function MobileDayCard({
         {/* Photo carousel as background */}
         <CardCarousel steps={steps} onTap={() => onOpenStory(date, steps)} />
 
-        {/* Date badge floating top-left */}
-        <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm rounded-xl px-2.5 py-1 shadow-sm pointer-events-none">
-          <span className="text-xs font-semibold text-stone-600">{shortDate}</span>
+        {/* Three-dot menu — top right */}
+        <div className="absolute top-3 right-3 z-10">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="p-1.5 text-white/80 hover:text-white transition-colors rounded-full bg-black/20 backdrop-blur-sm">
+              <MoreHorizontal className="w-4 h-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" side="bottom">
+              <DropdownMenuItem onClick={() => onOpenStory(date, steps)}>
+                <Eye className="w-4 h-4 mr-2" />
+                View day
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-600 focus:text-red-600"
+                onClick={async () => {
+                  const first = steps.find((s) => s.photoUrl);
+                  if (!first) return;
+                  try {
+                    await deleteStep(first.id);
+                    toast.success("Photo deleted");
+                    router.refresh();
+                  } catch {
+                    toast.error("Failed to delete photo");
+                  }
+                }}
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete photo
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Gradient overlay at bottom */}
@@ -236,21 +266,6 @@ export function MobileDayCard({
               {displayDescription}
             </p>
           )}
-        </div>
-
-        {/* Three-dot menu */}
-        <div className="absolute bottom-3 right-3 z-10">
-          <DropdownMenu>
-            <DropdownMenuTrigger className="p-1.5 text-white/80 hover:text-white transition-colors rounded-full bg-black/20 backdrop-blur-sm">
-              <MoreHorizontal className="w-4 h-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" side="top">
-              <DropdownMenuItem onClick={() => onOpenStory(date, steps)}>
-                <Eye className="w-4 h-4 mr-2" />
-                View day
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
     </motion.div>
