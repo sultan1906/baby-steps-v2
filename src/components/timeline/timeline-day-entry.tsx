@@ -4,7 +4,9 @@ import { parseISO } from "date-fns";
 import { MoreHorizontal, Plus, Eye } from "lucide-react";
 import { motion } from "framer-motion";
 import { getDayNumber, formatShortDate } from "@/lib/date-utils";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { DayPhotoCarousel } from "./day-photo-carousel";
+import { MobileDayCard } from "./mobile-day-card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +36,42 @@ export function TimelineDayEntry({
   readOnly,
   onOpenStory,
 }: TimelineDayEntryProps) {
+  const isMobile = useMediaQuery("(max-width: 767px)");
+
+  if (isMobile) {
+    return (
+      <>
+        <div className="flex">
+          {/* Left axis column */}
+          <div className="relative w-8 flex-shrink-0 flex justify-center">
+            <div
+              className={`absolute ${isFirst ? "top-[10px]" : "top-0"} bottom-0 w-0.5 bg-emerald-400/40`}
+            />
+            <div className="relative z-10 mt-3 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+          </div>
+          {/* Card content */}
+          <div className="flex-1 min-w-0 pr-1">
+            <MobileDayCard
+              date={date}
+              steps={steps}
+              birthdate={birthdate}
+              description={description}
+              readOnly={readOnly}
+              onOpenStory={onOpenStory}
+            />
+          </div>
+        </div>
+        {isLast && (
+          <div className="flex">
+            <div className="relative w-8 flex-shrink-0 flex justify-center">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
   const dayNumber = getDayNumber(parseISO(birthdate), parseISO(date));
   const shortDate = formatShortDate(date);
   const hasMedia = steps.some((s) => s.photoUrl || s.type === "growth");

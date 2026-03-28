@@ -249,7 +249,7 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
       </div>
 
       {/* Vertical timeline */}
-      <div className="relative px-2 pb-28 pt-2" ref={timelineRef}>
+      <div className="relative px-3 md:px-2 pb-28 pt-2" ref={timelineRef}>
         {monthSections.length === 0 ? (
           <EmptyState
             icon={CalendarX2}
