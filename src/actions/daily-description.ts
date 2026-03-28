@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { dailyDescription } from "@/db/schema";
+import { baby, dailyDescription } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { revalidatePath } from "next/cache";
@@ -18,7 +18,17 @@ async function getSession() {
  * Uses the unique(babyId, date) constraint for ON CONFLICT DO UPDATE.
  */
 export async function upsertDailyDescription(babyId: string, date: string, description: string) {
-  await getSession();
+  const session = await getSession();
+
+  const owned = await db
+    .select({ id: baby.id })
+    .from(baby)
+    .where(and(eq(baby.id, babyId), eq(baby.userId, session.user.id)))
+    .then((rows) => rows.length > 0);
+
+  if (!owned) {
+    throw new Error("Unauthorized: baby does not belong to current user");
+  }
 
   await db
     .insert(dailyDescription)
