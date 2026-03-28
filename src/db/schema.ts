@@ -4,7 +4,6 @@ import {
   text,
   timestamp,
   boolean,
-  real,
   index,
   unique,
   check,
@@ -13,13 +12,7 @@ import { relations, sql } from "drizzle-orm";
 
 // ── Enums ─────────────────────────────────────────────────────────────────────
 
-export const stepTypeEnum = pgEnum("step_type", [
-  "photo",
-  "video",
-  "growth",
-  "first_word",
-  "milestone",
-]);
+export const stepTypeEnum = pgEnum("step_type", ["photo", "video", "first_word", "milestone"]);
 
 export const followStatusEnum = pgEnum("follow_status", ["pending", "accepted", "rejected"]);
 
@@ -137,8 +130,6 @@ export const step = pgTable(
     locationNickname: text("location_nickname"), // denormalized for fast display
     isMajor: boolean("is_major").notNull().default(false),
     type: stepTypeEnum("type").notNull().default("photo"),
-    weight: real("weight"), // kg — for growth type
-    height: real("height"), // cm — for growth type
     firstWord: text("first_word"), // for first_word type
     title: text("title"),
     caption: text("caption"),

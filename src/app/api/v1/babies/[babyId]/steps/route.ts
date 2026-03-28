@@ -60,8 +60,6 @@ export async function POST(
     ...(data.locationId !== undefined && { locationId: data.locationId }),
     ...(data.locationNickname !== undefined && { locationNickname: data.locationNickname }),
     ...(data.isMajor !== undefined && { isMajor: data.isMajor }),
-    ...(data.weight !== undefined && { weight: data.weight }),
-    ...(data.height !== undefined && { height: data.height }),
     ...(data.firstWord !== undefined && { firstWord: data.firstWord }),
     ...(data.title !== undefined && { title: data.title }),
     ...(data.caption !== undefined && { caption: data.caption }),

@@ -3,7 +3,7 @@ export type { Baby, Step, SavedLocation, DailyDescription } from "@/db/schema";
 
 // ── Step types ────────────────────────────────────────────────────────────────
 
-export type StepType = "photo" | "video" | "growth" | "first_word" | "milestone";
+export type StepType = "photo" | "video" | "first_word" | "milestone";
 
 // ── Upload queue (client-side) ────────────────────────────────────────────────
 
@@ -31,8 +31,6 @@ export interface StepInput {
   locationNickname?: string;
   isMajor?: boolean;
   type?: StepType;
-  weight?: number;
-  height?: number;
   firstWord?: string;
   title?: string;
   caption?: string;

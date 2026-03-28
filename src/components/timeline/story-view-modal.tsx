@@ -11,8 +11,6 @@ import {
   Play,
   Volume2,
   VolumeX,
-  Ruler,
-  Pencil,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
@@ -22,7 +20,6 @@ import { upsertDailyDescription, getDailyDescription } from "@/actions/daily-des
 import { deleteStep } from "@/actions/steps";
 import { toast } from "sonner";
 import { useBabyOptional } from "@/components/baby/baby-provider";
-import { EditGrowthDrawer } from "@/components/memory/edit-growth-drawer";
 import type { Step } from "@/types";
 
 interface StoryViewModalProps {
@@ -60,7 +57,6 @@ export function StoryViewModal({
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const confirmDelete = pendingDeleteId !== null;
   const [deleting, setDeleting] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -91,7 +87,7 @@ export function StoryViewModal({
 
   // Auto-advance timer
   useEffect(() => {
-    if (!open || editingDesc || confirmDelete || editOpen) return;
+    if (!open || editingDesc || confirmDelete) return;
 
     // Don't auto-advance on video steps — let the user control playback
     if (currentStep?.type === "video") return;
@@ -114,7 +110,6 @@ export function StoryViewModal({
     currentIndex,
     editingDesc,
     confirmDelete,
-    editOpen,
     localSteps.length,
     onClose,
     onNextDay,
@@ -255,15 +250,6 @@ export function StoryViewModal({
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                {!readOnly && currentStep?.type === "growth" && (
-                  <button
-                    aria-label="Edit growth entry"
-                    onClick={() => setEditOpen(true)}
-                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-                  >
-                    <Pencil className="w-5 h-5" />
-                  </button>
-                )}
                 {!readOnly && (
                   <button
                     aria-label="Delete photo"
@@ -325,15 +311,6 @@ export function StoryViewModal({
                         className="object-contain"
                       />
                     )
-                  ) : currentStep?.type === "growth" ? (
-                    <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-3 px-6">
-                      <Ruler className="w-14 h-14 text-white/80" />
-                      <div className="text-white font-bold text-3xl">{currentStep.weight} kg</div>
-                      {currentStep.height && (
-                        <div className="text-white/70 text-lg">{currentStep.height} cm</div>
-                      )}
-                      <div className="text-white/50 text-sm font-medium mt-1">Growth Check-in</div>
-                    </div>
                   ) : (
                     <div className="w-full h-full gradient-bg flex items-center justify-center">
                       <span className="text-6xl">🌱</span>
@@ -513,36 +490,6 @@ export function StoryViewModal({
           </div>
         </motion.div>
       </AnimatePresence>
-
-      {/* Edit growth drawer — outside AnimatePresence since Drawer/Dialog manage their own animations */}
-      {!readOnly && editOpen && currentStep && ctx?.baby && (
-        <EditGrowthDrawer
-          step={currentStep}
-          baby={ctx.baby}
-          open={editOpen}
-          onClose={() => setEditOpen(false)}
-          onSaved={(updated) => {
-            if (updated.date === date) {
-              setEditedSteps((prev) => new Map(prev).set(updated.id, updated));
-            } else {
-              // Date changed — step no longer belongs to this day's story
-              const remaining = localSteps.filter((s) => s.id !== updated.id);
-              if (remaining.length === 0) {
-                onClose();
-                return;
-              }
-              setEditedSteps((prev) => {
-                const next = new Map(prev);
-                next.delete(updated.id);
-                return next;
-              });
-              setDeletedIds((prev) => new Set([...prev, updated.id]));
-              setCurrentIndex(Math.min(currentIndex, remaining.length - 1));
-            }
-          }}
-          elevated
-        />
-      )}
     </>
   );
 }

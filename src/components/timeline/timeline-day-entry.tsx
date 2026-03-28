@@ -74,7 +74,7 @@ export function TimelineDayEntry({
 
   const dayNumber = getDayNumber(parseISO(birthdate), parseISO(date));
   const shortDate = formatShortDate(date);
-  const hasMedia = steps.some((s) => s.photoUrl || s.type === "growth");
+  const hasMedia = steps.some((s) => s.photoUrl);
 
   // Use first step caption as fallback description
   const displayDescription = description || steps.find((s) => s.caption)?.caption;

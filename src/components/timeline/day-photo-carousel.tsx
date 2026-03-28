@@ -2,7 +2,7 @@
 
 import { useRef, useState, useCallback } from "react";
 import Image from "next/image";
-import { Play, Ruler } from "lucide-react";
+import { Play } from "lucide-react";
 import type { Step } from "@/types";
 
 interface DayPhotoCarouselProps {
@@ -82,13 +82,6 @@ export function DayPhotoCarousel({ steps, onTap }: DayPhotoCarouselProps) {
                   <Image src={step.photoUrl} alt="" fill sizes="240px" className="object-cover" />
                 </div>
               )
-            ) : step.type === "growth" ? (
-              <div className="aspect-square rounded-xl overflow-hidden gradient-bg flex flex-col items-center justify-center gap-1.5">
-                <Ruler className="w-7 h-7 text-white/80" />
-                <div className="text-white font-bold text-base">{step.weight} kg</div>
-                {step.height && <div className="text-white/70 text-xs">{step.height} cm</div>}
-                <div className="text-white/50 text-[10px] font-medium mt-0.5">Growth Check-in</div>
-              </div>
             ) : (
               <div className="aspect-square rounded-xl overflow-hidden gradient-bg" />
             )}

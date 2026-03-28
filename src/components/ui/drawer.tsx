@@ -55,4 +55,6 @@ function DrawerContent({
   );
 }
 
-export { Drawer, DrawerContent };
+const DrawerTitle = DrawerPrimitive.Title;
+
+export { Drawer, DrawerContent, DrawerTitle };

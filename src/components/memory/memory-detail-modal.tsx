@@ -1,23 +1,11 @@
 "use client";
 
 import { useRef, useState } from "react";
-import {
-  X,
-  MapPin,
-  Calendar,
-  Share2,
-  Award,
-  Play,
-  Volume2,
-  VolumeX,
-  Pencil,
-  Ruler,
-} from "lucide-react";
+import { X, MapPin, Calendar, Share2, Award, Play, Volume2, VolumeX } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { parseISO } from "date-fns";
 import { getDayNumber, formatMemoryDate } from "@/lib/date-utils";
-import { EditGrowthDrawer } from "./edit-growth-drawer";
 import type { Step, Baby } from "@/types";
 
 interface MemoryDetailModalProps {
@@ -25,20 +13,12 @@ interface MemoryDetailModalProps {
   baby: Baby;
   open: boolean;
   onClose: () => void;
-  onStepUpdated?: (updated: Step) => void;
 }
 
-export function MemoryDetailModal({
-  step,
-  baby,
-  open,
-  onClose,
-  onStepUpdated,
-}: MemoryDetailModalProps) {
+export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailModalProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isVideoPaused, setIsVideoPaused] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
   const [videoStateKey, setVideoStateKey] = useState(step.id);
   if (videoStateKey !== step.id) {
     setVideoStateKey(step.id);
@@ -126,13 +106,6 @@ export function MemoryDetailModal({
                     className="object-cover"
                   />
                 )
-              ) : step.type === "growth" ? (
-                <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-3 px-6">
-                  <Ruler className="w-14 h-14 text-white/80" />
-                  <div className="text-white font-bold text-3xl">{step.weight} kg</div>
-                  {step.height && <div className="text-white/70 text-lg">{step.height} cm</div>}
-                  <div className="text-white/50 text-sm font-medium mt-1">Growth Check-in</div>
-                </div>
               ) : (
                 <div className="w-full h-full gradient-bg" />
               )}
@@ -206,22 +179,6 @@ export function MemoryDetailModal({
                 </div>
               )}
 
-              {/* Growth data */}
-              {step.type === "growth" && step.weight && (
-                <div className="bg-white border border-stone-100 rounded-2xl p-4 flex gap-6 mb-4">
-                  <div className="flex items-center gap-2 text-stone-700">
-                    <span className="text-sm font-medium text-stone-500">Weight</span>
-                    <span className="font-bold">{step.weight} kg</span>
-                  </div>
-                  {step.height && (
-                    <div className="flex items-center gap-2 text-stone-700">
-                      <span className="text-sm font-medium text-stone-500">Height</span>
-                      <span className="font-bold">{step.height} cm</span>
-                    </div>
-                  )}
-                </div>
-              )}
-
               {/* First word */}
               {step.type === "first_word" && step.firstWord && (
                 <div className="bg-rose-50 rounded-2xl p-6 text-center mb-4">
@@ -236,15 +193,6 @@ export function MemoryDetailModal({
             {/* Sticky footer */}
             <div className="sticky bottom-0 bg-white/80 backdrop-blur-xl border-t border-stone-100 p-4">
               <div className="flex gap-3">
-                {step.type === "growth" && (
-                  <button
-                    onClick={() => setEditOpen(true)}
-                    className="flex-1 py-3.5 rounded-2xl border border-stone-200 text-stone-700 font-bold flex items-center justify-center gap-2 hover:bg-stone-50 transition-colors"
-                  >
-                    <Pencil className="w-4 h-4" />
-                    Edit
-                  </button>
-                )}
                 <button
                   onClick={handleShare}
                   className="flex-1 gradient-bg-vibrant py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-2"
@@ -257,17 +205,6 @@ export function MemoryDetailModal({
           </motion.div>
         </motion.div>
       </AnimatePresence>
-
-      {/* Edit growth drawer — outside AnimatePresence since Drawer/Dialog manage their own animations */}
-      {editOpen && (
-        <EditGrowthDrawer
-          step={step}
-          baby={baby}
-          open={editOpen}
-          onClose={() => setEditOpen(false)}
-          onSaved={(updated) => onStepUpdated?.(updated)}
-        />
-      )}
     </>
   );
 }

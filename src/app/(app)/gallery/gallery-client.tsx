@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Grid3x3, List, Award, MapPin, Calendar, Play, Ruler } from "lucide-react";
+import { Grid3x3, List, Award, MapPin, Calendar, Play } from "lucide-react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { BackButton } from "@/components/shared/back-button";
@@ -136,14 +136,6 @@ export function GalleryClient({ steps, baby }: GalleryClientProps) {
                       className="object-cover group-hover:scale-110 transition-transform duration-500"
                     />
                   )
-                ) : s.type === "growth" ? (
-                  <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-1 px-4">
-                    <Ruler className="w-7 h-7 text-white/80" />
-                    {s.weight != null && (
-                      <div className="text-white font-bold text-sm">{s.weight} kg</div>
-                    )}
-                    {s.height != null && <div className="text-white/70 text-xs">{s.height} cm</div>}
-                  </div>
                 ) : (
                   <div className="w-full h-full gradient-bg" />
                 )}
@@ -192,13 +184,6 @@ export function GalleryClient({ steps, baby }: GalleryClientProps) {
                     ) : (
                       <Image src={s.photoUrl} alt="" fill sizes="80px" className="object-cover" />
                     )
-                  ) : s.type === "growth" ? (
-                    <div className="w-full h-full gradient-bg flex flex-col items-center justify-center gap-1">
-                      <Ruler className="w-6 h-6 text-white/80" />
-                      {s.weight != null && (
-                        <div className="text-white font-bold text-xs">{s.weight} kg</div>
-                      )}
-                    </div>
                   ) : (
                     <div className="w-full h-full gradient-bg" />
                   )}
@@ -239,7 +224,6 @@ export function GalleryClient({ steps, baby }: GalleryClientProps) {
           baby={baby}
           open={!!selectedStep}
           onClose={() => setSelectedStep(null)}
-          onStepUpdated={(updated) => setSelectedStep(updated)}
         />
       )}
     </div>

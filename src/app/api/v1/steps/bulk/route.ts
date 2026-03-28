@@ -36,8 +36,6 @@ export async function POST(request: NextRequest) {
       ...(s.locationId !== undefined && { locationId: s.locationId as string }),
       ...(s.locationNickname !== undefined && { locationNickname: s.locationNickname as string }),
       ...(s.isMajor !== undefined && { isMajor: s.isMajor as boolean }),
-      ...(s.weight !== undefined && { weight: s.weight as number }),
-      ...(s.height !== undefined && { height: s.height as number }),
       ...(s.firstWord !== undefined && { firstWord: s.firstWord as string }),
       ...(s.title !== undefined && { title: s.title as string }),
       ...(s.caption !== undefined && { caption: s.caption as string }),
