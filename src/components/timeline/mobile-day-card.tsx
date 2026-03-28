@@ -206,7 +206,10 @@ export function MobileDayCard({
           {/* Three-dot menu */}
           <div className="absolute top-3 right-3 z-10">
             <DropdownMenu>
-              <DropdownMenuTrigger aria-label="Day actions" className="p-1 text-stone-400 hover:text-stone-600 transition-colors rounded-full bg-white/80 backdrop-blur-sm">
+              <DropdownMenuTrigger
+                aria-label="Day actions"
+                className="p-1 text-stone-400 hover:text-stone-600 transition-colors rounded-full bg-white/80 backdrop-blur-sm"
+              >
                 <MoreHorizontal className="w-4 h-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="bottom">
@@ -243,7 +246,10 @@ export function MobileDayCard({
         {/* Three-dot menu — top right */}
         <div className="absolute top-3 right-3 z-10">
           <DropdownMenu>
-            <DropdownMenuTrigger aria-label="Day actions" className="p-1.5 text-white/80 hover:text-white transition-colors rounded-full bg-black/20 backdrop-blur-sm">
+            <DropdownMenuTrigger
+              aria-label="Day actions"
+              className="p-1.5 text-white/80 hover:text-white transition-colors rounded-full bg-black/20 backdrop-blur-sm"
+            >
               <MoreHorizontal className="w-4 h-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom">
