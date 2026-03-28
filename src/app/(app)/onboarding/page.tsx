@@ -87,8 +87,8 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-[3rem] p-10 shadow-sm border border-stone-100/50 relative overflow-hidden">
+    <div className="min-h-dvh bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-[3rem] p-6 sm:p-10 shadow-sm border border-stone-100/50 relative overflow-hidden">
         {/* Progress pills */}
         <div className="flex gap-2 mb-8">
           <div className="flex-1 h-2 rounded-full gradient-bg" />
@@ -117,7 +117,7 @@ export default function OnboardingPage() {
         </AnimatePresence>
 
         {/* Step content with slide animation */}
-        <div className="relative overflow-hidden">
+        <div className="relative overflow-x-hidden">
           <AnimatePresence mode="wait" initial={false}>
             {step === 1 ? (
               <motion.div

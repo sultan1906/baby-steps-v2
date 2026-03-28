@@ -5,6 +5,7 @@ import Image from "next/image";
 import { parseISO } from "date-fns";
 import { MoreHorizontal, Plus, Play, Ruler, Eye } from "lucide-react";
 import { motion } from "framer-motion";
+import { differenceInCalendarMonths } from "date-fns";
 import { getDayNumber, formatShortDate, getMonthPillLabel } from "@/lib/date-utils";
 import {
   DropdownMenu,
@@ -18,7 +19,6 @@ interface MobileDayCardProps {
   date: string;
   steps: Step[];
   birthdate: string;
-  monthIndex: number;
   description?: string;
   readOnly?: boolean;
   onOpenStory: (date: string, steps: Step[]) => void;
@@ -133,13 +133,15 @@ export function MobileDayCard({
   date,
   steps,
   birthdate,
-  monthIndex,
   description,
   readOnly,
   onOpenStory,
 }: MobileDayCardProps) {
-  const dayNumber = getDayNumber(parseISO(birthdate), parseISO(date));
+  const birthdateDate = parseISO(birthdate);
+  const dateDate = parseISO(date);
+  const dayNumber = getDayNumber(birthdateDate, dateDate);
   const shortDate = formatShortDate(date);
+  const monthIndex = differenceInCalendarMonths(dateDate, birthdateDate);
   const monthLabel = getMonthPillLabel(monthIndex);
   const hasMedia = steps.some((s) => s.photoUrl || s.type === "growth");
   const displayDescription = description || steps.find((s) => s.caption)?.caption;
