@@ -9,7 +9,7 @@ import { useMediaQuery } from "@/hooks/use-media-query";
 import { useBaby } from "@/components/baby/baby-provider";
 import { createStep, createBulkSteps } from "@/actions/steps";
 import { BulkUploadQueue } from "./bulk-upload-queue";
-import { MapPickerDialog } from "./map-picker-dialog";
+import { MapPickerDialog, MapPickerInline } from "./map-picker-dialog";
 import { todayString } from "@/lib/date-utils";
 import type { UploadQueueItem } from "@/types";
 import confetti from "canvas-confetti";
@@ -217,9 +217,9 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         {children}
       </div>
 
-      {/* Map picker — rendered only when needed so its portal mounts after the
-          Drawer's portal, ensuring it stacks on top at the same z-index. */}
-      {showMapPicker && (
+      {/* Map picker — desktop: Dialog portal, mobile: rendered inline inside the
+          drawer to avoid vaul's touch-event capture on iOS. */}
+      {!isMobile && showMapPicker && (
         <MapPickerDialog
           open={showMapPicker}
           onClose={() => setShowMapPicker(false)}
@@ -236,7 +236,19 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         <Drawer open={open} onOpenChange={setOpen}>
           <DrawerContent className="max-h-[90vh] rounded-t-[3rem]">
             <DrawerTitle className="sr-only">Capture Memory</DrawerTitle>
-            {content}
+            {showMapPicker ? (
+              <MapPickerInline
+                open={showMapPicker}
+                onClose={() => setShowMapPicker(false)}
+                onSelect={(id, nickname) => {
+                  setLocationId(id);
+                  setLocationNickname(nickname);
+                  setShowMapPicker(false);
+                }}
+              />
+            ) : (
+              content
+            )}
           </DrawerContent>
         </Drawer>
       ) : (
