@@ -1,5 +1,6 @@
 "use client";
 
+import { useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Images, Share2, BarChart2, Settings, Users } from "lucide-react";
 import { BabySwitcherDropdown } from "@/components/baby/baby-switcher-dropdown";
@@ -7,11 +8,21 @@ import { useBaby } from "@/components/baby/baby-provider";
 import { getAgeLabel, getDayNumber } from "@/lib/date-utils";
 import { parseISO } from "date-fns";
 
+const emptySubscribe = () => () => {};
+
+function useClientDayNumber(birthdateDate: Date): number | null {
+  return useSyncExternalStore(
+    emptySubscribe,
+    () => getDayNumber(birthdateDate, new Date()),
+    () => null
+  );
+}
+
 export function TimelineHeader() {
   const { baby, pendingRequestCount } = useBaby();
   const birthdateDate = parseISO(baby.birthdate);
   const ageLabel = getAgeLabel(birthdateDate);
-  const totalDays = getDayNumber(birthdateDate, new Date());
+  const totalDays = useClientDayNumber(birthdateDate);
 
   return (
     <div>
@@ -23,7 +34,8 @@ export function TimelineHeader() {
             <div className="font-bold text-stone-800 leading-tight">{baby.name}</div>
             <div className="text-xs text-stone-400">
               <span className="md:hidden">
-                {ageLabel} &middot; {totalDays} days of growth
+                {ageLabel}
+                {totalDays !== null && <> &middot; {totalDays} days of growth</>}
               </span>
               <span className="hidden md:inline">{ageLabel}</span>
             </div>
@@ -52,7 +64,7 @@ export function TimelineHeader() {
             aria-label={
               pendingRequestCount > 0 ? `Following, ${pendingRequestCount} pending` : "Following"
             }
-            className="hidden md:block text-stone-400 hover:text-rose-500 transition-colors relative"
+            className="text-stone-400 hover:text-rose-500 transition-colors relative"
           >
             <Users className="w-5 h-5" />
             {pendingRequestCount > 0 && (
