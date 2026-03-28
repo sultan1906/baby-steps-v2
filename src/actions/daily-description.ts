@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { dailyDescription } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 
 async function getSession() {
@@ -26,6 +27,8 @@ export async function upsertDailyDescription(babyId: string, date: string, descr
       target: [dailyDescription.babyId, dailyDescription.date],
       set: { description, updatedAt: new Date() },
     });
+
+  revalidatePath("/timeline");
 }
 
 /**
