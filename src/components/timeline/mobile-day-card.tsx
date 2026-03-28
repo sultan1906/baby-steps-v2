@@ -26,9 +26,18 @@ interface MobileDayCardProps {
   onOpenStory: (date: string, steps: Step[]) => void;
 }
 
-function CardCarousel({ steps, onTap }: { steps: Step[]; onTap: () => void }) {
+function CardCarousel({
+  steps,
+  onTap,
+  activeIndex,
+  onActiveIndexChange,
+}: {
+  steps: Step[];
+  onTap: () => void;
+  activeIndex: number;
+  onActiveIndexChange: (index: number) => void;
+}) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
   const touchStartX = useRef(0);
   const didSwipe = useRef(false);
 
@@ -36,8 +45,8 @@ function CardCarousel({ steps, onTap }: { steps: Step[]; onTap: () => void }) {
     const el = scrollRef.current;
     if (!el) return;
     const idx = Math.round(el.scrollLeft / el.clientWidth);
-    setActiveIndex(idx);
-  }, []);
+    onActiveIndexChange(idx);
+  }, [onActiveIndexChange]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     touchStartX.current = e.clientX;
@@ -140,6 +149,7 @@ export function MobileDayCard({
   onOpenStory,
 }: MobileDayCardProps) {
   const router = useRouter();
+  const [activeIndex, setActiveIndex] = useState(0);
   const birthdateDate = parseISO(birthdate);
   const dateDate = parseISO(date);
   const dayNumber = getDayNumber(birthdateDate, dateDate);
@@ -148,6 +158,8 @@ export function MobileDayCard({
   const monthLabel = getMonthPillLabel(monthIndex);
   const hasMedia = steps.some((s) => s.photoUrl || s.type === "growth");
   const displayDescription = description || steps.find((s) => s.caption)?.caption;
+  const activeStep = steps[activeIndex];
+  const canDelete = !readOnly && activeStep?.photoUrl;
 
   // Empty state card (no media)
   if (!hasMedia) {
@@ -221,7 +233,12 @@ export function MobileDayCard({
     >
       <div className="relative rounded-3xl overflow-hidden shadow-sm aspect-[4/5]">
         {/* Photo carousel as background */}
-        <CardCarousel steps={steps} onTap={() => onOpenStory(date, steps)} />
+        <CardCarousel
+          steps={steps}
+          onTap={() => onOpenStory(date, steps)}
+          activeIndex={activeIndex}
+          onActiveIndexChange={setActiveIndex}
+        />
 
         {/* Three-dot menu — top right */}
         <div className="absolute top-3 right-3 z-10">
@@ -234,23 +251,23 @@ export function MobileDayCard({
                 <Eye className="w-4 h-4 mr-2" />
                 View day
               </DropdownMenuItem>
-              <DropdownMenuItem
-                className="text-red-600 focus:text-red-600"
-                onClick={async () => {
-                  const first = steps.find((s) => s.photoUrl);
-                  if (!first) return;
-                  try {
-                    await deleteStep(first.id);
-                    toast.success("Photo deleted");
-                    router.refresh();
-                  } catch {
-                    toast.error("Failed to delete photo");
-                  }
-                }}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete photo
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-red-600 focus:text-red-600"
+                  onClick={async () => {
+                    try {
+                      await deleteStep(activeStep.id);
+                      toast.success("Photo deleted");
+                      router.refresh();
+                    } catch {
+                      toast.error("Failed to delete photo");
+                    }
+                  }}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete photo
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
