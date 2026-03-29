@@ -24,7 +24,10 @@ export function BabySwitcherDropdown() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger suppressHydrationWarning className="flex items-center gap-2 focus:outline-none group">
+      <DropdownMenuTrigger
+        suppressHydrationWarning
+        className="flex items-center gap-2 focus:outline-none group"
+      >
         <BabyAvatar name={baby.name} photoUrl={baby.photoUrl} size={48} />
         <ChevronDown className="w-3 h-3 text-stone-400 group-hover:text-stone-600 transition-colors" />
       </DropdownMenuTrigger>
