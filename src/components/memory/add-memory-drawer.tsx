@@ -113,7 +113,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
           <>
             {/* Date + Location */}
             <div className="grid grid-cols-2 gap-3">
-              <div>
+              <div className="min-w-0">
                 <label
                   htmlFor="memory-date"
                   className="text-xs text-stone-500 font-medium block mb-1"
@@ -130,7 +130,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
                   className="w-full px-3 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
                 />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label
                   htmlFor="location-btn"
                   className="text-xs text-stone-500 font-medium block mb-1"
@@ -140,10 +140,10 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
                 <button
                   id="location-btn"
                   onClick={() => setShowMapPicker(true)}
-                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-500 text-sm hover:border-rose-300 transition-colors"
+                  className="w-full flex items-center gap-2 px-3 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-500 text-sm hover:border-rose-300 transition-colors truncate"
                 >
-                  <MapPin className="w-4 h-4 text-stone-400" />
-                  {locationNickname ?? "Add location"}
+                  <MapPin className="w-4 h-4 shrink-0 text-stone-400" />
+                  <span className="truncate">{locationNickname ?? "Add location"}</span>
                 </button>
               </div>
             </div>
