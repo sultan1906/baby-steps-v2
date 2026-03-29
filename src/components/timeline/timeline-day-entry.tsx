@@ -110,6 +110,7 @@ export function TimelineDayEntry({
             {/* Three-dot menu */}
             <DropdownMenu>
               <DropdownMenuTrigger
+                suppressHydrationWarning
                 aria-label={`Open actions for ${shortDate}`}
                 className="p-1 text-stone-400 hover:text-stone-600 transition-colors rounded-full hover:bg-stone-100"
               >

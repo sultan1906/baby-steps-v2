@@ -60,7 +60,10 @@ export function FollowedTimelineHeader({
         {/* Right: Baby switcher */}
         {babies.length > 1 ? (
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-2 focus:outline-none group">
+            <DropdownMenuTrigger
+              suppressHydrationWarning
+              className="flex items-center gap-2 focus:outline-none group"
+            >
               <BabyAvatar name={baby.name} photoUrl={baby.photoUrl} size={36} />
               <div className="text-right">
                 <div className="text-sm font-medium text-stone-700">{baby.name}</div>

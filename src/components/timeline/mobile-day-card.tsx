@@ -200,6 +200,7 @@ export function MobileDayCard({
           <div className="absolute top-3 right-3 z-10">
             <DropdownMenu>
               <DropdownMenuTrigger
+                suppressHydrationWarning
                 aria-label="Day actions"
                 className="p-1 text-stone-400 hover:text-stone-600 transition-colors rounded-full bg-white/80 backdrop-blur-sm"
               >
@@ -240,6 +241,7 @@ export function MobileDayCard({
         <div className="absolute top-3 right-3 z-10">
           <DropdownMenu>
             <DropdownMenuTrigger
+              suppressHydrationWarning
               aria-label="Day actions"
               className="p-1.5 text-white/80 hover:text-white transition-colors rounded-full bg-black/20 backdrop-blur-sm"
             >
