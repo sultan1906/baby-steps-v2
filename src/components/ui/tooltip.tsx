@@ -11,11 +11,7 @@ function Tooltip({ ...props }: TooltipPrimitive.Root.Props) {
 
 function TooltipTrigger({ ...props }: TooltipPrimitive.Trigger.Props) {
   return (
-    <TooltipPrimitive.Trigger
-      data-slot="tooltip-trigger"
-      suppressHydrationWarning
-      {...props}
-    />
+    <TooltipPrimitive.Trigger data-slot="tooltip-trigger" suppressHydrationWarning {...props} />
   );
 }
 
