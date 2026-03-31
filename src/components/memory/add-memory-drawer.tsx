@@ -128,7 +128,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
                   min={baby.birthdate}
                   max={todayString()}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
+                  className="w-full px-3 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300 appearance-none"
                 />
               </div>
               <div className="min-w-0">
