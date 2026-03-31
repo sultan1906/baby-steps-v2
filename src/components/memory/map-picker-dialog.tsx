@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Search, MapPin, Loader2, X, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createSavedLocation, getSavedLocations } from "@/actions/locations";
+import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import type { SavedLocation } from "@/types";
 import type { PlaceSuggestion } from "@/types";
 
@@ -235,9 +236,29 @@ function MapPickerDialog({ open, onClose, onSelect }: MapPickerDialogProps) {
 
 /** Mobile: renders inline inside a drawer — exported for use in AddMemoryDrawer. */
 function MapPickerInline({ open, onClose, onSelect }: MapPickerDialogProps) {
+  const keyboardHeight = useKeyboardHeight();
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  // When the keyboard opens, scroll to keep the search input visible
+  useEffect(() => {
+    if (keyboardHeight > 0 && scrollRef.current) {
+      const focused = scrollRef.current.querySelector<HTMLElement>(":focus");
+      if (focused) {
+        focused.scrollIntoView({ block: "center", behavior: "smooth" });
+      }
+    }
+  }, [keyboardHeight]);
+
   if (!open) return null;
   return (
-    <div className="p-6 space-y-3">
+    <div
+      ref={scrollRef}
+      className="p-6 space-y-3 overflow-y-auto overscroll-contain"
+      style={{
+        maxHeight: keyboardHeight > 0 ? `calc(90dvh - ${keyboardHeight}px)` : undefined,
+        paddingBottom: keyboardHeight > 0 ? 16 : undefined,
+      }}
+    >
       <MapPickerContent open={open} onClose={onClose} onSelect={onSelect} />
     </div>
   );
