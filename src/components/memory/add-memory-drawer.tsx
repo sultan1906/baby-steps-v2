@@ -218,8 +218,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         {children}
       </div>
 
-      {/* Map picker — desktop: Dialog portal, mobile: rendered inline inside the
-          drawer to avoid vaul's touch-event capture on iOS. */}
+      {/* Desktop: map picker Dialog portal */}
       {!isMobile && showMapPicker && (
         <MapPickerDialog
           open={showMapPicker}

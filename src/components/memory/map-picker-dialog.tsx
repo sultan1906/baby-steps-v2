@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from "react";
 import { Search, MapPin, Loader2, X, ArrowLeft } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { createSavedLocation, getSavedLocations } from "@/actions/locations";
-import { useKeyboardHeight } from "@/hooks/use-keyboard-height";
 import type { SavedLocation } from "@/types";
 import type { PlaceSuggestion } from "@/types";
 
@@ -234,30 +233,34 @@ function MapPickerDialog({ open, onClose, onSelect }: MapPickerDialogProps) {
   );
 }
 
-/** Mobile: renders inline inside a drawer — exported for use in AddMemoryDrawer. */
+/** Mobile: rendered inline inside the drawer (replaces main content) so vaul's
+ *  focus trap allows typing. Tracks visualViewport to shrink content when the
+ *  iOS keyboard appears, preventing it from covering the search input. */
 function MapPickerInline({ open, onClose, onSelect }: MapPickerDialogProps) {
-  const keyboardHeight = useKeyboardHeight();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // When the keyboard opens, scroll to keep the search input visible
   useEffect(() => {
-    if (keyboardHeight > 0 && scrollRef.current) {
-      const focused = scrollRef.current.querySelector<HTMLElement>(":focus");
-      if (focused) {
-        focused.scrollIntoView({ block: "center", behavior: "smooth" });
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const handler = () => {
+      const kh = Math.max(0, window.innerHeight - vv.height);
+      setKeyboardHeight(kh);
+      if (kh > 0 && scrollRef.current) {
+        const focused = scrollRef.current.querySelector<HTMLElement>(":focus");
+        focused?.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
-    }
-  }, [keyboardHeight]);
+    };
+    vv.addEventListener("resize", handler);
+    return () => vv.removeEventListener("resize", handler);
+  }, []);
 
   if (!open) return null;
   return (
     <div
       ref={scrollRef}
-      className="p-6 space-y-3 overflow-y-auto overscroll-contain"
-      style={{
-        maxHeight: keyboardHeight > 0 ? `calc(90dvh - ${keyboardHeight}px)` : undefined,
-        paddingBottom: keyboardHeight > 0 ? 16 : undefined,
-      }}
+      className="flex-1 overflow-y-auto overscroll-contain p-6 space-y-3"
+      style={keyboardHeight > 0 ? { maxHeight: `calc(90dvh - ${keyboardHeight}px)` } : undefined}
     >
       <MapPickerContent open={open} onClose={onClose} onSelect={onSelect} />
     </div>
