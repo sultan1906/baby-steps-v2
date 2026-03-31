@@ -35,7 +35,7 @@ export function BottomNav({ followerMode = false }: BottomNavProps) {
 
   if (followerMode) {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-t border-stone-100/50 safe-area-inset-bottom">
+      <nav className="sticky bottom-0 z-40 bg-background/80 backdrop-blur-xl border-t border-stone-100/50 safe-area-inset-bottom">
         <div className="flex items-center justify-around px-4 py-2 max-w-lg mx-auto">
           {followerNavItems.map(({ href, icon: Icon, label }) => (
             <Link
@@ -58,7 +58,7 @@ export function BottomNav({ followerMode = false }: BottomNavProps) {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl border-t border-stone-100/50 safe-area-inset-bottom">
+    <nav className="sticky bottom-0 z-40 bg-background/80 backdrop-blur-xl border-t border-stone-100/50 safe-area-inset-bottom">
       <div className="flex items-center justify-around px-4 py-2 max-w-lg mx-auto">
         {fullNavItems.slice(0, 2).map(({ href, icon: Icon, label, mobileLabel }) => (
           <Link

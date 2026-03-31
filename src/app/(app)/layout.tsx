@@ -55,8 +55,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           babies={[]}
           pendingRequestCount={pendingRequestCount}
         >
-          <div className="min-h-[100dvh] bg-background flex flex-col">
-            <main className="flex-1 pb-24">{children}</main>
+          <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
+            <main className="flex-1 overflow-y-auto">{children}</main>
             <BottomNav followerMode />
           </div>
           <Toaster position="top-center" />
@@ -79,8 +79,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         babies={allBabies}
         pendingRequestCount={pendingRequestCount}
       >
-        <div className="min-h-[100dvh] bg-background flex flex-col">
-          <main className="flex-1 pb-24">{children}</main>
+        <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
+          <main className="flex-1 overflow-y-auto">{children}</main>
           <BottomNav />
         </div>
         <Toaster position="top-center" />
