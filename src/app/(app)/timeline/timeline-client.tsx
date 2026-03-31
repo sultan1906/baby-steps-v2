@@ -258,7 +258,7 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
           />
         ) : (
           <>
-            {/* Scrub overlay on the green line area */}
+            {/* Scrub overlay on the green line area — pointer-events only for scrub gestures */}
             <div
               className="absolute left-0 top-0 bottom-0 w-14 z-20 cursor-grab active:cursor-grabbing"
               style={{ touchAction: "none" }}
@@ -266,6 +266,7 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
               onTouchMove={onScrubMove}
               onTouchEnd={onScrubEnd}
               onMouseDown={onScrubMouseDown}
+              onClick={(e) => e.stopPropagation()}
             />
             {monthSections.map((section) => (
               <section
