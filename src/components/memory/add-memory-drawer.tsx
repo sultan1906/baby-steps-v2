@@ -47,6 +47,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
     setIsMajor(false);
     setLocationId(undefined);
     setLocationNickname(undefined);
+    setShowMapPicker(false);
   };
 
   const handleSave = async () => {
@@ -233,11 +234,11 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
 
       {/* Mobile: Drawer / Desktop: Dialog */}
       {isMobile ? (
-        <Drawer open={open} onOpenChange={setOpen}>
-          <DrawerContent className="max-h-[90vh] rounded-t-[3rem]">
+        <Drawer open={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowMapPicker(false); }}>
+          <DrawerContent className="max-h-[90dvh] rounded-t-[3rem]">
             <DrawerTitle className="sr-only">Capture Memory</DrawerTitle>
             {showMapPicker ? (
-              <div className="flex-1 min-h-0 overflow-y-auto">
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
                 <MapPickerInline
                   open={showMapPicker}
                   onClose={() => setShowMapPicker(false)}
@@ -254,7 +255,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
           </DrawerContent>
         </Drawer>
       ) : (
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowMapPicker(false); }}>
           <DialogContent
             className="max-w-xl rounded-[3rem] p-0 overflow-hidden max-h-[85vh] flex flex-col"
             showCloseButton={false}

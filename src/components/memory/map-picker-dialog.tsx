@@ -129,15 +129,6 @@ function MapPickerContent({ open, onClose, onSelect, showHeader = true }: MapPic
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          onFocus={(e) => {
-            const input = e.currentTarget;
-            // On iOS, scroll the input into view after the keyboard opens
-            window.setTimeout(() => {
-              if (input.isConnected && document.activeElement === input) {
-                input.scrollIntoView({ behavior: "smooth", block: "center" });
-              }
-            }, 300);
-          }}
           placeholder="Search places..."
           className="w-full pl-10 pr-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-700 text-sm focus:outline-none focus:ring-2 focus:ring-rose-300"
         />
