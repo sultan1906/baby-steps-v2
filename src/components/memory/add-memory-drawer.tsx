@@ -244,17 +244,15 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
           <DrawerContent className="max-h-[90dvh] rounded-t-[3rem]">
             <DrawerTitle className="sr-only">Capture Memory</DrawerTitle>
             {showMapPicker ? (
-              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-                <MapPickerInline
-                  open={showMapPicker}
-                  onClose={() => setShowMapPicker(false)}
-                  onSelect={(id, nickname) => {
-                    setLocationId(id);
-                    setLocationNickname(nickname);
-                    setShowMapPicker(false);
-                  }}
-                />
-              </div>
+              <MapPickerInline
+                open={showMapPicker}
+                onClose={() => setShowMapPicker(false)}
+                onSelect={(id, nickname) => {
+                  setLocationId(id);
+                  setLocationNickname(nickname);
+                  setShowMapPicker(false);
+                }}
+              />
             ) : (
               content
             )}
