@@ -112,7 +112,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         {queue.length <= 1 && (
           <>
             {/* Date + Location */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3">
               <div className="min-w-0">
                 <label
                   htmlFor="memory-date"
@@ -237,15 +237,17 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
           <DrawerContent className="max-h-[90vh] rounded-t-[3rem]">
             <DrawerTitle className="sr-only">Capture Memory</DrawerTitle>
             {showMapPicker ? (
-              <MapPickerInline
-                open={showMapPicker}
-                onClose={() => setShowMapPicker(false)}
-                onSelect={(id, nickname) => {
-                  setLocationId(id);
-                  setLocationNickname(nickname);
-                  setShowMapPicker(false);
-                }}
-              />
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                <MapPickerInline
+                  open={showMapPicker}
+                  onClose={() => setShowMapPicker(false)}
+                  onSelect={(id, nickname) => {
+                    setLocationId(id);
+                    setLocationNickname(nickname);
+                    setShowMapPicker(false);
+                  }}
+                />
+              </div>
             ) : (
               content
             )}
