@@ -234,7 +234,13 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
 
       {/* Mobile: Drawer / Desktop: Dialog */}
       {isMobile ? (
-        <Drawer open={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowMapPicker(false); }}>
+        <Drawer
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) setShowMapPicker(false);
+          }}
+        >
           <DrawerContent className="max-h-[90dvh] rounded-t-[3rem]">
             <DrawerTitle className="sr-only">Capture Memory</DrawerTitle>
             {showMapPicker ? (
@@ -255,7 +261,13 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
           </DrawerContent>
         </Drawer>
       ) : (
-        <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowMapPicker(false); }}>
+        <Dialog
+          open={open}
+          onOpenChange={(v) => {
+            setOpen(v);
+            if (!v) setShowMapPicker(false);
+          }}
+        >
           <DialogContent
             className="max-w-xl rounded-[3rem] p-0 overflow-hidden max-h-[85vh] flex flex-col"
             showCloseButton={false}
