@@ -1,10 +1,10 @@
 import { db } from "@/db";
-import { step, baby, dailyDescription } from "@/db/schema";
+import { step, baby } from "@/db/schema";
 import { getApiSession, jsonError } from "@/lib/api-utils";
 import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-/** Get all steps and descriptions for a baby */
+/** Get all steps for a baby */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ babyId: string }> }
@@ -23,12 +23,13 @@ export async function GET(
 
   if (!found) return jsonError("Baby not found", 404);
 
-  const [allSteps, allDescriptions] = await Promise.all([
-    db.select().from(step).where(eq(step.babyId, babyId)).orderBy(step.date, step.createdAt),
-    db.select().from(dailyDescription).where(eq(dailyDescription.babyId, babyId)),
-  ]);
+  const allSteps = await db
+    .select()
+    .from(step)
+    .where(eq(step.babyId, babyId))
+    .orderBy(step.date, step.createdAt);
 
-  return NextResponse.json({ steps: allSteps, descriptions: allDescriptions });
+  return NextResponse.json({ steps: allSteps });
 }
 
 /** Create a single step */

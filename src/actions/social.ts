@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { user, follow, baby, step, dailyDescription } from "@/db/schema";
+import { user, follow, baby, step } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -438,10 +438,11 @@ export async function getFollowedUserTimeline(targetUserId: string, babyId: stri
 
   if (!targetBaby) throw new Error("Baby not found");
 
-  const [allSteps, allDescriptions] = await Promise.all([
-    db.select().from(step).where(eq(step.babyId, babyId)).orderBy(step.date, step.createdAt),
-    db.select().from(dailyDescription).where(eq(dailyDescription.babyId, babyId)),
-  ]);
+  const allSteps = await db
+    .select()
+    .from(step)
+    .where(eq(step.babyId, babyId))
+    .orderBy(step.date, step.createdAt);
 
-  return { baby: targetBaby, steps: allSteps, descriptions: allDescriptions };
+  return { baby: targetBaby, steps: allSteps };
 }

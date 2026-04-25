@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { baby, step, dailyDescription } from "@/db/schema";
+import { baby, step } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { currentBabyCookieConfig } from "@/lib/baby-utils";
 import { revalidatePath } from "next/cache";
@@ -17,8 +17,8 @@ async function getSession() {
 }
 
 /**
- * Create a new baby, auto-create the "Arrival" milestone step and first
- * daily description, then set the current baby cookie.
+ * Create a new baby, auto-create the "Arrival" milestone step,
+ * then set the current baby cookie.
  */
 export async function createBaby(data: { name: string; birthdate: string; photoUrl?: string }) {
   const session = await getSession();
@@ -41,13 +41,6 @@ export async function createBaby(data: { name: string; birthdate: string; photoU
     type: "milestone",
     title: "Arrival",
     caption: "The journey begins today.",
-  });
-
-  // Auto-create first daily description
-  await db.insert(dailyDescription).values({
-    babyId: newBaby.id,
-    date: data.birthdate,
-    description: "The journey begins today.",
   });
 
   // Set current baby cookie
