@@ -38,10 +38,11 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
 
   // Group ALL steps by month, then by date within each month
   const monthSections = useMemo(() => {
+    const bd = parseISO(baby.birthdate);
     const sections: { monthIndex: number; dayGroups: [string, Step[]][] }[] = [];
 
     for (let m = 0; m < totalMonths; m++) {
-      const monthSteps = steps.filter((s) => isDateInMonth(s.date, birthdateDate, m));
+      const monthSteps = steps.filter((s) => isDateInMonth(s.date, bd, m));
       if (monthSteps.length === 0) continue;
 
       const grouped = new Map<string, Step[]>();
@@ -53,7 +54,7 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
     }
 
     return sections;
-  }, [steps, birthdateDate, totalMonths]);
+  }, [steps, baby.birthdate, totalMonths]);
 
   // Flat dayGroups for StoryViewModal next-day navigation across months
   const allDayGroups = useMemo(() => monthSections.flatMap((s) => s.dayGroups), [monthSections]);

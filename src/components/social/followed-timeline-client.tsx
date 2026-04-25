@@ -43,10 +43,11 @@ export function FollowedTimelineClient({
   const scrollingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const monthSections = useMemo(() => {
+    const bd = parseISO(baby.birthdate);
     const sections: { monthIndex: number; dayGroups: [string, Step[]][] }[] = [];
 
     for (let m = 0; m < totalMonths; m++) {
-      const monthSteps = steps.filter((s) => isDateInMonth(s.date, birthdateDate, m));
+      const monthSteps = steps.filter((s) => isDateInMonth(s.date, bd, m));
       if (monthSteps.length === 0) continue;
 
       const grouped = new Map<string, Step[]>();
@@ -58,7 +59,7 @@ export function FollowedTimelineClient({
     }
 
     return sections;
-  }, [steps, birthdateDate, totalMonths]);
+  }, [steps, baby.birthdate, totalMonths]);
 
   const allDayGroups = useMemo(() => monthSections.flatMap((s) => s.dayGroups), [monthSections]);
   const totalDays = getDayNumber(birthdateDate, new Date());

@@ -162,13 +162,15 @@ export function StoryViewModal({
     if (!currentStep) return;
     setSavingDesc(true);
     try {
-      const updated = await updateStepCaption(currentStep.id, draftDesc);
+      const trimmed = draftDesc.trim();
+      const updated = await updateStepCaption(currentStep.id, trimmed);
       if (updated) {
         setEditedSteps((prev) => {
           const next = new Map(prev);
           next.set(currentStep.id, { ...currentStep, caption: updated.caption });
           return next;
         });
+        setDraftDesc(updated.caption ?? "");
       }
       setEditingDesc(false);
     } catch (err) {

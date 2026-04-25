@@ -14,6 +14,7 @@ interface DayPhotoCarouselProps {
 export function DayPhotoCarousel({ steps, onTap, onIndexChange }: DayPhotoCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const lastReportedIndex = useRef(0);
   const touchStartX = useRef(0);
   const didSwipe = useRef(false);
 
@@ -21,11 +22,10 @@ export function DayPhotoCarousel({ steps, onTap, onIndexChange }: DayPhotoCarous
     const el = scrollRef.current;
     if (!el) return;
     const idx = Math.round(el.scrollLeft / el.clientWidth);
-    setActiveIndex((prev) => {
-      if (prev === idx) return prev;
-      onIndexChange?.(idx);
-      return idx;
-    });
+    if (idx === lastReportedIndex.current) return;
+    lastReportedIndex.current = idx;
+    setActiveIndex(idx);
+    onIndexChange?.(idx);
   }, [onIndexChange]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
