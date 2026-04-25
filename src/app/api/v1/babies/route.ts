@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { baby, step, dailyDescription } from "@/db/schema";
+import { baby, step } from "@/db/schema";
 import { getApiSession, jsonError } from "@/lib/api-utils";
 import { currentBabyCookieConfig } from "@/lib/baby-utils";
 import { cookies } from "next/headers";
@@ -51,12 +51,6 @@ export async function POST(request: NextRequest) {
       type: "milestone",
       title: "Arrival",
       caption: "The journey begins today.",
-    }),
-    // Auto-create first daily description
-    db.insert(dailyDescription).values({
-      babyId,
-      date: data.birthdate,
-      description: "The journey begins today.",
     }),
   ]);
 

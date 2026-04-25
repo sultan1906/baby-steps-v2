@@ -42,7 +42,6 @@ export default async function FollowedUserPage({ params, searchParams }: Props) 
       }}
       baby={timeline.baby}
       steps={timeline.steps}
-      descriptions={timeline.descriptions}
       babies={targetUser.babies}
     />
   );
