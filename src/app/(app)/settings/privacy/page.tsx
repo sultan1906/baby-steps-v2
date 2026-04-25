@@ -2,23 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Shield, Globe, Lock, Loader2, Users, UserMinus, UserX } from "lucide-react";
+import { ArrowLeft, Shield, Lock, Loader2, Users, UserMinus, UserX } from "lucide-react";
 import { UserAvatar } from "@/components/social/user-avatar";
-import {
-  toggleProfilePrivacy,
-  getProfilePrivacy,
-  getFollowers,
-  getFollowedUsers,
-  removeFollower,
-  unfollowUser,
-} from "@/actions/social";
+import { getFollowers, getFollowedUsers, removeFollower, unfollowUser } from "@/actions/social";
 import type { FollowedUser } from "@/types";
 
 export default function PrivacyPage() {
   const router = useRouter();
-  const [isPublic, setIsPublic] = useState(true);
   const [loading, setLoading] = useState(true);
-  const [toggling, setToggling] = useState(false);
   const [followers, setFollowers] = useState<
     { id: string; followerId: string; name: string; image: string | null }[]
   >([]);
@@ -27,12 +18,10 @@ export default function PrivacyPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [privacy, followersList, followingList] = await Promise.all([
-          getProfilePrivacy(),
+        const [followersList, followingList] = await Promise.all([
           getFollowers(),
           getFollowedUsers(),
         ]);
-        setIsPublic(privacy);
         setFollowers(followersList);
         setFollowing(followingList);
       } finally {
@@ -41,17 +30,6 @@ export default function PrivacyPage() {
     }
     load();
   }, []);
-
-  const handleToggle = async () => {
-    setToggling(true);
-    const newValue = !isPublic;
-    try {
-      await toggleProfilePrivacy(newValue);
-      setIsPublic(newValue);
-    } finally {
-      setToggling(false);
-    }
-  };
 
   const handleRemoveFollower = async (followId: string) => {
     try {
@@ -97,48 +75,16 @@ export default function PrivacyPage() {
       </div>
 
       <div className="px-4 pb-28 pt-4 space-y-4">
-        {/* Profile Visibility Card */}
+        {/* Profile Visibility Info Card */}
         <div className="premium-card p-6">
           <div className="flex items-center gap-2 mb-4">
-            {isPublic ? (
-              <Globe className="w-5 h-5 text-emerald-500" />
-            ) : (
-              <Lock className="w-5 h-5 text-amber-500" />
-            )}
+            <Lock className="w-5 h-5 text-amber-500" />
             <h2 className="font-bold text-stone-800">Profile Visibility</h2>
           </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex-1 mr-4">
-              <p className="text-sm font-medium text-stone-700">
-                {isPublic ? "Public Profile" : "Private Profile"}
-              </p>
-              <p className="text-xs text-stone-400 mt-1">
-                {isPublic
-                  ? "Anyone can follow you without approval"
-                  : "You'll need to approve new follow requests"}
-              </p>
-            </div>
-            <button
-              role="switch"
-              aria-checked={isPublic}
-              aria-label="Profile visibility"
-              onClick={handleToggle}
-              disabled={toggling}
-              className={`relative w-12 h-7 rounded-full transition-colors ${
-                isPublic ? "bg-emerald-400" : "bg-amber-400"
-              }`}
-            >
-              <div
-                className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
-                  isPublic ? "left-5" : "left-0.5"
-                }`}
-              />
-              {toggling && (
-                <Loader2 className="absolute inset-0 m-auto w-3 h-3 animate-spin text-white" />
-              )}
-            </button>
-          </div>
+          <p className="text-sm text-stone-600">
+            Your profile is private. New followers need your approval before they can see your
+            babies and memories.
+          </p>
         </div>
 
         {/* Followers Card */}

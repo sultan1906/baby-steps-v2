@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
       id: user.id,
       name: user.name,
       image: user.image,
-      isPublic: user.isPublic,
       bio: user.bio,
       location: user.location,
     })
@@ -47,7 +46,6 @@ export async function GET(request: NextRequest) {
     id: r.id,
     name: r.name,
     image: r.image ?? null,
-    isPublic: r.isPublic,
     bio: r.bio ?? null,
     location: r.location ?? null,
     followStatus:

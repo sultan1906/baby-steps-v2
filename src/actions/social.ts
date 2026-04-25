@@ -14,25 +14,6 @@ async function getSession() {
   return session;
 }
 
-// ── Privacy ─────────────────────────────────────────────────────────────────
-
-export async function toggleProfilePrivacy(isPublic: boolean) {
-  const session = await getSession();
-  await db.update(user).set({ isPublic }).where(eq(user.id, session.user.id));
-  revalidatePath("/settings");
-  revalidatePath("/settings/privacy");
-}
-
-export async function getProfilePrivacy(): Promise<boolean> {
-  const session = await getSession();
-  const [u] = await db
-    .select({ isPublic: user.isPublic })
-    .from(user)
-    .where(eq(user.id, session.user.id))
-    .limit(1);
-  return u?.isPublic ?? true;
-}
-
 // ── Parent Profile ──────────────────────────────────────────────────────────
 
 export async function getParentProfile() {
@@ -83,7 +64,6 @@ export async function getUserProfile(targetUserId: string): Promise<UserProfile 
       image: user.image,
       bio: user.bio,
       location: user.location,
-      isPublic: user.isPublic,
     })
     .from(user)
     .where(eq(user.id, targetUserId))
@@ -117,9 +97,9 @@ export async function getUserProfile(targetUserId: string): Promise<UserProfile 
       .where(and(eq(follow.followerId, targetUserId), eq(follow.status, "accepted"))),
   ]);
 
-  // Babies — only visible if following or public
+  // Babies — only visible if following has been accepted
   let babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[] = [];
-  if (followStatus === "accepted" || targetUser.isPublic) {
+  if (followStatus === "accepted") {
     babies = await db
       .select({
         id: baby.id,
@@ -138,7 +118,6 @@ export async function getUserProfile(targetUserId: string): Promise<UserProfile 
     image: targetUser.image ?? null,
     bio: targetUser.bio ?? null,
     location: targetUser.location ?? null,
-    isPublic: targetUser.isPublic,
     followStatus,
     babies,
     followerCount: followerResult?.count ?? 0,
@@ -160,7 +139,6 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
       id: user.id,
       name: user.name,
       image: user.image,
-      isPublic: user.isPublic,
       bio: user.bio,
       location: user.location,
     })
@@ -191,7 +169,6 @@ export async function searchUsers(query: string): Promise<UserSearchResult[]> {
     id: r.id,
     name: r.name,
     image: r.image ?? null,
-    isPublic: r.isPublic,
     bio: r.bio ?? null,
     location: r.location ?? null,
     followStatus:
@@ -209,9 +186,8 @@ export async function sendFollowRequest(targetUserId: string) {
   const session = await getSession();
   if (targetUserId === session.user.id) throw new Error("Cannot follow yourself");
 
-  // Check target exists and privacy setting
   const [target] = await db
-    .select({ id: user.id, isPublic: user.isPublic })
+    .select({ id: user.id })
     .from(user)
     .where(eq(user.id, targetUserId))
     .limit(1);
@@ -230,26 +206,37 @@ export async function sendFollowRequest(targetUserId: string) {
     if (existing.status === "pending") throw new Error("Request already pending");
     // If previously rejected, allow re-request
     if (existing.status === "rejected") {
-      const newStatus = target.isPublic ? "accepted" : "pending";
       await db
         .update(follow)
-        .set({ status: newStatus, updatedAt: new Date() })
+        .set({ status: "pending", updatedAt: new Date() })
         .where(eq(follow.id, existing.id));
       revalidatePath("/following");
-      return { status: newStatus };
+      return { status: "pending" as const };
     }
   }
 
-  const status = target.isPublic ? "accepted" : "pending";
-
-  await db.insert(follow).values({
-    followerId: session.user.id,
-    followingId: targetUserId,
-    status,
-  });
+  try {
+    await db.insert(follow).values({
+      followerId: session.user.id,
+      followingId: targetUserId,
+      status: "pending",
+    });
+  } catch (err: unknown) {
+    // Postgres unique_violation — concurrent duplicate request
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      (err as { code?: string }).code === "23505"
+    ) {
+      revalidatePath("/following");
+      return { status: "pending" as const };
+    }
+    throw err;
+  }
 
   revalidatePath("/following");
-  return { status };
+  return { status: "pending" as const };
 }
 
 export async function unfollowUser(targetUserId: string) {
