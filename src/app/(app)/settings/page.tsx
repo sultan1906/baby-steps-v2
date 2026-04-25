@@ -15,8 +15,6 @@ import {
   Baby as BabyIcon,
   Check,
   Plus,
-  Globe,
-  Lock,
   MapPin,
 } from "lucide-react";
 import Image from "next/image";
@@ -25,12 +23,7 @@ import { BackButton } from "@/components/shared/back-button";
 import { BabyAvatar } from "@/components/baby/baby-avatar";
 import { useBabyOptional } from "@/components/baby/baby-provider";
 import { updateBaby, deleteBaby, switchBaby } from "@/actions/baby";
-import {
-  toggleProfilePrivacy,
-  getProfilePrivacy,
-  getParentProfile,
-  updateParentProfile,
-} from "@/actions/social";
+import { getParentProfile, updateParentProfile } from "@/actions/social";
 import { authClient } from "@/lib/auth-client";
 import {
   AlertDialog,
@@ -55,8 +48,6 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [isPublic, setIsPublic] = useState<boolean | null>(null);
-  const [togglingPrivacy, setTogglingPrivacy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Parent profile state
@@ -79,10 +70,6 @@ export default function SettingsPage() {
       setPhotoFile(null);
     }
   }, [baby]);
-
-  useEffect(() => {
-    getProfilePrivacy().then(setIsPublic);
-  }, []);
 
   useEffect(() => {
     getParentProfile()
@@ -174,17 +161,6 @@ export default function SettingsPage() {
       router.push("/following");
     } finally {
       setDeleting(false);
-    }
-  };
-
-  const handleTogglePrivacy = async () => {
-    setTogglingPrivacy(true);
-    const newValue = !isPublic;
-    try {
-      await toggleProfilePrivacy(newValue);
-      setIsPublic(newValue);
-    } finally {
-      setTogglingPrivacy(false);
     }
   };
 
@@ -527,50 +503,6 @@ export default function SettingsPage() {
             </div>
             {babies.length > 0 ? "Add another baby" : "Add a baby"}
           </button>
-        </div>
-
-        {/* Profile Visibility Card */}
-        <div className="premium-card p-6">
-          <div className="flex items-center gap-2 mb-4">
-            {isPublic ? (
-              <Globe className="w-5 h-5 text-emerald-500" />
-            ) : (
-              <Lock className="w-5 h-5 text-amber-500" />
-            )}
-            <h2 className="font-bold text-stone-800">Profile Visibility</h2>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <div className="flex-1 mr-4">
-              <p className="text-sm font-medium text-stone-700">
-                {isPublic ? "Public Profile" : "Private Profile"}
-              </p>
-              <p className="text-xs text-stone-400 mt-1">
-                {isPublic
-                  ? "Anyone can follow you without approval"
-                  : "New followers need your approval"}
-              </p>
-            </div>
-            <button
-              role="switch"
-              aria-checked={isPublic ?? false}
-              aria-label="Profile visibility"
-              onClick={handleTogglePrivacy}
-              disabled={isPublic === null || togglingPrivacy}
-              className={`relative w-12 h-7 rounded-full transition-colors ${
-                isPublic ? "bg-emerald-400" : "bg-amber-400"
-              }`}
-            >
-              <div
-                className={`absolute top-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
-                  isPublic ? "left-5" : "left-0.5"
-                }`}
-              />
-              {togglingPrivacy && (
-                <Loader2 className="absolute inset-0 m-auto w-3 h-3 animate-spin text-white" />
-              )}
-            </button>
-          </div>
         </div>
 
         {/* Account Card */}

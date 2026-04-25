@@ -18,7 +18,7 @@ export function ProfileClient({ profile: initial }: ProfileClientProps) {
   const router = useRouter();
   const [followStatus, setFollowStatus] = useState<FollowStatus>(initial.followStatus);
 
-  const canSeeBabies = followStatus === "accepted" || initial.isPublic;
+  const canSeeBabies = followStatus === "accepted";
 
   const handleStatusChange = (newStatus: FollowStatus) => {
     setFollowStatus(newStatus);

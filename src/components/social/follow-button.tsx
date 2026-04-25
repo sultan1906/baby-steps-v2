@@ -28,10 +28,9 @@ export function FollowButton({
     setLoading(true);
     try {
       if (status === "none") {
-        const result = await sendFollowRequest(userId);
-        const newStatus = result.status === "accepted" ? "accepted" : "pending";
-        setStatus(newStatus);
-        onStatusChange?.(newStatus);
+        await sendFollowRequest(userId);
+        setStatus("pending");
+        onStatusChange?.("pending");
       } else if (status === "accepted") {
         await unfollowUser(userId);
         setStatus("none");
