@@ -52,7 +52,6 @@ export interface UserSearchResult {
   id: string;
   name: string;
   image: string | null;
-  isPublic: boolean;
   bio: string | null;
   location: string | null;
   followStatus: FollowStatus;
@@ -82,7 +81,6 @@ export interface UserProfile {
   image: string | null;
   bio: string | null;
   location: string | null;
-  isPublic: boolean;
   followStatus: FollowStatus;
   babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[];
   followerCount: number;

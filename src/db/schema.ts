@@ -28,7 +28,6 @@ export const user = pgTable("user", {
   image: text("image"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  isPublic: boolean("is_public").notNull().default(true),
   bio: text("bio"),
   location: text("location"),
 });

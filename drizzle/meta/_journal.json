@@ -40,8 +40,15 @@
     {
       "idx": 5,
       "version": "7",
-      "when": 1777133072340,
-      "tag": "0005_drop_daily_description",
+      "when": 1777131351432,
+      "tag": "0005_remove_user_is_public",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777133580567,
+      "tag": "0006_drop_daily_description",
       "breakpoints": true
     }
   ]

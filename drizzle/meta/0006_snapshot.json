@@ -1,6 +1,6 @@
 {
-  "id": "6af75a12-2459-4872-876e-53db0bc2d7ba",
-  "prevId": "5dbe4970-4bfd-4f2c-946c-9b37140bb0b6",
+  "id": "4a0b9d86-0d95-43ed-9242-d1b085af14d2",
+  "prevId": "6af75a12-2459-4872-876e-53db0bc2d7ba",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -187,74 +187,6 @@
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.daily_description": {
-      "name": "daily_description",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "baby_id": {
-          "name": "baby_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "date": {
-          "name": "date",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "description": {
-          "name": "description",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "''"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "daily_description_baby_id_baby_id_fk": {
-          "name": "daily_description_baby_id_baby_id_fk",
-          "tableFrom": "daily_description",
-          "tableTo": "baby",
-          "columnsFrom": [
-            "baby_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {
-        "daily_description_baby_id_date_unique": {
-          "name": "daily_description_baby_id_date_unique",
-          "nullsNotDistinct": false,
-          "columns": [
-            "baby_id",
-            "date"
-          ]
-        }
-      },
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
