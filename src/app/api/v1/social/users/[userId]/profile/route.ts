@@ -21,7 +21,6 @@ export async function GET(
       image: user.image,
       bio: user.bio,
       location: user.location,
-      isPublic: user.isPublic,
     })
     .from(user)
     .where(eq(user.id, targetUserId))
@@ -43,9 +42,9 @@ export async function GET(
         ? "pending"
         : "none";
 
-  // Babies (only if following or public)
+  // Babies (only if following has been accepted)
   let babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[] = [];
-  if (followStatus === "accepted" || targetUser.isPublic) {
+  if (followStatus === "accepted") {
     babies = await db
       .select({
         id: baby.id,
@@ -64,7 +63,6 @@ export async function GET(
     image: targetUser.image ?? null,
     bio: targetUser.bio ?? null,
     location: targetUser.location ?? null,
-    isPublic: targetUser.isPublic,
     followStatus,
     babies,
   });

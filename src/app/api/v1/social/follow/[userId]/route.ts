@@ -16,7 +16,7 @@ export async function POST(
   if (targetUserId === session.user.id) return jsonError("Cannot follow yourself");
 
   const [target] = await db
-    .select({ id: user.id, isPublic: user.isPublic })
+    .select({ id: user.id })
     .from(user)
     .where(eq(user.id, targetUserId))
     .limit(1);
@@ -33,25 +33,28 @@ export async function POST(
     if (existing.status === "accepted") return jsonError("Already following");
     if (existing.status === "pending") return jsonError("Request already pending");
     if (existing.status === "rejected") {
-      const newStatus = target.isPublic ? "accepted" : "pending";
       await db
         .update(follow)
-        .set({ status: newStatus, updatedAt: new Date() })
+        .set({ status: "pending", updatedAt: new Date() })
         .where(eq(follow.id, existing.id));
-      return NextResponse.json({ status: newStatus });
+      return NextResponse.json({ status: "pending" });
     }
   }
 
-  const status = target.isPublic ? "accepted" : "pending";
   try {
     await db.insert(follow).values({
       followerId: session.user.id,
       followingId: targetUserId,
-      status,
+      status: "pending",
     });
   } catch (err: unknown) {
-    // Unique constraint violation — concurrent duplicate request
-    if (err instanceof Error && err.message.includes("unique")) {
+    // Postgres unique_violation (SQLSTATE 23505) — concurrent duplicate request
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      (err as { code?: string }).code === "23505"
+    ) {
       const [current] = await db
         .select({ status: follow.status })
         .from(follow)
@@ -62,7 +65,7 @@ export async function POST(
     throw err;
   }
 
-  return NextResponse.json({ status }, { status: 201 });
+  return NextResponse.json({ status: "pending" }, { status: 201 });
 }
 
 /** Unfollow a user */
