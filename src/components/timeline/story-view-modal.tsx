@@ -77,11 +77,14 @@ export function StoryViewModal({
     setEditingDesc(false);
   }, [open, date]);
 
-  // Reset draft and exit edit mode when navigating between slides
+  // Reset draft and exit edit mode when navigating between slides.
+  // Intentionally keyed only on slide identity so a remote/optimistic caption
+  // update doesn't clobber an in-progress draft.
   useEffect(() => {
     setEditingDesc(false);
     setDraftDesc(currentStep?.caption ?? "");
-  }, [currentStep?.id, currentStep?.caption]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep?.id]);
 
   // Auto-advance timer
   useEffect(() => {

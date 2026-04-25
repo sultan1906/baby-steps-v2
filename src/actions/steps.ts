@@ -43,12 +43,17 @@ export async function createBulkSteps(steps: StepInput[]) {
   return created;
 }
 
+const MAX_CAPTION_LENGTH = 2000;
+
 /**
  * Update a single step's caption (the per-photo description).
  * Verifies ownership via baby.userId.
  */
 export async function updateStepCaption(stepId: string, caption: string) {
   const session = await getSession();
+
+  const trimmed = caption.trim();
+  if (trimmed.length > MAX_CAPTION_LENGTH) throw new Error("Caption too long");
 
   const [found] = await db
     .select({ id: step.id })
@@ -58,11 +63,16 @@ export async function updateStepCaption(stepId: string, caption: string) {
 
   if (!found) throw new Error("Not found or unauthorized");
 
-  const [updated] = await db.update(step).set({ caption }).where(eq(step.id, stepId)).returning();
+  const [updated] = await db
+    .update(step)
+    .set({ caption: trimmed || null })
+    .where(eq(step.id, stepId))
+    .returning();
 
   revalidatePath("/timeline");
   revalidatePath("/gallery");
   revalidatePath("/dashboard");
+  revalidatePath("/following", "layout");
   return updated;
 }
 

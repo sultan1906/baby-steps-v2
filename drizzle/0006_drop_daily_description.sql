@@ -1,8 +1,10 @@
--- Migrate existing daily descriptions onto the first photo of each day,
--- but only if that photo has no caption yet.
+-- Migrate existing daily descriptions onto the first photo/video of each day,
+-- but only if that step has no caption yet. Skip text-only steps (first_word,
+-- milestone) so the description always lands on a visible piece of media.
 WITH first_step_per_day AS (
   SELECT DISTINCT ON (baby_id, date) id, baby_id, date, caption
   FROM "step"
+  WHERE photo_url IS NOT NULL
   ORDER BY baby_id, date, created_at ASC
 )
 UPDATE "step" AS s
