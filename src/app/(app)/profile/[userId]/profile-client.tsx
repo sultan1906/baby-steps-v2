@@ -86,12 +86,8 @@ export function ProfileClient({ profile: initial }: ProfileClientProps) {
               {initial.babies.map((b) => (
                 <Link
                   key={b.id}
-                  href={
-                    followStatus === "accepted" ? `/following/${initial.id}?babyId=${b.id}` : "#"
-                  }
-                  className={`flex items-center gap-3 py-2 px-2 -mx-2 rounded-xl transition-colors ${
-                    followStatus === "accepted" ? "hover:bg-stone-50" : "cursor-default"
-                  }`}
+                  href={`/following/${initial.id}?babyId=${b.id}`}
+                  className="flex items-center gap-3 py-2 px-2 -mx-2 rounded-xl transition-colors hover:bg-stone-50"
                 >
                   <BabyAvatar name={b.name} photoUrl={b.photoUrl} size={40} />
                   <div className="flex-1 min-w-0">

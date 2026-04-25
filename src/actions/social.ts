@@ -215,11 +215,25 @@ export async function sendFollowRequest(targetUserId: string) {
     }
   }
 
-  await db.insert(follow).values({
-    followerId: session.user.id,
-    followingId: targetUserId,
-    status: "pending",
-  });
+  try {
+    await db.insert(follow).values({
+      followerId: session.user.id,
+      followingId: targetUserId,
+      status: "pending",
+    });
+  } catch (err: unknown) {
+    // Postgres unique_violation — concurrent duplicate request
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      (err as { code?: string }).code === "23505"
+    ) {
+      revalidatePath("/following");
+      return { status: "pending" as const };
+    }
+    throw err;
+  }
 
   revalidatePath("/following");
   return { status: "pending" as const };

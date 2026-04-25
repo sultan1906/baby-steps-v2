@@ -48,8 +48,13 @@ export async function POST(
       status: "pending",
     });
   } catch (err: unknown) {
-    // Unique constraint violation — concurrent duplicate request
-    if (err instanceof Error && err.message.includes("unique")) {
+    // Postgres unique_violation (SQLSTATE 23505) — concurrent duplicate request
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      (err as { code?: string }).code === "23505"
+    ) {
       const [current] = await db
         .select({ status: follow.status })
         .from(follow)
