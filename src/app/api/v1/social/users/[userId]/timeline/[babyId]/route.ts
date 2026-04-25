@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { follow, baby, step, dailyDescription } from "@/db/schema";
+import { follow, baby, step } from "@/db/schema";
 import { getApiSession, jsonError } from "@/lib/api-utils";
 import { eq, and } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
@@ -38,10 +38,11 @@ export async function GET(
 
   if (!targetBaby) return jsonError("Baby not found", 404);
 
-  const [allSteps, allDescriptions] = await Promise.all([
-    db.select().from(step).where(eq(step.babyId, babyId)).orderBy(step.date, step.createdAt),
-    db.select().from(dailyDescription).where(eq(dailyDescription.babyId, babyId)),
-  ]);
+  const allSteps = await db
+    .select()
+    .from(step)
+    .where(eq(step.babyId, babyId))
+    .orderBy(step.date, step.createdAt);
 
-  return NextResponse.json({ baby: targetBaby, steps: allSteps, descriptions: allDescriptions });
+  return NextResponse.json({ baby: targetBaby, steps: allSteps });
 }

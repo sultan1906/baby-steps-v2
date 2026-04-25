@@ -16,8 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { parseISO } from "date-fns";
 import { getDayNumber, formatMemoryDate } from "@/lib/date-utils";
-import { upsertDailyDescription, getDailyDescription } from "@/actions/daily-description";
-import { deleteStep } from "@/actions/steps";
+import { deleteStep, updateStepCaption } from "@/actions/steps";
 import { toast } from "sonner";
 import { useBabyOptional } from "@/components/baby/baby-provider";
 import type { Step } from "@/types";
@@ -50,7 +49,6 @@ export function StoryViewModal({
     [steps, deletedIds, editedSteps]
   );
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [description, setDescription] = useState("");
   const [editingDesc, setEditingDesc] = useState(false);
   const [draftDesc, setDraftDesc] = useState("");
   const [savingDesc, setSavingDesc] = useState(false);
@@ -67,23 +65,23 @@ export function StoryViewModal({
   const isVideoStep = currentStep?.type === "video";
   const dayNumber = baby ? getDayNumber(parseISO(baby.birthdate), parseISO(date)) : 0;
   const dateLabel = formatMemoryDate(date);
+  const description = currentStep?.caption ?? "";
 
-  // Load daily description and reset navigation state
+  // Reset navigation state when modal opens or date changes
   useEffect(() => {
     if (!open) return;
-    // Clear stale state immediately before async fetch
     setDeletedIds(new Set());
     setEditedSteps(new Map());
     setCurrentIndex(0);
     setPendingDeleteId(null);
-    setDescription("");
-    setDraftDesc("");
-    if (!baby) return;
-    getDailyDescription(baby.id, date).then((d) => {
-      setDescription(d?.description ?? "");
-      setDraftDesc(d?.description ?? "");
-    });
-  }, [open, baby, date]);
+    setEditingDesc(false);
+  }, [open, date]);
+
+  // Reset draft and exit edit mode when navigating between slides
+  useEffect(() => {
+    setEditingDesc(false);
+    setDraftDesc(currentStep?.caption ?? "");
+  }, [currentStep?.id, currentStep?.caption]);
 
   // Auto-advance timer
   useEffect(() => {
@@ -158,12 +156,24 @@ export function StoryViewModal({
   };
 
   const handleSaveDesc = async () => {
+    if (!currentStep) return;
     setSavingDesc(true);
-    if (!baby) return;
-    await upsertDailyDescription(baby.id, date, draftDesc);
-    setDescription(draftDesc);
-    setEditingDesc(false);
-    setSavingDesc(false);
+    try {
+      const updated = await updateStepCaption(currentStep.id, draftDesc);
+      if (updated) {
+        setEditedSteps((prev) => {
+          const next = new Map(prev);
+          next.set(currentStep.id, { ...currentStep, caption: updated.caption });
+          return next;
+        });
+      }
+      setEditingDesc(false);
+    } catch (err) {
+      console.error("Failed to save caption:", err);
+      toast.error("Failed to save. Please try again.");
+    } finally {
+      setSavingDesc(false);
+    }
   };
 
   const handleCancelEdit = () => {

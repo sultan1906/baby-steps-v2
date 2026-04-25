@@ -8,9 +8,10 @@ import type { Step } from "@/types";
 interface DayPhotoCarouselProps {
   steps: Step[];
   onTap: () => void;
+  onIndexChange?: (index: number) => void;
 }
 
-export function DayPhotoCarousel({ steps, onTap }: DayPhotoCarouselProps) {
+export function DayPhotoCarousel({ steps, onTap, onIndexChange }: DayPhotoCarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const touchStartX = useRef(0);
@@ -20,8 +21,12 @@ export function DayPhotoCarousel({ steps, onTap }: DayPhotoCarouselProps) {
     const el = scrollRef.current;
     if (!el) return;
     const idx = Math.round(el.scrollLeft / el.clientWidth);
-    setActiveIndex(idx);
-  }, []);
+    setActiveIndex((prev) => {
+      if (prev === idx) return prev;
+      onIndexChange?.(idx);
+      return idx;
+    });
+  }, [onIndexChange]);
 
   const handlePointerDown = useCallback((e: React.PointerEvent) => {
     touchStartX.current = e.clientX;

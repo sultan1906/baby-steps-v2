@@ -141,24 +141,6 @@ export const step = pgTable(
   })
 );
 
-export const dailyDescription = pgTable(
-  "daily_description",
-  {
-    id: text("id")
-      .primaryKey()
-      .$defaultFn(() => crypto.randomUUID()),
-    babyId: text("baby_id")
-      .notNull()
-      .references(() => baby.id, { onDelete: "cascade" }),
-    date: text("date").notNull(), // "YYYY-MM-DD"
-    description: text("description").notNull().default(""),
-    updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  },
-  (t) => ({
-    uniqueBabyDate: unique().on(t.babyId, t.date), // one description per baby per day
-  })
-);
-
 export const follow = pgTable(
   "follow",
   {
@@ -195,7 +177,6 @@ export const userRelations = relations(user, ({ many }) => ({
 export const babyRelations = relations(baby, ({ one, many }) => ({
   user: one(user, { fields: [baby.userId], references: [user.id] }),
   steps: many(step),
-  dailyDescriptions: many(dailyDescription),
 }));
 
 export const stepRelations = relations(step, ({ one }) => ({
@@ -204,10 +185,6 @@ export const stepRelations = relations(step, ({ one }) => ({
     fields: [step.locationId],
     references: [savedLocation.id],
   }),
-}));
-
-export const dailyDescriptionRelations = relations(dailyDescription, ({ one }) => ({
-  baby: one(baby, { fields: [dailyDescription.babyId], references: [baby.id] }),
 }));
 
 export const savedLocationRelations = relations(savedLocation, ({ one }) => ({
@@ -232,7 +209,6 @@ export const followRelations = relations(follow, ({ one }) => ({
 export type User = typeof user.$inferSelect;
 export type Baby = typeof baby.$inferSelect;
 export type Step = typeof step.$inferSelect;
-export type DailyDescription = typeof dailyDescription.$inferSelect;
 export type SavedLocation = typeof savedLocation.$inferSelect;
 export type NewStep = typeof step.$inferInsert;
 export type NewBaby = typeof baby.$inferInsert;

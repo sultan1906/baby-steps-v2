@@ -1,7 +1,7 @@
 import { db } from "@/db";
-import { step, baby, dailyDescription } from "@/db/schema";
+import { step, baby } from "@/db/schema";
 import { getApiSession, jsonError } from "@/lib/api-utils";
-import { eq, and, count } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -14,7 +14,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const data = await request.json();
 
   const [found] = await db
-    .select({ id: step.id, babyId: step.babyId, date: step.date })
+    .select({ id: step.id })
     .from(step)
     .innerJoin(baby, eq(step.babyId, baby.id))
     .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
@@ -32,30 +32,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
 
   const [updated] = await db.update(step).set(allowedFields).where(eq(step.id, stepId)).returning();
 
-  // If date changed, clean up orphaned daily description for the old date
-  if (data.date && data.date !== found.date) {
-    const [{ remaining }] = await db
-      .select({ remaining: count() })
-      .from(step)
-      .where(and(eq(step.babyId, found.babyId), eq(step.date, found.date)));
-
-    if (remaining === 0) {
-      const [desc] = await db
-        .select({ description: dailyDescription.description })
-        .from(dailyDescription)
-        .where(
-          and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date))
-        );
-      if (!desc?.description) {
-        await db
-          .delete(dailyDescription)
-          .where(
-            and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date))
-          );
-      }
-    }
-  }
-
   return NextResponse.json(updated);
 }
 
@@ -70,7 +46,7 @@ export async function DELETE(
   const { id: stepId } = await params;
 
   const [found] = await db
-    .select({ id: step.id, babyId: step.babyId, date: step.date, photoUrl: step.photoUrl })
+    .select({ id: step.id, photoUrl: step.photoUrl })
     .from(step)
     .innerJoin(baby, eq(step.babyId, baby.id))
     .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
@@ -82,26 +58,6 @@ export async function DELETE(
   }
 
   await db.delete(step).where(eq(step.id, stepId));
-
-  // Clean up orphaned daily description if no steps remain for this date
-  const [{ remaining }] = await db
-    .select({ remaining: count() })
-    .from(step)
-    .where(and(eq(step.babyId, found.babyId), eq(step.date, found.date)));
-
-  if (remaining === 0) {
-    const [desc] = await db
-      .select({ description: dailyDescription.description })
-      .from(dailyDescription)
-      .where(and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date)));
-    if (!desc?.description) {
-      await db
-        .delete(dailyDescription)
-        .where(
-          and(eq(dailyDescription.babyId, found.babyId), eq(dailyDescription.date, found.date))
-        );
-    }
-  }
 
   return NextResponse.json({ success: true });
 }

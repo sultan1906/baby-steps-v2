@@ -21,7 +21,6 @@ interface MobileDayCardProps {
   date: string;
   steps: Step[];
   birthdate: string;
-  description?: string;
   readOnly?: boolean;
   onOpenStory: (date: string, steps: Step[]) => void;
 }
@@ -137,7 +136,6 @@ export function MobileDayCard({
   date,
   steps,
   birthdate,
-  description,
   readOnly,
   onOpenStory,
 }: MobileDayCardProps) {
@@ -150,8 +148,9 @@ export function MobileDayCard({
   const monthIndex = differenceInCalendarMonths(dateDate, birthdateDate);
   const monthLabel = getMonthPillLabel(monthIndex);
   const hasMedia = steps.some((s) => s.photoUrl);
-  const displayDescription = description || steps.find((s) => s.caption)?.caption;
-  const activeStep = steps[activeIndex];
+  const safeIndex = Math.min(activeIndex, Math.max(steps.length - 1, 0));
+  const activeStep = steps[safeIndex];
+  const displayDescription = activeStep?.caption ?? undefined;
   const canDelete = !readOnly && activeStep?.photoUrl;
 
   // Empty state card (no media)

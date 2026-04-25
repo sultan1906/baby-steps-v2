@@ -15,13 +15,12 @@ import {
   isDateInMonth,
   getDayNumber,
 } from "@/lib/date-utils";
-import type { Step, Baby, DailyDescription } from "@/types";
+import type { Step, Baby } from "@/types";
 
 interface FollowedTimelineClientProps {
   targetUser: { id: string; name: string; image: string | null };
   baby: Baby;
   steps: Step[];
-  descriptions: DailyDescription[];
   babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[];
 }
 
@@ -29,7 +28,6 @@ export function FollowedTimelineClient({
   targetUser,
   baby,
   steps,
-  descriptions,
   babies,
 }: FollowedTimelineClientProps) {
   const birthdateDate = parseISO(baby.birthdate);
@@ -44,38 +42,23 @@ export function FollowedTimelineClient({
   const isScrollingTo = useRef(false);
   const scrollingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  const descriptionMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const d of descriptions) {
-      map.set(d.date, d.description);
-    }
-    return map;
-  }, [descriptions]);
-
   const monthSections = useMemo(() => {
     const sections: { monthIndex: number; dayGroups: [string, Step[]][] }[] = [];
 
     for (let m = 0; m < totalMonths; m++) {
       const monthSteps = steps.filter((s) => isDateInMonth(s.date, birthdateDate, m));
-      const descDates = Array.from(descriptionMap.keys()).filter((d) =>
-        isDateInMonth(d, birthdateDate, m)
-      );
-
-      if (monthSteps.length === 0 && descDates.length === 0) continue;
+      if (monthSteps.length === 0) continue;
 
       const grouped = new Map<string, Step[]>();
       for (const s of monthSteps) {
         grouped.set(s.date, [...(grouped.get(s.date) ?? []), s]);
-      }
-      for (const d of descDates) {
-        if (!grouped.has(d)) grouped.set(d, []);
       }
       const sorted = Array.from(grouped.entries()).sort(([a], [b]) => a.localeCompare(b));
       sections.push({ monthIndex: m, dayGroups: sorted });
     }
 
     return sections;
-  }, [steps, birthdateDate, totalMonths, descriptionMap]);
+  }, [steps, birthdateDate, totalMonths]);
 
   const allDayGroups = useMemo(() => monthSections.flatMap((s) => s.dayGroups), [monthSections]);
   const totalDays = getDayNumber(birthdateDate, new Date());
@@ -195,7 +178,6 @@ export function FollowedTimelineClient({
                   date={date}
                   steps={daySteps}
                   birthdate={baby.birthdate}
-                  description={descriptionMap.get(date)}
                   isFirst={i === 0}
                   isLast={i === section.dayGroups.length - 1}
                   readOnly

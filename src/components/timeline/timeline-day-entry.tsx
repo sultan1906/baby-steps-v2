@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { parseISO } from "date-fns";
 import { MoreHorizontal, Plus, Eye } from "lucide-react";
 import { motion } from "framer-motion";
@@ -19,7 +20,6 @@ interface TimelineDayEntryProps {
   date: string;
   steps: Step[];
   birthdate: string;
-  description?: string;
   isFirst?: boolean;
   isLast?: boolean;
   readOnly?: boolean;
@@ -30,13 +30,13 @@ export function TimelineDayEntry({
   date,
   steps,
   birthdate,
-  description,
   isFirst,
   isLast,
   readOnly,
   onOpenStory,
 }: TimelineDayEntryProps) {
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const [activeIndex, setActiveIndex] = useState(0);
 
   if (isMobile) {
     return (
@@ -55,7 +55,6 @@ export function TimelineDayEntry({
               date={date}
               steps={steps}
               birthdate={birthdate}
-              description={description}
               readOnly={readOnly}
               onOpenStory={onOpenStory}
             />
@@ -75,9 +74,8 @@ export function TimelineDayEntry({
   const dayNumber = getDayNumber(parseISO(birthdate), parseISO(date));
   const shortDate = formatShortDate(date);
   const hasMedia = steps.some((s) => s.photoUrl);
-
-  // Use first step caption as fallback description
-  const displayDescription = description || steps.find((s) => s.caption)?.caption;
+  const safeIndex = Math.min(activeIndex, Math.max(steps.length - 1, 0));
+  const displayDescription = steps[safeIndex]?.caption ?? undefined;
 
   return (
     <>
@@ -127,7 +125,11 @@ export function TimelineDayEntry({
 
           {/* Photo carousel or empty placeholder */}
           {hasMedia ? (
-            <DayPhotoCarousel steps={steps} onTap={() => onOpenStory(date, steps)} />
+            <DayPhotoCarousel
+              steps={steps}
+              onTap={() => onOpenStory(date, steps)}
+              onIndexChange={setActiveIndex}
+            />
           ) : readOnly ? (
             <div className="w-full rounded-2xl p-4 bg-stone-50/50 border border-stone-100">
               <span className="text-sm text-stone-400">No media for this day</span>

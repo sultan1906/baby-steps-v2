@@ -36,6 +36,13 @@
       "when": 1774727445945,
       "tag": "0004_nosy_norrin_radd",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777133072340,
+      "tag": "0005_drop_daily_description",
+      "breakpoints": true
     }
   ]
 }

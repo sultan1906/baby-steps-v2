@@ -15,15 +15,14 @@ import {
   isDateInMonth,
   getDayNumber,
 } from "@/lib/date-utils";
-import type { Step, Baby, DailyDescription } from "@/types";
+import type { Step, Baby } from "@/types";
 
 interface TimelineClientProps {
   steps: Step[];
   baby: Baby;
-  descriptions: DailyDescription[];
 }
 
-export function TimelineClient({ steps, baby, descriptions }: TimelineClientProps) {
+export function TimelineClient({ steps, baby }: TimelineClientProps) {
   const birthdateDate = parseISO(baby.birthdate);
   const currentAgeMonths = getCurrentMonthIndex(birthdateDate);
   const totalMonths = getTotalMonths(birthdateDate);
@@ -37,46 +36,24 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
   const isScrollingTo = useRef(false);
   const scrollingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Description lookup map
-  const descriptionMap = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const d of descriptions) {
-      map.set(d.date, d.description);
-    }
-    return map;
-  }, [descriptions]);
-
   // Group ALL steps by month, then by date within each month
-  // Union step dates with description-only dates so days with just a note still appear
   const monthSections = useMemo(() => {
     const sections: { monthIndex: number; dayGroups: [string, Step[]][] }[] = [];
 
     for (let m = 0; m < totalMonths; m++) {
       const monthSteps = steps.filter((s) => isDateInMonth(s.date, birthdateDate, m));
-
-      // Collect description-only dates for this month
-      const descDates = Array.from(descriptionMap.keys()).filter((d) =>
-        isDateInMonth(d, birthdateDate, m)
-      );
-
-      if (monthSteps.length === 0 && descDates.length === 0) continue;
+      if (monthSteps.length === 0) continue;
 
       const grouped = new Map<string, Step[]>();
       for (const s of monthSteps) {
         grouped.set(s.date, [...(grouped.get(s.date) ?? []), s]);
-      }
-      // Ensure description-only dates get an empty Step[] entry
-      for (const d of descDates) {
-        if (!grouped.has(d)) {
-          grouped.set(d, []);
-        }
       }
       const sorted = Array.from(grouped.entries()).sort(([a], [b]) => a.localeCompare(b));
       sections.push({ monthIndex: m, dayGroups: sorted });
     }
 
     return sections;
-  }, [steps, birthdateDate, totalMonths, descriptionMap]);
+  }, [steps, birthdateDate, totalMonths]);
 
   // Flat dayGroups for StoryViewModal next-day navigation across months
   const allDayGroups = useMemo(() => monthSections.flatMap((s) => s.dayGroups), [monthSections]);
@@ -283,7 +260,6 @@ export function TimelineClient({ steps, baby, descriptions }: TimelineClientProp
                     date={date}
                     steps={daySteps}
                     birthdate={baby.birthdate}
-                    description={descriptionMap.get(date)}
                     isFirst={i === 0}
                     isLast={i === section.dayGroups.length - 1}
                     onOpenStory={openStory}
