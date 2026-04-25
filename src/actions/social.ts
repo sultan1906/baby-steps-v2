@@ -85,18 +85,6 @@ export async function getUserProfile(targetUserId: string): Promise<UserProfile 
         ? ("pending" as const)
         : ("none" as const);
 
-  // Follower and following counts
-  const [[followerResult], [followingResult]] = await Promise.all([
-    db
-      .select({ count: count() })
-      .from(follow)
-      .where(and(eq(follow.followingId, targetUserId), eq(follow.status, "accepted"))),
-    db
-      .select({ count: count() })
-      .from(follow)
-      .where(and(eq(follow.followerId, targetUserId), eq(follow.status, "accepted"))),
-  ]);
-
   // Babies — only visible if following has been accepted
   let babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[] = [];
   if (followStatus === "accepted") {
@@ -120,8 +108,6 @@ export async function getUserProfile(targetUserId: string): Promise<UserProfile 
     location: targetUser.location ?? null,
     followStatus,
     babies,
-    followerCount: followerResult?.count ?? 0,
-    followingCount: followingResult?.count ?? 0,
   };
 }
 

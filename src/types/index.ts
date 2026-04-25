@@ -83,6 +83,4 @@ export interface UserProfile {
   location: string | null;
   followStatus: FollowStatus;
   babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[];
-  followerCount: number;
-  followingCount: number;
 }
