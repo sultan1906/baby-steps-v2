@@ -85,6 +85,4 @@ export interface UserProfile {
   isPublic: boolean;
   followStatus: FollowStatus;
   babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[];
-  followerCount: number;
-  followingCount: number;
 }

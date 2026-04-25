@@ -51,20 +51,8 @@ export function ProfileClient({ profile: initial }: ProfileClientProps) {
           )}
         </div>
 
-        {/* Stats */}
-        <div className="flex justify-center gap-8 mb-6">
-          <div className="text-center">
-            <p className="text-lg font-bold text-stone-800">{initial.followerCount}</p>
-            <p className="text-xs text-stone-400">Followers</p>
-          </div>
-          <div className="text-center">
-            <p className="text-lg font-bold text-stone-800">{initial.followingCount}</p>
-            <p className="text-xs text-stone-400">Following</p>
-          </div>
-        </div>
-
         {/* Follow Button */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mt-6 mb-8">
           <FollowButton
             userId={initial.id}
             initialStatus={initial.followStatus}

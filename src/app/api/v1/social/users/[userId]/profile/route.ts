@@ -1,7 +1,7 @@
 import { db } from "@/db";
 import { user, follow, baby } from "@/db/schema";
 import { getApiSession } from "@/lib/api-utils";
-import { eq, and, count, desc } from "drizzle-orm";
+import { eq, and, desc } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 /** Get a user's public profile */
@@ -43,18 +43,6 @@ export async function GET(
         ? "pending"
         : "none";
 
-  // Counts
-  const [[followerResult], [followingResult]] = await Promise.all([
-    db
-      .select({ count: count() })
-      .from(follow)
-      .where(and(eq(follow.followingId, targetUserId), eq(follow.status, "accepted"))),
-    db
-      .select({ count: count() })
-      .from(follow)
-      .where(and(eq(follow.followerId, targetUserId), eq(follow.status, "accepted"))),
-  ]);
-
   // Babies (only if following or public)
   let babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[] = [];
   if (followStatus === "accepted" || targetUser.isPublic) {
@@ -79,7 +67,5 @@ export async function GET(
     isPublic: targetUser.isPublic,
     followStatus,
     babies,
-    followerCount: followerResult?.count ?? 0,
-    followingCount: followingResult?.count ?? 0,
   });
 }
