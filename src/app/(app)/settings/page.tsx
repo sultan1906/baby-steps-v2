@@ -14,7 +14,6 @@ import {
   Loader2,
   Baby as BabyIcon,
   Check,
-  Plus,
   Globe,
   Lock,
   MapPin,
@@ -513,20 +512,10 @@ export default function SettingsPage() {
               ))}
             </div>
           ) : (
-            <p className="text-sm text-stone-400 mb-2">
+            <p className="text-sm text-stone-400">
               You haven&apos;t added any babies yet. Add one to start capturing memories!
             </p>
           )}
-
-          <button
-            onClick={() => router.push("/onboarding")}
-            className="w-full mt-3 flex items-center gap-3 py-3 px-2 -mx-2 rounded-xl hover:bg-stone-50 transition-colors text-rose-500 font-medium"
-          >
-            <div className="w-8 h-8 rounded-xl border-2 border-dashed border-rose-200 flex items-center justify-center">
-              <Plus className="w-4 h-4" />
-            </div>
-            {babies.length > 0 ? "Add another baby" : "Add a baby"}
-          </button>
         </div>
 
         {/* Profile Visibility Card */}
