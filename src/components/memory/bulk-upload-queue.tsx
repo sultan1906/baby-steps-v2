@@ -1,22 +1,35 @@
 "use client";
 
-import { useRef, useCallback } from "react";
-import { Camera, X, Check, Loader2, Award, AlertCircle } from "lucide-react";
+import { useRef, useCallback, useEffect } from "react";
+import { Camera } from "lucide-react";
 import exifr from "exifr";
 import { format, parseISO, isBefore } from "date-fns";
-import { cn } from "@/lib/utils";
 import type { UploadQueueItem } from "@/types";
 import { toast } from "sonner";
-import Image from "next/image";
 
 interface BulkUploadQueueProps {
   babyBirthdate: string;
   queue: UploadQueueItem[];
   onQueueChange: (queue: UploadQueueItem[]) => void;
+  /** Called once on mount with a function that opens the file picker. */
+  onTriggerReady?: (trigger: () => void) => void;
 }
 
-export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUploadQueueProps) {
+export function BulkUploadQueue({
+  babyBirthdate,
+  queue,
+  onQueueChange,
+  onTriggerReady,
+}: BulkUploadQueueProps) {
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const triggerPicker = useCallback(() => {
+    inputRef.current?.click();
+  }, []);
+
+  useEffect(() => {
+    onTriggerReady?.(triggerPicker);
+  }, [onTriggerReady, triggerPicker]);
 
   const processFiles = useCallback(
     async (files: FileList) => {
@@ -44,7 +57,6 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
           date = format(new Date(), "yyyy-MM-dd");
         }
 
-        // Upload to Vercel Blob
         const id = crypto.randomUUID();
         const preview = URL.createObjectURL(file);
 
@@ -85,74 +97,22 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
     );
   };
 
-  const removeItem = (id: string) => {
-    onQueueChange(queue.filter((i) => i.id !== id));
-  };
-
-  const toggleMilestone = (id: string) => {
-    onQueueChange(queue.map((i) => (i.id === id ? { ...i, isMajor: !i.isMajor } : i)));
-  };
-
-  const updateDate = (id: string, date: string) => {
-    onQueueChange(queue.map((i) => (i.id === id ? { ...i, date } : i)));
-  };
-
   return (
-    <div className="space-y-3">
-      {/* Drop zone */}
-      {queue.length === 0 ? (
+    <>
+      {/* Empty-state drop zone */}
+      {queue.length === 0 && (
         <div
           role="button"
           tabIndex={0}
-          onClick={() => inputRef.current?.click()}
+          onClick={triggerPicker}
           onKeyDown={(e) =>
-            (e.key === "Enter" || e.key === " ") && (e.preventDefault(), inputRef.current?.click())
+            (e.key === "Enter" || e.key === " ") && (e.preventDefault(), triggerPicker())
           }
           className="flex flex-col items-center justify-center aspect-video rounded-[2rem] border-2 border-dashed border-stone-200 hover:border-rose-300 hover:bg-rose-50/30 cursor-pointer transition-colors"
         >
           <Camera className="w-8 h-8 text-rose-300 mb-2" />
           <span className="text-stone-400 font-medium">Add Photos or Videos</span>
           <span className="text-stone-300 text-sm mt-1">+ Tap to upload</span>
-        </div>
-      ) : (
-        <div
-          role="button"
-          tabIndex={0}
-          className="aspect-video rounded-[2rem] overflow-hidden relative cursor-pointer group"
-          onClick={() => inputRef.current?.click()}
-          onKeyDown={(e) =>
-            (e.key === "Enter" || e.key === " ") && (e.preventDefault(), inputRef.current?.click())
-          }
-        >
-          {queue[0].status === "done" ? (
-            queue[0].mediaType === "video" ? (
-              <video
-                src={queue[0].preview}
-                muted
-                autoPlay
-                playsInline
-                loop
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            ) : (
-              <Image
-                src={queue[0].preview}
-                alt="Preview"
-                fill
-                sizes="100vw"
-                className="object-cover"
-              />
-            )
-          ) : (
-            <div className="w-full h-full bg-stone-100 flex items-center justify-center">
-              <Loader2 className="w-6 h-6 text-stone-400 animate-spin" />
-            </div>
-          )}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-            <span className="opacity-0 group-hover:opacity-100 text-white font-medium text-sm bg-black/50 px-3 py-1.5 rounded-full">
-              Add more
-            </span>
-          </div>
         </div>
       )}
 
@@ -163,95 +123,11 @@ export function BulkUploadQueue({ babyBirthdate, queue, onQueueChange }: BulkUpl
         accept="image/*,video/*"
         multiple
         className="hidden"
-        onChange={(e) => e.target.files && processFiles(e.target.files)}
+        onChange={(e) => {
+          if (e.target.files) processFiles(e.target.files);
+          e.target.value = "";
+        }}
       />
-
-      {/* Queue list (multiple items) */}
-      {queue.length > 1 && (
-        <div className="bg-stone-50 rounded-[2rem] border border-stone-100 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="font-bold text-stone-700 text-sm">Queue ({queue.length})</span>
-            <button
-              onClick={() => onQueueChange([])}
-              className="text-xs text-stone-400 hover:text-stone-600"
-            >
-              Clear All
-            </button>
-          </div>
-          <div className="space-y-2 max-h-[240px] overflow-y-auto scrollbar-hide">
-            {queue.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-3 py-2 border-b border-stone-100 last:border-0"
-              >
-                {/* Thumbnail */}
-                <div className="w-16 h-16 rounded-xl overflow-hidden relative flex-shrink-0 bg-stone-100">
-                  {item.status === "done" ? (
-                    item.mediaType === "video" ? (
-                      <video
-                        src={item.preview}
-                        muted
-                        autoPlay
-                        playsInline
-                        loop
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Image src={item.preview} alt="" fill sizes="64px" className="object-cover" />
-                    )
-                  ) : item.status === "uploading" ? (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Loader2 className="w-4 h-4 text-stone-400 animate-spin" />
-                    </div>
-                  ) : item.status === "error" ? (
-                    <div className="w-full h-full flex items-center justify-center bg-rose-50">
-                      <AlertCircle className="w-4 h-4 text-rose-400" />
-                    </div>
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Loader2 className="w-4 h-4 text-stone-300 animate-spin" />
-                    </div>
-                  )}
-                  {item.status === "done" && (
-                    <div className="absolute top-1 right-1 w-4 h-4 rounded-full gradient-bg flex items-center justify-center">
-                      <Check className="w-2.5 h-2.5 text-white" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Date + controls */}
-                <div className="flex-1 min-w-0">
-                  <input
-                    type="date"
-                    value={item.date}
-                    onChange={(e) => updateDate(item.id, e.target.value)}
-                    className="text-xs text-stone-600 bg-white border border-stone-200 rounded-lg px-2 py-1 w-full"
-                  />
-                </div>
-
-                {/* Milestone toggle */}
-                <button
-                  onClick={() => toggleMilestone(item.id)}
-                  className={cn(
-                    "w-8 h-8 rounded-xl flex items-center justify-center transition-colors flex-shrink-0",
-                    item.isMajor ? "gradient-bg" : "bg-stone-200"
-                  )}
-                >
-                  <Award className="w-4 h-4 text-white" />
-                </button>
-
-                {/* Remove */}
-                <button
-                  onClick={() => removeItem(item.id)}
-                  className="w-6 h-6 rounded-full bg-stone-200 hover:bg-stone-300 flex items-center justify-center flex-shrink-0"
-                >
-                  <X className="w-3 h-3 text-stone-600" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
