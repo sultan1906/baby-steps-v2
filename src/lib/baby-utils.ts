@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { db } from "@/db";
-import { baby } from "@/db/schema";
+import { baby, user } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 
 const COOKIE_NAME = "babysteps_current_baby";
@@ -30,6 +30,17 @@ export async function getCurrentBaby(userId: string) {
   if (!babyId) return babies[0];
 
   return babies.find((b) => b.id === babyId) ?? babies[0];
+}
+
+export async function resolveNoBabyDestination(
+  userId: string
+): Promise<"/onboarding" | "/following"> {
+  const [row] = await db
+    .select({ onboardedAt: user.onboardedAt })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  return row?.onboardedAt ? "/following" : "/onboarding";
 }
 
 /**

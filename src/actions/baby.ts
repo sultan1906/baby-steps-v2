@@ -1,13 +1,13 @@
 "use server";
 
 import { db } from "@/db";
-import { baby, step } from "@/db/schema";
+import { baby, step, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { currentBabyCookieConfig } from "@/lib/baby-utils";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { cookies } from "next/headers";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, isNull } from "drizzle-orm";
 import type { NewBaby } from "@/db/schema";
 
 async function getSession() {
@@ -42,6 +42,11 @@ export async function createBaby(data: { name: string; birthdate: string; photoU
     title: "Arrival",
     caption: "The journey begins today.",
   });
+
+  await db
+    .update(user)
+    .set({ onboardedAt: new Date() })
+    .where(and(eq(user.id, session.user.id), isNull(user.onboardedAt)));
 
   // Set current baby cookie
   const cookieStore = await cookies();
@@ -99,6 +104,14 @@ export async function listBabies() {
     .from(baby)
     .where(eq(baby.userId, session.user.id))
     .orderBy(desc(baby.createdAt));
+}
+
+export async function markOnboardedAsFollower() {
+  const session = await getSession();
+  await db
+    .update(user)
+    .set({ onboardedAt: new Date() })
+    .where(and(eq(user.id, session.user.id), isNull(user.onboardedAt)));
 }
 
 /**

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { getCurrentBaby } from "@/lib/baby-utils";
+import { getCurrentBaby, resolveNoBabyDestination } from "@/lib/baby-utils";
 import { listBabies } from "@/actions/baby";
 import { getPendingRequestCount } from "@/actions/social";
 import { BabyProvider } from "@/components/baby/baby-provider";
@@ -31,7 +31,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     );
 
     if (!isOnboarding && !isAllowed) {
-      redirect("/following");
+      redirect(await resolveNoBabyDestination(session.user.id));
     }
 
     // Onboarding gets minimal shell (no nav)
