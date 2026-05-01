@@ -168,10 +168,20 @@ export const follow = pgTable(
 // ── Relations ─────────────────────────────────────────────────────────────────
 
 export const userRelations = relations(user, ({ many }) => ({
+  sessions: many(session),
+  accounts: many(account),
   babies: many(baby),
   savedLocations: many(savedLocation),
   followers: many(follow, { relationName: "following" }),
   following: many(follow, { relationName: "follower" }),
+}));
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, { fields: [session.userId], references: [user.id] }),
+}));
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, { fields: [account.userId], references: [user.id] }),
 }));
 
 export const babyRelations = relations(baby, ({ one, many }) => ({
