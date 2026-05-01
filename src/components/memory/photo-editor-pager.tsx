@@ -51,13 +51,14 @@ export function PhotoEditorPager({
 
   const handleScroll = useCallback(() => {
     const el = scrollRef.current;
-    if (!el) return;
-    const idx = Math.round(el.scrollLeft / el.clientWidth);
+    if (!el || el.clientWidth === 0) return;
+    const rawIdx = Math.round(el.scrollLeft / el.clientWidth);
+    const idx = Math.max(0, Math.min(queue.length - 1, rawIdx));
     if (idx === activeIndex) return;
     // The next activeIndex change is internal — don't re-scroll to it.
     skipNextScrollSync.current = true;
     onActiveIndexChange(idx);
-  }, [activeIndex, onActiveIndexChange]);
+  }, [activeIndex, onActiveIndexChange, queue.length]);
 
   // Sync scroll position to controlled activeIndex (mount, arrow click, thumbnail click,
   // dot click, queue mutations, parent restores after temporary unmount).

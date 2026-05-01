@@ -157,10 +157,10 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
               <Loader2 className="w-5 h-5 animate-spin" />
               Uploading…
             </>
-          ) : queue.length > 1 ? (
-            `Save ${doneCount} Memories`
-          ) : (
+          ) : doneCount === 1 ? (
             "Save Memory"
+          ) : (
+            `Save ${doneCount} Memories`
           )}
         </button>
       </div>
