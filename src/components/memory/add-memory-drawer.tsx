@@ -34,21 +34,28 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
     setLocationEditingItemId(null);
   };
 
+  const inFlight = queue.some((i) => i.status === "pending" || i.status === "uploading");
+  const doneCount = queue.filter((i) => i.status === "done").length;
+
   const handleSave = async () => {
-    if (queue.length === 0) return;
+    if (queue.length === 0 || inFlight) return;
     setSaving(true);
 
     try {
-      const steps = queue.map((item) => ({
-        babyId: baby.id,
-        photoUrl: item.status === "done" ? item.preview : undefined,
-        date: item.date,
-        isMajor: item.isMajor,
-        locationId: item.locationId,
-        locationNickname: item.locationNickname,
-        caption: item.caption?.trim() || undefined,
-        type: item.mediaType ?? "photo",
-      }));
+      const steps = queue
+        .filter((item) => item.status === "done")
+        .map((item) => ({
+          babyId: baby.id,
+          photoUrl: item.preview,
+          date: item.date,
+          isMajor: item.isMajor,
+          locationId: item.locationId,
+          locationNickname: item.locationNickname,
+          caption: item.caption?.trim() || undefined,
+          type: item.mediaType ?? "photo",
+        }));
+
+      if (steps.length === 0) return;
 
       if (steps.length === 1) {
         await createStep(steps[0]);
@@ -131,13 +138,18 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
       <div className="p-6 border-t border-stone-100/50">
         <button
           onClick={handleSave}
-          disabled={saving || queue.filter((i) => i.status === "done").length === 0}
+          disabled={saving || inFlight || doneCount === 0}
           className="gradient-bg-vibrant w-full py-4 rounded-[1.75rem] text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition"
         >
           {saving ? (
             <Loader2 className="w-5 h-5 animate-spin" />
+          ) : inFlight ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Uploading…
+            </>
           ) : queue.length > 1 ? (
-            `Save ${queue.filter((i) => i.status === "done").length} Memories`
+            `Save ${doneCount} Memories`
           ) : (
             "Save Memory"
           )}

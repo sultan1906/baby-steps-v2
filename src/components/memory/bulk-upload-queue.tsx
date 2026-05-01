@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, type Dispatch, type SetStateAction } from "react";
 import { Camera } from "lucide-react";
 import exifr from "exifr";
 import { format, parseISO, isBefore } from "date-fns";
@@ -10,7 +10,7 @@ import { toast } from "sonner";
 interface BulkUploadQueueProps {
   babyBirthdate: string;
   queue: UploadQueueItem[];
-  onQueueChange: (queue: UploadQueueItem[]) => void;
+  onQueueChange: Dispatch<SetStateAction<UploadQueueItem[]>>;
   /** Called once on mount with a function that opens the file picker. */
   onTriggerReady?: (trigger: () => void) => void;
 }
@@ -64,7 +64,7 @@ export function BulkUploadQueue({
           id,
           file,
           preview,
-          status: "pending",
+          status: "uploading",
           progress: 0,
           date,
           isMajor: false,
@@ -72,30 +72,17 @@ export function BulkUploadQueue({
         });
       }
 
-      // Trigger uploads
-      const withUploads = await uploadItems(newItems);
-      onQueueChange([...queue, ...withUploads]);
-    },
-    [babyBirthdate, queue, onQueueChange]
-  );
+      // Insert immediately so the user can edit metadata while uploads run.
+      onQueueChange((prev) => [...prev, ...newItems]);
 
-  const uploadItems = async (items: UploadQueueItem[]): Promise<UploadQueueItem[]> => {
-    return Promise.all(
-      items.map(async (item) => {
-        try {
-          const updated: UploadQueueItem = { ...item, status: "uploading" };
-          const fd = new FormData();
-          fd.append("file", item.file);
-          const res = await fetch("/api/upload", { method: "POST", body: fd });
-          if (!res.ok) throw new Error("Upload failed");
-          const { url } = await res.json();
-          return { ...updated, status: "done", preview: url, progress: 100 };
-        } catch {
-          return { ...item, status: "error", progress: 0 };
-        }
-      })
-    );
-  };
+      // Kick off each upload independently; patch by id with functional state
+      // so concurrent edits / item removals / drawer close are race-safe.
+      for (const item of newItems) {
+        void uploadOne(item, onQueueChange);
+      }
+    },
+    [babyBirthdate, onQueueChange]
+  );
 
   return (
     <>
@@ -130,4 +117,26 @@ export function BulkUploadQueue({
       />
     </>
   );
+}
+
+async function uploadOne(
+  item: UploadQueueItem,
+  onQueueChange: Dispatch<SetStateAction<UploadQueueItem[]>>
+) {
+  try {
+    const fd = new FormData();
+    fd.append("file", item.file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    if (!res.ok) throw new Error("Upload failed");
+    const { url } = await res.json();
+    onQueueChange((prev) =>
+      prev.map((i) =>
+        i.id === item.id ? { ...i, status: "done", preview: url, progress: 100 } : i
+      )
+    );
+  } catch {
+    onQueueChange((prev) =>
+      prev.map((i) => (i.id === item.id ? { ...i, status: "error", progress: 0 } : i))
+    );
+  }
 }

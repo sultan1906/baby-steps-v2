@@ -1,6 +1,13 @@
 "use client";
 
-import { useRef, useState, useCallback, useEffect } from "react";
+import {
+  useRef,
+  useState,
+  useCallback,
+  useEffect,
+  type Dispatch,
+  type SetStateAction,
+} from "react";
 import Image from "next/image";
 import {
   X,
@@ -21,7 +28,7 @@ const CAPTION_COUNTER_THRESHOLD = 1800;
 
 interface PhotoEditorPagerProps {
   queue: UploadQueueItem[];
-  onQueueChange: (queue: UploadQueueItem[]) => void;
+  onQueueChange: Dispatch<SetStateAction<UploadQueueItem[]>>;
   onAddMore: () => void;
   onOpenLocationPicker: (itemId: string) => void;
   babyBirthdate: string;
@@ -71,11 +78,11 @@ export function PhotoEditorPager({
   }, [queue.length, activeIndex, scrollToIndex]);
 
   const updateItem = (id: string, patch: Partial<UploadQueueItem>) => {
-    onQueueChange(queue.map((i) => (i.id === id ? { ...i, ...patch } : i)));
+    onQueueChange((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
   };
 
   const removeItem = (id: string) => {
-    onQueueChange(queue.filter((i) => i.id !== id));
+    onQueueChange((prev) => prev.filter((i) => i.id !== id));
   };
 
   const goPrev = () => {
