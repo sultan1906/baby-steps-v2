@@ -199,8 +199,12 @@ export default function OnboardingPage() {
                     type="button"
                     onClick={async () => {
                       if (!termsAccepted) return;
-                      await markOnboardedAsFollower();
-                      router.push("/following");
+                      try {
+                        await markOnboardedAsFollower();
+                        router.push("/following");
+                      } catch {
+                        setError("We couldn't save that choice. Please try again.");
+                      }
                     }}
                     disabled={!termsAccepted}
                     className="w-full text-center text-sm text-stone-400 hover:text-stone-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors mt-1"
