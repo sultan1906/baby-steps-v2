@@ -20,8 +20,12 @@ function getAuth() {
           session: schema.session,
           account: schema.account,
           verification: schema.verification,
+          userRelations: schema.userRelations,
+          sessionRelations: schema.sessionRelations,
+          accountRelations: schema.accountRelations,
         },
       }),
+      experimental: { joins: true },
 
       emailAndPassword: {
         enabled: true,
