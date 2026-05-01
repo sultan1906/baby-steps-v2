@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { getCurrentBaby } from "@/lib/baby-utils";
+import { getCurrentBaby, resolveNoBabyDestination } from "@/lib/baby-utils";
 import { LandingPage } from "@/components/landing/landing-page";
 import type { Metadata } from "next";
 
@@ -16,11 +16,8 @@ export default async function RootPage() {
 
   if (session) {
     const currentBaby = await getCurrentBaby(session.user.id);
-    if (currentBaby) {
-      redirect("/timeline");
-    } else {
-      redirect("/following");
-    }
+    if (currentBaby) redirect("/timeline");
+    redirect(await resolveNoBabyDestination(session.user.id));
   }
 
   // Marketing landing page (unauthenticated)

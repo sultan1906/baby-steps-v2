@@ -30,6 +30,7 @@ export const user = pgTable("user", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   bio: text("bio"),
   location: text("location"),
+  onboardedAt: timestamp("onboarded_at"),
 });
 
 export const session = pgTable("session", {

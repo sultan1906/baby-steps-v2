@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createBaby } from "@/actions/baby";
+import { createBaby, markOnboardedAsFollower } from "@/actions/baby";
 import { format } from "date-fns";
 import Image from "next/image";
 import confetti from "canvas-confetti";
@@ -197,8 +197,14 @@ export default function OnboardingPage() {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      if (termsAccepted) router.push("/following");
+                    onClick={async () => {
+                      if (!termsAccepted) return;
+                      try {
+                        await markOnboardedAsFollower();
+                        router.push("/following");
+                      } catch {
+                        setError("We couldn't save that choice. Please try again.");
+                      }
                     }}
                     disabled={!termsAccepted}
                     className="w-full text-center text-sm text-stone-400 hover:text-stone-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors mt-1"
