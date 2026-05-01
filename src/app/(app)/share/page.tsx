@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { getCurrentBaby } from "@/lib/baby-utils";
+import { getCurrentBaby, resolveNoBabyDestination } from "@/lib/baby-utils";
 import { db } from "@/db";
 import { step } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
@@ -12,7 +12,7 @@ export default async function SharePage() {
   if (!session) redirect("/auth");
 
   const currentBaby = await getCurrentBaby(session.user.id);
-  if (!currentBaby) redirect("/following");
+  if (!currentBaby) redirect(await resolveNoBabyDestination(session.user.id));
 
   const allSteps = await db
     .select()
