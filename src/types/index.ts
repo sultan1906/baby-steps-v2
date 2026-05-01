@@ -10,7 +10,9 @@ export type StepType = "photo" | "video" | "first_word" | "milestone";
 export interface UploadQueueItem {
   id: string;
   file: File;
-  preview: string; // URL.createObjectURL()
+  preview: string; // local blob URL while uploading; remote URL after upload
+  objectUrl?: string; // original blob URL (kept so we can revoke once it's no longer in use)
+  controller?: AbortController; // present while upload is in flight; cleared on settle
   status: "pending" | "uploading" | "done" | "error";
   progress: number; // 0-100
   date: string; // "YYYY-MM-DD" from EXIF or fallback

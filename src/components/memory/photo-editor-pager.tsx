@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  useRef,
-  useState,
-  useCallback,
-  useEffect,
-  type Dispatch,
-  type SetStateAction,
-} from "react";
+import { useRef, useCallback, useEffect, type Dispatch, type SetStateAction } from "react";
 import Image from "next/image";
 import {
   X,
@@ -32,6 +25,9 @@ interface PhotoEditorPagerProps {
   onAddMore: () => void;
   onOpenLocationPicker: (itemId: string) => void;
   babyBirthdate: string;
+  /** Lifted into the parent so it survives temporary unmounts (mobile location picker). */
+  activeIndex: number;
+  onActiveIndexChange: (idx: number) => void;
 }
 
 export function PhotoEditorPager({
@@ -40,10 +36,11 @@ export function PhotoEditorPager({
   onAddMore,
   onOpenLocationPicker,
   babyBirthdate,
+  activeIndex,
+  onActiveIndexChange,
 }: PhotoEditorPagerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const lastReportedIndex = useRef(0);
+  const skipNextScrollSync = useRef(false);
   const previousQueueLength = useRef(queue.length);
 
   const scrollToIndex = useCallback((idx: number, behavior: ScrollBehavior = "smooth") => {
@@ -56,40 +53,50 @@ export function PhotoEditorPager({
     const el = scrollRef.current;
     if (!el) return;
     const idx = Math.round(el.scrollLeft / el.clientWidth);
-    if (idx === lastReportedIndex.current) return;
-    lastReportedIndex.current = idx;
-    setActiveIndex(idx);
-  }, []);
+    if (idx === activeIndex) return;
+    // The next activeIndex change is internal — don't re-scroll to it.
+    skipNextScrollSync.current = true;
+    onActiveIndexChange(idx);
+  }, [activeIndex, onActiveIndexChange]);
 
-  // When new items are appended, scroll to the first new page.
+  // Sync scroll position to controlled activeIndex (mount, arrow click, thumbnail click,
+  // dot click, queue mutations, parent restores after temporary unmount).
+  useEffect(() => {
+    if (skipNextScrollSync.current) {
+      skipNextScrollSync.current = false;
+      return;
+    }
+    const r = requestAnimationFrame(() => scrollToIndex(activeIndex, "auto"));
+    return () => cancelAnimationFrame(r);
+  }, [activeIndex, scrollToIndex]);
+
+  // Queue length changes: shift activeIndex to first new page or clamp to last.
   useEffect(() => {
     if (queue.length > previousQueueLength.current) {
-      const firstNewIdx = previousQueueLength.current;
-      lastReportedIndex.current = firstNewIdx;
-      setActiveIndex(firstNewIdx);
-      requestAnimationFrame(() => scrollToIndex(firstNewIdx, "smooth"));
+      onActiveIndexChange(previousQueueLength.current);
     } else if (queue.length < previousQueueLength.current) {
       const clamped = Math.min(activeIndex, Math.max(0, queue.length - 1));
-      lastReportedIndex.current = clamped;
-      setActiveIndex(clamped);
-      requestAnimationFrame(() => scrollToIndex(clamped, "auto"));
+      if (clamped !== activeIndex) onActiveIndexChange(clamped);
     }
     previousQueueLength.current = queue.length;
-  }, [queue.length, activeIndex, scrollToIndex]);
+  }, [queue.length, activeIndex, onActiveIndexChange]);
 
   const updateItem = (id: string, patch: Partial<UploadQueueItem>) => {
     onQueueChange((prev) => prev.map((i) => (i.id === id ? { ...i, ...patch } : i)));
   };
 
   const removeItem = (id: string) => {
+    const target = queue.find((i) => i.id === id);
+    target?.controller?.abort();
+    if (target?.objectUrl) URL.revokeObjectURL(target.objectUrl);
     onQueueChange((prev) => prev.filter((i) => i.id !== id));
   };
 
   const goPrev = () => {
-    if (activeIndex > 0) scrollToIndex(activeIndex - 1);
+    if (activeIndex > 0) onActiveIndexChange(activeIndex - 1);
   };
   const goNext = () => {
-    if (activeIndex < queue.length - 1) scrollToIndex(activeIndex + 1);
+    if (activeIndex < queue.length - 1) onActiveIndexChange(activeIndex + 1);
   };
 
   return (
@@ -145,7 +152,7 @@ export function PhotoEditorPager({
               key={i}
               type="button"
               aria-label={`Go to photo ${i + 1}`}
-              onClick={() => scrollToIndex(i)}
+              onClick={() => onActiveIndexChange(i)}
               className={`h-1.5 rounded-full transition-all duration-200 ${
                 i === activeIndex ? "gradient-bg w-3" : "bg-stone-300 w-1.5"
               }`}
@@ -160,7 +167,7 @@ export function PhotoEditorPager({
           <button
             key={item.id}
             type="button"
-            onClick={() => scrollToIndex(idx)}
+            onClick={() => onActiveIndexChange(idx)}
             aria-label={`Edit photo ${idx + 1}`}
             className={cn(
               "relative w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-stone-100 transition-all",
@@ -221,6 +228,8 @@ function PhotoEditorPage({
 }: PhotoEditorPageProps) {
   const caption = item.caption ?? "";
   const remaining = MAX_CAPTION_LENGTH - caption.length;
+  const dateId = `photo-date-${item.id}`;
+  const captionId = `photo-caption-${item.id}`;
 
   return (
     <div className="snap-center flex-shrink-0 w-full pr-3 last:pr-0 first:pl-0 space-y-3">
@@ -264,8 +273,11 @@ function PhotoEditorPage({
       {/* Date + Location */}
       <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3">
         <div className="min-w-0">
-          <label className="text-xs text-stone-500 font-medium block mb-1">Date</label>
+          <label htmlFor={dateId} className="text-xs text-stone-500 font-medium block mb-1">
+            Date
+          </label>
           <input
+            id={dateId}
             type="date"
             value={item.date}
             min={babyBirthdate}
@@ -289,8 +301,11 @@ function PhotoEditorPage({
 
       {/* Description */}
       <div>
-        <label className="text-xs text-stone-500 font-medium block mb-1">Description</label>
+        <label htmlFor={captionId} className="text-xs text-stone-500 font-medium block mb-1">
+          Description
+        </label>
         <textarea
+          id={captionId}
           value={caption}
           onChange={(e) => onUpdate({ caption: e.target.value })}
           maxLength={MAX_CAPTION_LENGTH}

@@ -24,13 +24,20 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
   const isMobile = useMediaQuery("(max-width: 640px)");
   const [open, setOpen] = useState(false);
   const [queue, setQueue] = useState<UploadQueueItem[]>([]);
+  const [activeIndex, setActiveIndex] = useState(0);
   const [locationEditingItemId, setLocationEditingItemId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [triggerAddMore, setTriggerAddMore] = useState<(() => void) | null>(null);
 
   const handleClose = () => {
+    // Cancel any in-flight uploads and revoke local blob URLs.
+    for (const item of queue) {
+      item.controller?.abort();
+      if (item.objectUrl) URL.revokeObjectURL(item.objectUrl);
+    }
     setOpen(false);
     setQueue([]);
+    setActiveIndex(0);
     setLocationEditingItemId(null);
   };
 
@@ -130,6 +137,8 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
             onAddMore={() => triggerAddMore?.()}
             onOpenLocationPicker={(itemId) => setLocationEditingItemId(itemId)}
             babyBirthdate={baby.birthdate}
+            activeIndex={activeIndex}
+            onActiveIndexChange={setActiveIndex}
           />
         )}
       </div>
@@ -184,8 +193,8 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         <Drawer
           open={open}
           onOpenChange={(v) => {
-            setOpen(v);
-            if (!v) setLocationEditingItemId(null);
+            if (!v) handleClose();
+            else setOpen(v);
           }}
         >
           <DrawerContent className="max-h-[90dvh] rounded-t-[3rem]">
@@ -205,8 +214,8 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         <Dialog
           open={open}
           onOpenChange={(v) => {
-            setOpen(v);
-            if (!v) setLocationEditingItemId(null);
+            if (!v) handleClose();
+            else setOpen(v);
           }}
         >
           <DialogContent

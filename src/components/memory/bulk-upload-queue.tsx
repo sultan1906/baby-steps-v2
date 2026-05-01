@@ -58,12 +58,15 @@ export function BulkUploadQueue({
         }
 
         const id = crypto.randomUUID();
-        const preview = URL.createObjectURL(file);
+        const objectUrl = URL.createObjectURL(file);
+        const controller = new AbortController();
 
         newItems.push({
           id,
           file,
-          preview,
+          preview: objectUrl,
+          objectUrl,
+          controller,
           status: "uploading",
           progress: 0,
           date,
@@ -126,17 +129,38 @@ async function uploadOne(
   try {
     const fd = new FormData();
     fd.append("file", item.file);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const res = await fetch("/api/upload", {
+      method: "POST",
+      body: fd,
+      signal: item.controller?.signal,
+    });
     if (!res.ok) throw new Error("Upload failed");
     const { url } = await res.json();
     onQueueChange((prev) =>
       prev.map((i) =>
-        i.id === item.id ? { ...i, status: "done", preview: url, progress: 100 } : i
+        i.id === item.id
+          ? {
+              ...i,
+              status: "done",
+              preview: url,
+              progress: 100,
+              objectUrl: undefined,
+              controller: undefined,
+            }
+          : i
       )
     );
   } catch {
+    // AbortError or network/server failure. The item may already be removed —
+    // the functional update will simply no-op in that case.
     onQueueChange((prev) =>
-      prev.map((i) => (i.id === item.id ? { ...i, status: "error", progress: 0 } : i))
+      prev.map((i) =>
+        i.id === item.id
+          ? { ...i, status: "error", progress: 0, objectUrl: undefined, controller: undefined }
+          : i
+      )
     );
+  } finally {
+    if (item.objectUrl) URL.revokeObjectURL(item.objectUrl);
   }
 }
