@@ -99,12 +99,12 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
           setActiveMonth(topmost);
         }
       },
-      { rootMargin: "-120px 0px -40% 0px", threshold: 0 }
+      { rootMargin: `-${Math.max(0, scrollOffset)}px 0px -40% 0px`, threshold: 0 }
     );
 
     monthRefs.current.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [monthSections]);
+  }, [monthSections, scrollOffset]);
 
   // Scroll to a specific month section. scroll-margin-top on the section
   // (set inline below) accounts for the sticky header so the divider is visible.
