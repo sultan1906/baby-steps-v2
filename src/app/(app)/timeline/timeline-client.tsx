@@ -30,12 +30,24 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
   const [storyDate, setStoryDate] = useState<string | null>(null);
   const [storySteps, setStorySteps] = useState<Step[]>([]);
   const [activeMonth, setActiveMonth] = useState(currentAgeMonths);
+  const [scrollOffset, setScrollOffset] = useState(0);
 
   // Refs for each month section (scroll targets)
   const monthRefs = useRef(new Map<number, HTMLElement>());
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
   const isScrollingTo = useRef(false);
   const scrollingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Track sticky header height to offset section scroll targets
+  useEffect(() => {
+    const el = stickyHeaderRef.current;
+    if (!el) return;
+    const update = () => setScrollOffset(el.offsetHeight + 8);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Group ALL steps by month, then by date within each month
   const monthSections = useMemo(() => {
@@ -94,37 +106,16 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
     return () => observer.disconnect();
   }, [monthSections]);
 
-  // Scroll to a specific month section, accounting for the sticky header
+  // Scroll to a specific month section. scroll-margin-top on the section
+  // (set inline below) accounts for the sticky header so the divider is visible.
   const scrollToMonth = useCallback((monthIndex: number) => {
     const el = monthRefs.current.get(monthIndex);
     if (!el) return;
 
-    // Find the actual scroll container (the AppLayout <main> uses overflow-y-auto)
-    let scrollContainer: HTMLElement | null = el.parentElement;
-    while (scrollContainer && scrollContainer !== document.body) {
-      const overflowY = window.getComputedStyle(scrollContainer).overflowY;
-      if (overflowY === "auto" || overflowY === "scroll") break;
-      scrollContainer = scrollContainer.parentElement;
-    }
-
-    const headerHeight = stickyHeaderRef.current?.offsetHeight ?? 0;
-
-    // Suppress observer during programmatic scroll
     isScrollingTo.current = true;
     setActiveMonth(monthIndex);
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
 
-    if (scrollContainer && scrollContainer !== document.body) {
-      const containerRect = scrollContainer.getBoundingClientRect();
-      const elRect = el.getBoundingClientRect();
-      const targetTop =
-        scrollContainer.scrollTop + (elRect.top - containerRect.top) - headerHeight - 8;
-      scrollContainer.scrollTo({ top: targetTop, behavior: "smooth" });
-    } else {
-      const targetTop = window.scrollY + el.getBoundingClientRect().top - headerHeight - 8;
-      window.scrollTo({ top: targetTop, behavior: "smooth" });
-    }
-
-    // Clear any previous timer before setting a new one
     if (scrollingTimerRef.current) clearTimeout(scrollingTimerRef.current);
     scrollingTimerRef.current = setTimeout(() => {
       isScrollingTo.current = false;
@@ -276,6 +267,7 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
                   if (el) monthRefs.current.set(section.monthIndex, el);
                 }}
                 data-month-idx={section.monthIndex}
+                style={{ scrollMarginTop: scrollOffset }}
               >
                 <MonthDivider monthIndex={section.monthIndex} birthdate={baby.birthdate} />
                 {section.dayGroups.map(([date, daySteps], i) => (
