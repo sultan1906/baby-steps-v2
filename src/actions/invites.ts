@@ -55,6 +55,11 @@ async function sendInviteEmail(args: {
   inviteUrl: string;
   babyNames: string[];
 }) {
+  const from = process.env.RESEND_FROM_EMAIL;
+  if (!from) {
+    throw new Error("Email is not configured (RESEND_FROM_EMAIL missing)");
+  }
+
   const html = await render(
     InviteEmailTemplate({
       inviterName: args.inviterName,
@@ -62,12 +67,20 @@ async function sendInviteEmail(args: {
       babyNames: args.babyNames,
     })
   );
-  await getResend().emails.send({
-    from: process.env.RESEND_FROM_EMAIL!,
+
+  // Resend's SDK returns { data, error } instead of throwing on API rejections,
+  // so we have to inspect the response or the email silently never sends.
+  const { error } = await getResend().emails.send({
+    from,
     to: args.to,
     subject: `${args.inviterName} invited you to Baby Steps`,
     html,
   });
+
+  if (error) {
+    console.error("Resend invite email failed", { to: args.to, error });
+    throw new Error(error.message || "Couldn't send invite email");
+  }
 }
 
 // ── Inviter actions ────────────────────────────────────────────────────────
