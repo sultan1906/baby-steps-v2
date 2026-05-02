@@ -333,8 +333,7 @@ The repo has no automated test harness. These 12 scenarios should pass before me
 - `src/actions/social.ts` — remove search/follow-request actions; add `getPendingIncomingInviteCount`
 - `src/app/(app)/following/following-client.tsx` — drop Search/Requests tabs, add Invite tab + Following filter
 - `src/app/(app)/following/page.tsx` — drop `getFollowRequests` call
-- `src/app/(app)/onboarding/page.tsx` — invoke post-auth invite redemption
-- `src/app/(app)/timeline/page.tsx` — invoke post-auth invite redemption
+- `src/app/(app)/layout.tsx` — central post-auth invite redemption hook (reads `pending_invite_token` cookie, calls `acceptInvite`, redirects to `/profile/<inviterId>?welcome=1` or `/timeline?invite=invalid`); also swaps `getPendingRequestCount` for `getPendingIncomingInviteCount`
 - `src/app/(app)/profile/[userId]/profile-client.tsx` — surface `?welcome=1` toast; hide Follow button for `none` status
 - `src/components/social/follow-button.tsx` — remove `status === "none"` branch (or render nothing)
 - Bottom nav (find file in `src/components/`) — swap pending-request count for pending-incoming-invite count

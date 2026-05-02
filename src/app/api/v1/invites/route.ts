@@ -35,6 +35,11 @@ export async function GET() {
   const { error } = await getApiSession();
   if (error) return error;
 
-  const invites = await listMyInvites();
-  return NextResponse.json(invites);
+  try {
+    const invites = await listMyInvites();
+    return NextResponse.json(invites);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to fetch invites";
+    return jsonError(msg, 500);
+  }
 }
