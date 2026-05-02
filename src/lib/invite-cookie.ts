@@ -1,18 +1,7 @@
 import { cookies } from "next/headers";
 
-const INVITE_COOKIE_NAME = "pending_invite_token";
-const ONE_DAY_SECONDS = 60 * 60 * 24;
-
-export async function setPendingInviteCookie(token: string) {
-  const jar = await cookies();
-  jar.set(INVITE_COOKIE_NAME, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: ONE_DAY_SECONDS,
-  });
-}
+export const INVITE_COOKIE_NAME = "pending_invite_token";
+export const INVITE_COOKIE_MAX_AGE_SECONDS = 60 * 60 * 24;
 
 export async function readPendingInviteCookie(): Promise<string | null> {
   const jar = await cookies();

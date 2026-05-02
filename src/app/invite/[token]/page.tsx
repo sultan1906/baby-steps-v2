@@ -1,7 +1,6 @@
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { getInvitePreview } from "@/actions/invites";
-import { setPendingInviteCookie } from "@/lib/invite-cookie";
 import { InviteAcceptClient } from "./invite-accept-client";
 import { InviteErrorView } from "./invite-error-view";
 
@@ -21,12 +20,10 @@ export default async function InvitePage({ params }: Props) {
     );
   }
 
+  // The pending_invite_token cookie for unauthenticated viewers is set by the
+  // middleware (src/proxy.ts), since cookie writes from server-component
+  // render are unreliable in Next.js 15+.
   const session = await auth.api.getSession({ headers: await headers() });
-
-  if (!session) {
-    // Stash token in cookie for post-auth redemption
-    await setPendingInviteCookie(token);
-  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
