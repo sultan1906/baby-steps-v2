@@ -25,17 +25,16 @@ export function VerticalMonthSelector({
   const totalMonths = getTotalMonths(birthdateDate);
   const currentAgeMonths = getCurrentMonthIndex(birthdateDate);
 
-  // Auto-scroll active month pill into view
+  // Auto-center the active month pill horizontally. We avoid scrollIntoView
+  // because it can interrupt an in-progress smooth scroll on ancestor scroll
+  // containers — and the timeline triggers exactly such a scroll on click.
   useEffect(() => {
     const container = scrollRef.current;
     if (!container) return;
-    const pill = container.querySelector(`[data-month="${activeMonth}"]`) as HTMLElement;
+    const pill = container.querySelector(`[data-month="${activeMonth}"]`) as HTMLElement | null;
     if (!pill) return;
-    pill.scrollIntoView({
-      behavior: "smooth",
-      inline: "center",
-      block: "nearest",
-    });
+    const target = pill.offsetLeft - (container.clientWidth - pill.clientWidth) / 2;
+    container.scrollTo({ left: Math.max(0, target), behavior: "smooth" });
   }, [activeMonth]);
 
   return (
