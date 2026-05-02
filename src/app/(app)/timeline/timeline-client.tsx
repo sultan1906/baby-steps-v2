@@ -33,6 +33,7 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
 
   // Refs for each month section (scroll targets)
   const monthRefs = useRef(new Map<number, HTMLElement>());
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
   const isScrollingTo = useRef(false);
   const scrollingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
@@ -93,16 +94,35 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
     return () => observer.disconnect();
   }, [monthSections]);
 
-  // Scroll to a specific month section
-  // Scroll to a specific month section
+  // Scroll to a specific month section, accounting for the sticky header
   const scrollToMonth = useCallback((monthIndex: number) => {
     const el = monthRefs.current.get(monthIndex);
     if (!el) return;
 
+    // Find the actual scroll container (the AppLayout <main> uses overflow-y-auto)
+    let scrollContainer: HTMLElement | null = el.parentElement;
+    while (scrollContainer && scrollContainer !== document.body) {
+      const overflowY = window.getComputedStyle(scrollContainer).overflowY;
+      if (overflowY === "auto" || overflowY === "scroll") break;
+      scrollContainer = scrollContainer.parentElement;
+    }
+
+    const headerHeight = stickyHeaderRef.current?.offsetHeight ?? 0;
+
     // Suppress observer during programmatic scroll
     isScrollingTo.current = true;
     setActiveMonth(monthIndex);
-    el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    if (scrollContainer && scrollContainer !== document.body) {
+      const containerRect = scrollContainer.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      const targetTop =
+        scrollContainer.scrollTop + (elRect.top - containerRect.top) - headerHeight - 8;
+      scrollContainer.scrollTo({ top: targetTop, behavior: "smooth" });
+    } else {
+      const targetTop = window.scrollY + el.getBoundingClientRect().top - headerHeight - 8;
+      window.scrollTo({ top: targetTop, behavior: "smooth" });
+    }
 
     // Clear any previous timer before setting a new one
     if (scrollingTimerRef.current) clearTimeout(scrollingTimerRef.current);
@@ -215,7 +235,10 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Sticky header + month selector */}
-      <div className="sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-stone-100/50">
+      <div
+        ref={stickyHeaderRef}
+        className="sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-stone-100/50"
+      >
         <TimelineHeader />
         <VerticalMonthSelector
           birthdate={baby.birthdate}
