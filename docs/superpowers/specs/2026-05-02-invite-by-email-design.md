@@ -242,10 +242,11 @@ Logic:
 - The signup page reads the `invite` query param. For email-kind invites, the email field is pre-filled and read-only.
 - After successful sign-up + email verification (better-auth's `autoSignInAfterVerification` is already enabled), the user lands on the post-auth landing route.
 - After successful sign-in, same thing.
-- Both `/onboarding` (new users) and `/timeline` (returning users) server components add a redemption check at the top:
+- The `(app)` server layout (`src/app/(app)/layout.tsx`) is the central redemption hook — it runs on every request inside the app, after the session is loaded and before any page renders:
   - If `pending_invite_token` cookie present, call `acceptInvite(token)`.
   - On success: clear cookie, redirect to `/profile/<inviterId>?welcome=1`.
   - On failure (expired/revoked/mismatch): clear cookie, redirect to `/timeline?invite=invalid` (toast surfaces the error).
+  - Skipped on `/profile/...` to avoid a redirect loop after we've already sent the user there.
 - Per Q7 of brainstorming: this overrides the default destination **even for new signups**. They can complete onboarding from the bottom nav whenever they want.
 
 The `?welcome=1` query on `/profile/<inviterId>` triggers a one-time toast: "You're now connected with <inviter name>".
@@ -325,7 +326,7 @@ The repo has no automated test harness. These 12 scenarios should pass before me
 - `src/components/social/copy-invite-link-button.tsx`
 - `src/emails/InviteEmailTemplate.tsx`
 - `src/lib/invite-cookie.ts` — helpers to read/set/clear `pending_invite_token`
-- `src/lib/post-auth-invite.ts` — invoked from `/onboarding` and `/timeline` server components
+- `src/lib/post-auth-invite.ts` — invoked from the `(app)` server layout
 
 ### Modify
 - `src/types/index.ts` — add `Invite`, `InvitePreview`, etc.

@@ -7,11 +7,14 @@ export async function POST(request: NextRequest) {
   const { error } = await getApiSession();
   if (error) return error;
 
+  const rawBody = await request.text();
   let body: { email?: string } = {};
-  try {
-    body = await request.json();
-  } catch {
-    body = {};
+  if (rawBody.trim()) {
+    try {
+      body = JSON.parse(rawBody);
+    } catch {
+      return jsonError("Invalid JSON body");
+    }
   }
 
   try {

@@ -5,7 +5,7 @@ import { user, follow, baby, step } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq, and, desc, inArray } from "drizzle-orm";
+import { eq, and, or, desc, inArray } from "drizzle-orm";
 import type { FollowedUser, UserProfile } from "@/types";
 
 async function getSession() {
@@ -116,13 +116,15 @@ export async function getUserProfile(targetUserId: string): Promise<UserProfile 
 export async function unfollowUser(targetUserId: string) {
   const session = await getSession();
 
-  // Mutual unfollow: removes both directions of the connection.
+  // Atomic mutual disconnect: both directions removed in a single statement.
   await db
     .delete(follow)
-    .where(and(eq(follow.followerId, session.user.id), eq(follow.followingId, targetUserId)));
-  await db
-    .delete(follow)
-    .where(and(eq(follow.followerId, targetUserId), eq(follow.followingId, session.user.id)));
+    .where(
+      or(
+        and(eq(follow.followerId, session.user.id), eq(follow.followingId, targetUserId)),
+        and(eq(follow.followerId, targetUserId), eq(follow.followingId, session.user.id))
+      )
+    );
 
   revalidatePath("/following");
 }
@@ -140,10 +142,12 @@ export async function removeFollower(followId: string) {
 
   await db
     .delete(follow)
-    .where(and(eq(follow.id, followId), eq(follow.followingId, session.user.id)));
-  await db
-    .delete(follow)
-    .where(and(eq(follow.followerId, session.user.id), eq(follow.followingId, row.followerId)));
+    .where(
+      or(
+        and(eq(follow.id, followId), eq(follow.followingId, session.user.id)),
+        and(eq(follow.followerId, session.user.id), eq(follow.followingId, row.followerId))
+      )
+    );
 
   revalidatePath("/settings");
   revalidatePath("/following");

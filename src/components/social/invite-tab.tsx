@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Mail, Send, Loader2, Link2, Copy, Check, Trash2, Inbox } from "lucide-react";
 import { toast } from "sonner";
 import { createEmailInvite, createLinkInvite, revokeInvite } from "@/actions/invites";
@@ -20,6 +20,11 @@ export function InviteTab({ initialInvites }: Props) {
   const [generatingLink, setGeneratingLink] = useState(false);
   const [copied, setCopied] = useState(false);
   const [, startTransition] = useTransition();
+  const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    setInvites(initialInvites);
+  }, [initialInvites]);
 
   const activeLinkInvite = invites.find((i) => i.kind === "link" && !i.isExpired);
 
@@ -56,9 +61,11 @@ export function InviteTab({ initialInvites }: Props) {
       await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
+      setFallbackUrl(null);
       toast.success("Invite link copied");
     } catch {
-      toast.error("Couldn't copy. Long-press the link to copy manually.");
+      setFallbackUrl(text);
+      toast.error("Couldn't copy automatically. Tap the link below to copy.");
     }
   };
 
@@ -172,6 +179,15 @@ export function InviteTab({ initialInvites }: Props) {
             </>
           )}
         </button>
+        {fallbackUrl && (
+          <a
+            href={fallbackUrl}
+            className="block mt-2 px-3 py-2 rounded-lg bg-stone-50 border border-stone-200 text-xs text-stone-700 break-all underline"
+            onClick={(e) => e.preventDefault()}
+          >
+            {fallbackUrl}
+          </a>
+        )}
         <p className="text-xs text-stone-400 px-1 mt-2">
           A reusable link — share over WhatsApp, iMessage, or anywhere. Each person who opens it
           becomes connected to you. Expires in 24 hours.

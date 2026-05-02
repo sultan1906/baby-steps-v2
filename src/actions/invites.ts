@@ -8,7 +8,7 @@ import { InviteEmailTemplate } from "@/emails/InviteEmailTemplate";
 import { render } from "@react-email/components";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq, and, or, gt, desc, sql } from "drizzle-orm";
+import { eq, and, or, gt, lte, desc, sql } from "drizzle-orm";
 import crypto from "node:crypto";
 import type { InvitePreview, PendingInviteItem } from "@/types";
 
@@ -26,7 +26,10 @@ function generateToken() {
 }
 
 function buildInviteUrl(token: string) {
-  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+  const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  if (!base) {
+    throw new Error("NEXT_PUBLIC_APP_URL is not configured");
+  }
   return `${base}/invite/${token}`;
 }
 
@@ -89,8 +92,24 @@ export async function createEmailInvite(
     throw new Error("You're already connected with this person");
   }
 
-  // Check for existing pending non-expired email-invite from caller to this email
   const now = new Date();
+
+  // Expire any stale pending rows for the same (inviter, email) so a fresh
+  // insert won't collide with the partial unique index.
+  await db
+    .update(invite)
+    .set({ status: "expired" })
+    .where(
+      and(
+        eq(invite.inviterId, session.user.id),
+        eq(invite.email, email),
+        eq(invite.kind, "email"),
+        eq(invite.status, "pending"),
+        lte(invite.expiresAt, now)
+      )
+    );
+
+  // Reuse a still-active pending invite if one exists.
   const [existingPending] = await db
     .select()
     .from(invite)
@@ -121,6 +140,13 @@ export async function createEmailInvite(
   const babyNames = babiesRows.map((b) => b.name);
 
   if (existingPending) {
+    // Refresh expiry so the email's "expires in 24h" claim is honest.
+    const refreshedExpiresAt = new Date(now.getTime() + ONE_DAY_MS);
+    await db
+      .update(invite)
+      .set({ expiresAt: refreshedExpiresAt })
+      .where(eq(invite.id, existingPending.id));
+
     await sendInviteEmail({
       to: email,
       inviterName,
@@ -341,29 +367,50 @@ export async function acceptInvite(token: string): Promise<{ inviterId: string }
     }
   }
 
-  // For email-kind: flip the row to accepted (single-use). For link: leave pending.
-  if (row.kind === "email") {
-    const updated = await db
-      .update(invite)
-      .set({
-        status: "accepted",
-        acceptedByUserId: session.user.id,
-        acceptedAt: now,
-      })
-      .where(and(eq(invite.id, row.id), eq(invite.status, "pending")))
-      .returning({ id: invite.id });
-    if (updated.length === 0) throw new Error("This invite is no longer valid");
-  }
+  const followIdA = crypto.randomUUID();
+  const followIdB = crypto.randomUUID();
 
-  // Upsert mutual follow rows (both directions). Use raw SQL ON CONFLICT for upsert.
-  await db.execute(sql`
-    INSERT INTO ${follow} (id, follower_id, following_id, status, created_at, updated_at)
-    VALUES
-      (${crypto.randomUUID()}, ${row.inviterId}, ${session.user.id}, 'accepted', now(), now()),
-      (${crypto.randomUUID()}, ${session.user.id}, ${row.inviterId}, 'accepted', now(), now())
-    ON CONFLICT (follower_id, following_id)
-    DO UPDATE SET status = 'accepted', updated_at = now()
-  `);
+  if (row.kind === "email") {
+    // Atomic: update invite + insert both follow rows in a single CTE.
+    // The follow inserts only run if the invite update affected a row.
+    const result = await db.execute(sql`
+      WITH accepted_invite AS (
+        UPDATE ${invite}
+        SET status = 'accepted',
+            accepted_by_user_id = ${session.user.id},
+            accepted_at = ${now}
+        WHERE id = ${row.id} AND status = 'pending'
+        RETURNING id
+      ),
+      mutual_follows AS (
+        INSERT INTO ${follow} (id, follower_id, following_id, status, created_at, updated_at)
+        SELECT ${followIdA}, ${row.inviterId}, ${session.user.id}, 'accepted', now(), now()
+        FROM accepted_invite
+        UNION ALL
+        SELECT ${followIdB}, ${session.user.id}, ${row.inviterId}, 'accepted', now(), now()
+        FROM accepted_invite
+        ON CONFLICT (follower_id, following_id)
+        DO UPDATE SET status = 'accepted', updated_at = now()
+        RETURNING id
+      )
+      SELECT (SELECT count(*) FROM accepted_invite)::int AS accepted_count
+    `);
+    const acceptedCount = Number(
+      (result as unknown as { rows?: { accepted_count: number }[] }).rows?.[0]?.accepted_count ??
+        (Array.isArray(result) ? (result[0] as { accepted_count: number })?.accepted_count : 0)
+    );
+    if (!acceptedCount) throw new Error("This invite is no longer valid");
+  } else {
+    // Link-kind: just upsert the mutual follow rows; invite stays pending.
+    await db.execute(sql`
+      INSERT INTO ${follow} (id, follower_id, following_id, status, created_at, updated_at)
+      VALUES
+        (${followIdA}, ${row.inviterId}, ${session.user.id}, 'accepted', now(), now()),
+        (${followIdB}, ${session.user.id}, ${row.inviterId}, 'accepted', now(), now())
+      ON CONFLICT (follower_id, following_id)
+      DO UPDATE SET status = 'accepted', updated_at = now()
+    `);
+  }
 
   revalidatePath("/following");
   revalidatePath("/timeline");

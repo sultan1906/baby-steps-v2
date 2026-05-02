@@ -95,6 +95,4 @@ export interface ValidInvitePreview {
   babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[];
 }
 
-export type InvitePreview =
-  | ValidInvitePreview
-  | { status: Exclude<InvitePreviewStatus, "valid"> };
+export type InvitePreview = ValidInvitePreview | { status: Exclude<InvitePreviewStatus, "valid"> };
