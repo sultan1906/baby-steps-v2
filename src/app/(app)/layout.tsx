@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
 import { getCurrentBaby, resolveNoBabyDestination } from "@/lib/baby-utils";
 import { listBabies } from "@/actions/baby";
-import { getPendingRequestCount } from "@/actions/social";
+import { getPendingIncomingInviteCount } from "@/actions/invites";
+import { consumePendingInvite } from "@/lib/post-auth-invite";
 import { BabyProvider } from "@/components/baby/baby-provider";
 import { BottomNav } from "@/components/shared/bottom-nav";
 import { QueryProvider } from "@/components/shared/query-provider";
@@ -20,8 +21,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     redirect("/auth");
   }
 
-  const currentBaby = await getCurrentBaby(session.user.id);
   const pathname = headersList.get("x-pathname") ?? "";
+
+  // Redeem any pending invite that was stashed before authentication.
+  // Skip on the profile page itself (avoids redirect loop after we send the user there).
+  if (!pathname.startsWith("/profile/")) {
+    const inviteRedirect = await consumePendingInvite();
+    if (inviteRedirect) redirect(inviteRedirect);
+  }
+
+  const currentBaby = await getCurrentBaby(session.user.id);
 
   if (!currentBaby) {
     // Allow onboarding and follower-friendly routes
@@ -45,7 +54,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     }
 
     // Follower-only shell: BabyProvider with null baby + follower-mode nav
-    const pendingRequestCount = await getPendingRequestCount();
+    const pendingInviteCount = await getPendingIncomingInviteCount();
 
     return (
       <QueryProvider>
@@ -53,7 +62,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           baby={null}
           user={{ ...session.user, image: session.user.image ?? null }}
           babies={[]}
-          pendingRequestCount={pendingRequestCount}
+          pendingInviteCount={pendingInviteCount}
         >
           <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
             <main className="flex-1 overflow-y-auto">{children}</main>
@@ -66,9 +75,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   // Full mode: user has babies
-  const [allBabies, pendingRequestCount] = await Promise.all([
+  const [allBabies, pendingInviteCount] = await Promise.all([
     listBabies(),
-    getPendingRequestCount(),
+    getPendingIncomingInviteCount(),
   ]);
 
   return (
@@ -77,7 +86,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         baby={currentBaby}
         user={{ ...session.user, image: session.user.image ?? null }}
         babies={allBabies}
-        pendingRequestCount={pendingRequestCount}
+        pendingInviteCount={pendingInviteCount}
       >
         <div className="h-[100dvh] bg-background flex flex-col overflow-hidden">
           <main className="flex-1 overflow-y-auto">{children}</main>

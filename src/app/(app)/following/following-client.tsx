@@ -1,44 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { ArrowLeft, Search, Users, UserCheck, Bell, UserX, UserMinus } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { ArrowLeft, Mail, Users, UserCheck, UserMinus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { UserSearch } from "@/components/social/user-search";
+import { InviteTab } from "@/components/social/invite-tab";
 import { FollowedUserCard } from "@/components/social/followed-user-card";
-import { FollowRequestCard } from "@/components/social/follow-request-card";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { removeFollower } from "@/actions/social";
 import { toast } from "sonner";
-import type { FollowedUser, FollowRequestItem } from "@/types";
+import type { FollowedUser, PendingInviteItem } from "@/types";
 
-type Tab = "search" | "following" | "followers" | "requests";
+type Tab = "invite" | "following" | "followers";
 
 type Follower = { id: string; followerId: string; name: string; image: string | null };
 
 interface FollowingClientProps {
   followedUsers: FollowedUser[];
-  followRequests: FollowRequestItem[];
   followers: Follower[];
+  pendingInvites: PendingInviteItem[];
 }
 
 export function FollowingClient({
   followedUsers,
-  followRequests: initialRequests,
   followers: initialFollowers,
+  pendingInvites,
 }: FollowingClientProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<Tab>(
-    initialRequests.length > 0 ? "requests" : "following"
-  );
-  const [requests, setRequests] = useState(initialRequests);
+  const [activeTab, setActiveTab] = useState<Tab>("following");
   const [followed, setFollowed] = useState(() => followedUsers);
   const [followers, setFollowers] = useState(initialFollowers);
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [followingFilter, setFollowingFilter] = useState("");
 
-  useEffect(() => setRequests(initialRequests), [initialRequests]);
   useEffect(() => setFollowed(followedUsers), [followedUsers]);
   useEffect(() => setFollowers(initialFollowers), [initialFollowers]);
+
+  const filteredFollowed = useMemo(() => {
+    const q = followingFilter.trim().toLowerCase();
+    if (!q) return followed;
+    return followed.filter((u) => u.name.toLowerCase().includes(q));
+  }, [followed, followingFilter]);
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
@@ -59,16 +61,10 @@ export function FollowingClient({
     }
   };
 
-  const tabs: { id: Tab; label: string; icon: typeof Search; badge?: number }[] = [
-    { id: "search", label: "Search", icon: Search },
+  const tabs: { id: Tab; label: string; icon: typeof Mail }[] = [
+    { id: "invite", label: "Invite", icon: Mail },
     { id: "following", label: "Following", icon: Users },
     { id: "followers", label: "Followers", icon: UserCheck },
-    {
-      id: "requests",
-      label: "Requests",
-      icon: Bell,
-      badge: requests.length > 0 ? requests.length : undefined,
-    },
   ];
 
   return (
@@ -102,11 +98,6 @@ export function FollowingClient({
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
-                {tab.badge && (
-                  <span className="absolute -top-0.5 right-2 w-5 h-5 gradient-bg-vibrant rounded-full text-white text-[10px] font-bold flex items-center justify-center">
-                    {tab.badge}
-                  </span>
-                )}
               </button>
             );
           })}
@@ -114,8 +105,8 @@ export function FollowingClient({
       </div>
 
       <div className="px-4 pb-28 pt-4">
-        {/* Search tab */}
-        {activeTab === "search" && <UserSearch onFollowChange={() => router.refresh()} />}
+        {/* Invite tab */}
+        {activeTab === "invite" && <InviteTab initialInvites={pendingInvites} />}
 
         {/* Following tab */}
         {activeTab === "following" && (
@@ -124,23 +115,39 @@ export function FollowingClient({
               <div className="flex flex-col items-center py-12 text-stone-400">
                 <Users className="w-12 h-12 mb-3" />
                 <p className="font-medium text-stone-500">Not following anyone yet</p>
-                <p className="text-sm mt-1">Search for people to follow</p>
+                <p className="text-sm mt-1">Send an invite to connect</p>
                 <button
-                  onClick={() => handleTabChange("search")}
+                  onClick={() => handleTabChange("invite")}
                   className="mt-4 px-6 py-2.5 gradient-bg-vibrant text-white rounded-xl font-medium text-sm transition-transform active:scale-95"
                 >
-                  Find People
+                  Invite people
                 </button>
               </div>
             ) : (
-              <div className="divide-y divide-stone-100">
-                {followed.map((user) => (
-                  <FollowedUserCard
-                    key={user.id}
-                    user={user}
-                    onUnfollow={(id) => setFollowed((prev) => prev.filter((u) => u.id !== id))}
+              <div>
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                  <input
+                    type="text"
+                    placeholder="Search by name..."
+                    value={followingFilter}
+                    onChange={(e) => setFollowingFilter(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-800 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-300 text-sm"
                   />
-                ))}
+                </div>
+                {filteredFollowed.length === 0 ? (
+                  <div className="text-center py-8 text-stone-400 text-sm">No matches</div>
+                ) : (
+                  <div className="divide-y divide-stone-100">
+                    {filteredFollowed.map((user) => (
+                      <FollowedUserCard
+                        key={user.id}
+                        user={user}
+                        onUnfollow={(id) => setFollowed((prev) => prev.filter((u) => u.id !== id))}
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -153,7 +160,9 @@ export function FollowingClient({
               <div className="flex flex-col items-center py-12 text-stone-400">
                 <UserCheck className="w-12 h-12 mb-3" />
                 <p className="font-medium text-stone-500">No followers yet</p>
-                <p className="text-sm mt-1">When someone follows you, they&apos;ll appear here</p>
+                <p className="text-sm mt-1">
+                  When someone accepts your invite, they&apos;ll appear here
+                </p>
               </div>
             ) : (
               <div className="divide-y divide-stone-100">
@@ -172,31 +181,6 @@ export function FollowingClient({
                       <UserMinus className="w-4 h-4" />
                     </button>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Requests tab */}
-        {activeTab === "requests" && (
-          <div>
-            {requests.length === 0 ? (
-              <div className="flex flex-col items-center py-12 text-stone-400">
-                <UserX className="w-12 h-12 mb-3" />
-                <p className="font-medium text-stone-500">No pending requests</p>
-                <p className="text-sm mt-1">
-                  When someone requests to follow you, it&apos;ll show up here
-                </p>
-              </div>
-            ) : (
-              <div className="divide-y divide-stone-100">
-                {requests.map((request) => (
-                  <FollowRequestCard
-                    key={request.id}
-                    request={request}
-                    onHandled={() => setRequests((prev) => prev.filter((r) => r.id !== request.id))}
-                  />
                 ))}
               </div>
             )}

@@ -14,7 +14,7 @@ interface BabyContextValue {
   baby: Baby | null;
   user: SessionUser;
   babies: Baby[];
-  pendingRequestCount: number;
+  pendingInviteCount: number;
 }
 
 const BabyContext = createContext<BabyContextValue | null>(null);
@@ -23,11 +23,11 @@ export function BabyProvider({
   baby,
   user,
   babies,
-  pendingRequestCount,
+  pendingInviteCount,
   children,
 }: BabyContextValue & { children: React.ReactNode }) {
   return (
-    <BabyContext.Provider value={{ baby, user, babies, pendingRequestCount }}>
+    <BabyContext.Provider value={{ baby, user, babies, pendingInviteCount }}>
       {children}
     </BabyContext.Provider>
   );
