@@ -4,4 +4,5 @@ out
 build
 public
 drizzle
+.context
 *.md

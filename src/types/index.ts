@@ -50,25 +50,6 @@ export interface PlaceSuggestion {
 
 export type FollowStatus = "none" | "pending" | "accepted";
 
-export interface UserSearchResult {
-  id: string;
-  name: string;
-  image: string | null;
-  bio: string | null;
-  location: string | null;
-  followStatus: FollowStatus;
-}
-
-export interface FollowRequestItem {
-  id: string;
-  follower: {
-    id: string;
-    name: string;
-    image: string | null;
-  };
-  createdAt: Date;
-}
-
 export interface FollowedUser {
   id: string;
   name: string;
@@ -86,3 +67,32 @@ export interface UserProfile {
   followStatus: FollowStatus;
   babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[];
 }
+
+// ── Invite types ────────────────────────────────────────────────────────────
+
+export type InviteKind = "email" | "link";
+
+export interface PendingInviteItem {
+  id: string;
+  kind: InviteKind;
+  email: string | null;
+  expiresAt: Date;
+  url: string;
+  isExpired: boolean;
+  createdAt: Date;
+}
+
+export type InvitePreviewStatus = "valid" | "expired" | "revoked" | "accepted" | "not_found";
+
+export interface ValidInvitePreview {
+  status: "valid";
+  kind: InviteKind;
+  inviter: {
+    id: string;
+    name: string;
+    image: string | null;
+  };
+  babies: { id: string; name: string; photoUrl: string | null; birthdate: string }[];
+}
+
+export type InvitePreview = ValidInvitePreview | { status: Exclude<InvitePreviewStatus, "valid"> };

@@ -5,8 +5,8 @@ import { user, follow, baby, step } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq, and, or, ilike, count, desc, ne, inArray } from "drizzle-orm";
-import type { UserSearchResult, FollowRequestItem, FollowedUser, UserProfile } from "@/types";
+import { eq, and, or, desc, inArray } from "drizzle-orm";
+import type { FollowedUser, UserProfile } from "@/types";
 
 async function getSession() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -111,217 +111,49 @@ export async function getUserProfile(targetUserId: string): Promise<UserProfile 
   };
 }
 
-// ── Search ──────────────────────────────────────────────────────────────────
-
-export async function searchUsers(query: string): Promise<UserSearchResult[]> {
-  const session = await getSession();
-  const trimmed = query.trim();
-  if (!trimmed || trimmed.length < 2) return [];
-
-  const searchTerm = `%${trimmed}%`;
-
-  const results = await db
-    .select({
-      id: user.id,
-      name: user.name,
-      image: user.image,
-      bio: user.bio,
-      location: user.location,
-    })
-    .from(user)
-    .where(
-      and(
-        ne(user.id, session.user.id),
-        or(ilike(user.name, searchTerm), ilike(user.location, searchTerm))
-      )
-    )
-    .limit(20);
-
-  if (results.length === 0) return [];
-
-  // Batch-check follow status for all results
-  const resultIds = results.map((r) => r.id);
-  const followRows = await db
-    .select({
-      followingId: follow.followingId,
-      status: follow.status,
-    })
-    .from(follow)
-    .where(and(eq(follow.followerId, session.user.id), inArray(follow.followingId, resultIds)));
-
-  const followMap = new Map(followRows.map((f) => [f.followingId, f.status]));
-
-  return results.map((r) => ({
-    id: r.id,
-    name: r.name,
-    image: r.image ?? null,
-    bio: r.bio ?? null,
-    location: r.location ?? null,
-    followStatus:
-      followMap.get(r.id) === "accepted"
-        ? ("accepted" as const)
-        : followMap.get(r.id) === "pending"
-          ? ("pending" as const)
-          : ("none" as const),
-  }));
-}
-
 // ── Follow actions ──────────────────────────────────────────────────────────
-
-export async function sendFollowRequest(targetUserId: string) {
-  const session = await getSession();
-  if (targetUserId === session.user.id) throw new Error("Cannot follow yourself");
-
-  const [target] = await db
-    .select({ id: user.id })
-    .from(user)
-    .where(eq(user.id, targetUserId))
-    .limit(1);
-
-  if (!target) throw new Error("User not found");
-
-  // Check for existing follow relationship
-  const [existing] = await db
-    .select()
-    .from(follow)
-    .where(and(eq(follow.followerId, session.user.id), eq(follow.followingId, targetUserId)))
-    .limit(1);
-
-  if (existing) {
-    if (existing.status === "accepted") throw new Error("Already following");
-    if (existing.status === "pending") throw new Error("Request already pending");
-    // If previously rejected, allow re-request
-    if (existing.status === "rejected") {
-      await db
-        .update(follow)
-        .set({ status: "pending", updatedAt: new Date() })
-        .where(eq(follow.id, existing.id));
-      revalidatePath("/following");
-      return { status: "pending" as const };
-    }
-  }
-
-  try {
-    await db.insert(follow).values({
-      followerId: session.user.id,
-      followingId: targetUserId,
-      status: "pending",
-    });
-  } catch (err: unknown) {
-    // Postgres unique_violation — concurrent duplicate request
-    if (
-      err &&
-      typeof err === "object" &&
-      "code" in err &&
-      (err as { code?: string }).code === "23505"
-    ) {
-      revalidatePath("/following");
-      return { status: "pending" as const };
-    }
-    throw err;
-  }
-
-  revalidatePath("/following");
-  return { status: "pending" as const };
-}
 
 export async function unfollowUser(targetUserId: string) {
   const session = await getSession();
 
+  // Atomic mutual disconnect: both directions removed in a single statement.
   await db
     .delete(follow)
-    .where(and(eq(follow.followerId, session.user.id), eq(follow.followingId, targetUserId)));
-
-  revalidatePath("/following");
-}
-
-export async function acceptFollowRequest(followId: string) {
-  const session = await getSession();
-
-  await db
-    .update(follow)
-    .set({ status: "accepted", updatedAt: new Date() })
     .where(
-      and(
-        eq(follow.id, followId),
-        eq(follow.followingId, session.user.id),
-        eq(follow.status, "pending")
+      or(
+        and(eq(follow.followerId, session.user.id), eq(follow.followingId, targetUserId)),
+        and(eq(follow.followerId, targetUserId), eq(follow.followingId, session.user.id))
       )
     );
 
-  revalidatePath("/settings");
-  revalidatePath("/following");
-}
-
-export async function rejectFollowRequest(followId: string) {
-  const session = await getSession();
-
-  await db
-    .update(follow)
-    .set({ status: "rejected", updatedAt: new Date() })
-    .where(
-      and(
-        eq(follow.id, followId),
-        eq(follow.followingId, session.user.id),
-        eq(follow.status, "pending")
-      )
-    );
-
-  revalidatePath("/settings");
   revalidatePath("/following");
 }
 
 export async function removeFollower(followId: string) {
   const session = await getSession();
 
+  // Resolve the other party from the follow row, then remove both directions.
+  const [row] = await db
+    .select({ followerId: follow.followerId })
+    .from(follow)
+    .where(and(eq(follow.id, followId), eq(follow.followingId, session.user.id)))
+    .limit(1);
+  if (!row) return;
+
   await db
     .delete(follow)
-    .where(and(eq(follow.id, followId), eq(follow.followingId, session.user.id)));
+    .where(
+      or(
+        and(eq(follow.id, followId), eq(follow.followingId, session.user.id)),
+        and(eq(follow.followerId, session.user.id), eq(follow.followingId, row.followerId))
+      )
+    );
 
   revalidatePath("/settings");
-  revalidatePath("/settings/privacy");
+  revalidatePath("/following");
 }
 
 // ── Data fetching ───────────────────────────────────────────────────────────
-
-export async function getFollowRequests(): Promise<FollowRequestItem[]> {
-  const session = await getSession();
-
-  const requests = await db
-    .select({
-      id: follow.id,
-      createdAt: follow.createdAt,
-      followerId: follow.followerId,
-      followerName: user.name,
-      followerImage: user.image,
-    })
-    .from(follow)
-    .innerJoin(user, eq(follow.followerId, user.id))
-    .where(and(eq(follow.followingId, session.user.id), eq(follow.status, "pending")))
-    .orderBy(desc(follow.createdAt));
-
-  return requests.map((r) => ({
-    id: r.id,
-    follower: {
-      id: r.followerId,
-      name: r.followerName,
-      image: r.followerImage ?? null,
-    },
-    createdAt: r.createdAt,
-  }));
-}
-
-export async function getPendingRequestCount(): Promise<number> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) return 0;
-
-  const [result] = await db
-    .select({ count: count() })
-    .from(follow)
-    .where(and(eq(follow.followingId, session.user.id), eq(follow.status, "pending")));
-
-  return result?.count ?? 0;
-}
 
 export async function getFollowedUsers(): Promise<FollowedUser[]> {
   const session = await getSession();

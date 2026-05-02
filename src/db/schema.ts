@@ -6,6 +6,7 @@ import {
   boolean,
   index,
   unique,
+  uniqueIndex,
   check,
 } from "drizzle-orm/pg-core";
 import { relations, sql } from "drizzle-orm";
@@ -15,6 +16,15 @@ import { relations, sql } from "drizzle-orm";
 export const stepTypeEnum = pgEnum("step_type", ["photo", "video", "first_word", "milestone"]);
 
 export const followStatusEnum = pgEnum("follow_status", ["pending", "accepted", "rejected"]);
+
+export const inviteKindEnum = pgEnum("invite_kind", ["email", "link"]);
+
+export const inviteStatusEnum = pgEnum("invite_status", [
+  "pending",
+  "accepted",
+  "revoked",
+  "expired",
+]);
 
 // ── better-auth required tables ───────────────────────────────────────────────
 // These are managed by the better-auth Drizzle adapter.
@@ -165,6 +175,40 @@ export const follow = pgTable(
   })
 );
 
+export const invite = pgTable(
+  "invite",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    inviterId: text("inviter_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: inviteKindEnum("kind").notNull(),
+    email: text("email"), // lowercased; required when kind = 'email'
+    token: text("token").notNull().unique(),
+    status: inviteStatusEnum("status").notNull().default("pending"),
+    expiresAt: timestamp("expires_at").notNull(),
+    acceptedByUserId: text("accepted_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    acceptedAt: timestamp("accepted_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({
+    inviterIdx: index("invite_inviter_idx").on(t.inviterId, t.status),
+    emailIdx: index("invite_email_idx").on(t.email),
+    tokenIdx: index("invite_token_idx").on(t.token),
+    uniquePendingEmailPerInviter: uniqueIndex("invite_unique_pending_email")
+      .on(t.inviterId, t.email)
+      .where(sql`${t.status} = 'pending' AND ${t.kind} = 'email'`),
+    emailKindCheck: check(
+      "invite_email_kind_check",
+      sql`(${t.kind} = 'email' AND ${t.email} IS NOT NULL) OR (${t.kind} = 'link' AND ${t.email} IS NULL)`
+    ),
+  })
+);
+
 // ── Relations ─────────────────────────────────────────────────────────────────
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -214,6 +258,19 @@ export const followRelations = relations(follow, ({ one }) => ({
   }),
 }));
 
+export const inviteRelations = relations(invite, ({ one }) => ({
+  inviter: one(user, {
+    fields: [invite.inviterId],
+    references: [user.id],
+    relationName: "inviteInviter",
+  }),
+  acceptedBy: one(user, {
+    fields: [invite.acceptedByUserId],
+    references: [user.id],
+    relationName: "inviteAcceptedBy",
+  }),
+}));
+
 // ── Exported types ────────────────────────────────────────────────────────────
 
 export type User = typeof user.$inferSelect;
@@ -224,3 +281,5 @@ export type NewStep = typeof step.$inferInsert;
 export type NewBaby = typeof baby.$inferInsert;
 export type Follow = typeof follow.$inferSelect;
 export type NewFollow = typeof follow.$inferInsert;
+export type Invite = typeof invite.$inferSelect;
+export type NewInvite = typeof invite.$inferInsert;

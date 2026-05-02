@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Lock, Baby } from "lucide-react";
 import { BackButton } from "@/components/shared/back-button";
 import { UserAvatar } from "@/components/social/user-avatar";
 import { BabyAvatar } from "@/components/baby/baby-avatar";
 import { FollowButton } from "@/components/social/follow-button";
+import { toast } from "sonner";
 import type { UserProfile, FollowStatus } from "@/types";
 
 interface ProfileClientProps {
@@ -16,9 +17,20 @@ interface ProfileClientProps {
 
 export function ProfileClient({ profile: initial }: ProfileClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [followStatus, setFollowStatus] = useState<FollowStatus>(initial.followStatus);
 
   const canSeeBabies = followStatus === "accepted";
+
+  useEffect(() => {
+    if (searchParams.get("welcome") === "1") {
+      toast.success(`You're now connected with ${initial.name}`);
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete("welcome");
+      const next = params.toString();
+      router.replace(`/profile/${initial.id}${next ? `?${next}` : ""}`, { scroll: false });
+    }
+  }, [searchParams, initial.id, initial.name, router]);
 
   const handleStatusChange = (newStatus: FollowStatus) => {
     setFollowStatus(newStatus);
@@ -51,15 +63,17 @@ export function ProfileClient({ profile: initial }: ProfileClientProps) {
           )}
         </div>
 
-        {/* Follow Button */}
-        <div className="flex justify-center mt-6 mb-8">
-          <FollowButton
-            userId={initial.id}
-            initialStatus={initial.followStatus}
-            onStatusChange={handleStatusChange}
-            className="px-8 py-2.5"
-          />
-        </div>
+        {/* Follow / Unfollow button — hidden for non-connected users */}
+        {followStatus !== "none" && (
+          <div className="flex justify-center mt-6 mb-8">
+            <FollowButton
+              userId={initial.id}
+              initialStatus={initial.followStatus}
+              onStatusChange={handleStatusChange}
+              className="px-8 py-2.5"
+            />
+          </div>
+        )}
 
         {/* Babies */}
         {canSeeBabies && initial.babies.length > 0 && (

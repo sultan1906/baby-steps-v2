@@ -19,7 +19,7 @@ function useClientDayNumber(birthdateDate: Date): number | null {
 }
 
 export function TimelineHeader() {
-  const { baby, pendingRequestCount } = useBaby();
+  const { baby, pendingInviteCount } = useBaby();
   const birthdateDate = parseISO(baby.birthdate);
   const ageLabel = getAgeLabel(birthdateDate);
   const totalDays = useClientDayNumber(birthdateDate);
@@ -62,14 +62,14 @@ export function TimelineHeader() {
           <Link
             href="/following"
             aria-label={
-              pendingRequestCount > 0 ? `Following, ${pendingRequestCount} pending` : "Following"
+              pendingInviteCount > 0 ? `Following, ${pendingInviteCount} pending` : "Following"
             }
             className="text-stone-400 hover:text-rose-500 transition-colors relative"
           >
             <Users className="w-5 h-5" />
-            {pendingRequestCount > 0 && (
+            {pendingInviteCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 w-4 h-4 gradient-bg-vibrant rounded-full text-white text-[9px] font-bold flex items-center justify-center">
-                {pendingRequestCount > 9 ? "9+" : pendingRequestCount}
+                {pendingInviteCount > 9 ? "9+" : pendingInviteCount}
               </span>
             )}
           </Link>
