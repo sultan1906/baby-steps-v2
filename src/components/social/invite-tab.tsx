@@ -117,7 +117,7 @@ export function InviteTab({ initialInvites }: Props) {
           <Mail className="w-4 h-4" />
           Invite by email
         </h2>
-        <form onSubmit={handleSendEmail} className="space-y-2">
+        <form onSubmit={handleSendEmail} className="space-y-2" noValidate>
           <div className="flex gap-2">
             <input
               type="email"
