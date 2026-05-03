@@ -1,6 +1,16 @@
 // Re-export Drizzle inferred types
 export type { Baby, Step, SavedLocation } from "@/db/schema";
 
+// ── Album view types ──────────────────────────────────────────────────────────
+
+export interface AlbumWithMeta {
+  id: string;
+  name: string;
+  coverPhotoUrl: string | null;
+  photoCount: number;
+  createdAt: Date;
+}
+
 // ── Step types ────────────────────────────────────────────────────────────────
 
 export type StepType = "photo" | "video" | "first_word" | "milestone";
