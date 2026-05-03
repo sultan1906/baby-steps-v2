@@ -20,7 +20,6 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
   if (!currentBaby) redirect(await resolveNoBabyDestination(session.user.id));
 
   const { album: albumIdParam, tab: tabParam } = await searchParams;
-  const initialTab = tabParam === "albums" ? "albums" : "photos";
 
   const allSteps = await db
     .select()
@@ -69,6 +68,11 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
       };
     }
   }
+
+  // Stale or invalid album link → land in Albums tab (so user sees their list,
+  // not the full photo gallery).
+  const initialTab =
+    albumIdParam && !activeAlbum ? "albums" : tabParam === "albums" ? "albums" : "photos";
 
   return (
     <GalleryClient

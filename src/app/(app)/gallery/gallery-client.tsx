@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Grid3x3,
   List,
@@ -128,31 +129,43 @@ export function GalleryClient({
 
   async function handleCreateAlbum(name: string) {
     if (!coverId || selectedIds.size === 0) return;
-    await createAlbum({
-      name,
-      stepIds: Array.from(selectedIds),
-      coverStepId: coverId,
-    });
-    exitCreateMode();
-    setTab("albums");
-    router.refresh();
+    try {
+      await createAlbum({
+        name,
+        stepIds: Array.from(selectedIds),
+        coverStepId: coverId,
+      });
+      exitCreateMode();
+      setTab("albums");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't create album. Try again.");
+    }
   }
 
   async function handleRename(name: string) {
     if (!renameTarget) return;
-    await renameAlbum(renameTarget.id, name);
-    setRenameTarget(null);
-    router.refresh();
+    try {
+      await renameAlbum(renameTarget.id, name);
+      setRenameTarget(null);
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't rename album. Try again.");
+    }
   }
 
   async function handleDelete() {
     if (!deleteTarget) return;
-    await deleteAlbum(deleteTarget.id);
-    setDeleteTarget(null);
-    if (activeAlbum?.id === deleteTarget.id) {
-      router.push("/gallery");
-    } else {
-      router.refresh();
+    try {
+      await deleteAlbum(deleteTarget.id);
+      setDeleteTarget(null);
+      if (activeAlbum?.id === deleteTarget.id) {
+        router.push("/gallery?tab=albums");
+      } else {
+        router.refresh();
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Couldn't delete album. Try again.");
     }
   }
 
