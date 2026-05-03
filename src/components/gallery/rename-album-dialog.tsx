@@ -45,6 +45,8 @@ export function RenameAlbumDialog({
     setSubmitting(true);
     try {
       await onSubmit(trimmed);
+    } catch (err) {
+      console.error("Album rename failed:", err);
     } finally {
       setSubmitting(false);
     }

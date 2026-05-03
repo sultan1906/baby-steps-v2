@@ -24,6 +24,10 @@ export function DeleteAlbumDialog({
     setSubmitting(true);
     try {
       await onConfirm();
+    } catch (err) {
+      // Parent is expected to surface the error; this is defense-in-depth so
+      // a caller that forgets to handle rejections doesn't crash the dialog.
+      console.error("Album delete failed:", err);
     } finally {
       setSubmitting(false);
     }

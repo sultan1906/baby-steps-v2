@@ -42,6 +42,8 @@ export function NewAlbumNameDialog({
     setSubmitting(true);
     try {
       await onSubmit(trimmed);
+    } catch (err) {
+      console.error("Album create failed:", err);
     } finally {
       setSubmitting(false);
     }
