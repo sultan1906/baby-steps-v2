@@ -151,6 +151,47 @@ export const step = pgTable(
   })
 );
 
+export const album = pgTable(
+  "album",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    babyId: text("baby_id")
+      .notNull()
+      .references(() => baby.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    coverStepId: text("cover_step_id").references(() => step.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({
+    babyIdx: index("album_baby_idx").on(t.babyId),
+  })
+);
+
+export const albumStep = pgTable(
+  "album_step",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    albumId: text("album_id")
+      .notNull()
+      .references(() => album.id, { onDelete: "cascade" }),
+    stepId: text("step_id")
+      .notNull()
+      .references(() => step.id, { onDelete: "cascade" }),
+    addedAt: timestamp("added_at").notNull().defaultNow(),
+  },
+  (t) => ({
+    albumIdx: index("album_step_album_idx").on(t.albumId),
+    stepIdx: index("album_step_step_idx").on(t.stepId),
+    uniquePair: unique("album_step_unique_pair").on(t.albumId, t.stepId),
+  })
+);
+
 export const follow = pgTable(
   "follow",
   {
@@ -231,14 +272,27 @@ export const accountRelations = relations(account, ({ one }) => ({
 export const babyRelations = relations(baby, ({ one, many }) => ({
   user: one(user, { fields: [baby.userId], references: [user.id] }),
   steps: many(step),
+  albums: many(album),
 }));
 
-export const stepRelations = relations(step, ({ one }) => ({
+export const stepRelations = relations(step, ({ one, many }) => ({
   baby: one(baby, { fields: [step.babyId], references: [baby.id] }),
   location: one(savedLocation, {
     fields: [step.locationId],
     references: [savedLocation.id],
   }),
+  albumSteps: many(albumStep),
+}));
+
+export const albumRelations = relations(album, ({ one, many }) => ({
+  baby: one(baby, { fields: [album.babyId], references: [baby.id] }),
+  coverStep: one(step, { fields: [album.coverStepId], references: [step.id] }),
+  albumSteps: many(albumStep),
+}));
+
+export const albumStepRelations = relations(albumStep, ({ one }) => ({
+  album: one(album, { fields: [albumStep.albumId], references: [album.id] }),
+  step: one(step, { fields: [albumStep.stepId], references: [step.id] }),
 }));
 
 export const savedLocationRelations = relations(savedLocation, ({ one }) => ({
@@ -283,3 +337,7 @@ export type Follow = typeof follow.$inferSelect;
 export type NewFollow = typeof follow.$inferInsert;
 export type Invite = typeof invite.$inferSelect;
 export type NewInvite = typeof invite.$inferInsert;
+export type Album = typeof album.$inferSelect;
+export type NewAlbum = typeof album.$inferInsert;
+export type AlbumStep = typeof albumStep.$inferSelect;
+export type NewAlbumStep = typeof albumStep.$inferInsert;
