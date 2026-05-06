@@ -77,6 +77,8 @@ export async function updateBaby(
       .where(and(eq(baby.id, id), eq(baby.userId, session.user.id)))
       .returning();
 
+    if (!updated) throw new UserError("Baby not found");
+
     revalidatePath("/settings");
     revalidatePath("/timeline");
     return updated;
