@@ -32,8 +32,11 @@ export function InviteAcceptClient({ token, preview, isSignedIn }: Props) {
       toast.success(`You're now connected with ${inviter.name}`);
       router.push(`/profile/${inviterId}?welcome=1`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to accept invite";
-      setError(msg);
+      const raw = err instanceof Error ? err.message : "";
+      const looksLikeSql = /\b(SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(raw);
+      const safe =
+        !raw || looksLikeSql || raw.length > 200 ? "Something went wrong. Please try again." : raw;
+      setError(safe);
       setLoading(false);
     }
   };

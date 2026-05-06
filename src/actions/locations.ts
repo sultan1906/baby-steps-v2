@@ -5,10 +5,11 @@ import { savedLocation } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 import { eq, desc } from "drizzle-orm";
+import { UserError, runAction } from "@/lib/errors";
 
 async function getSession() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthorized");
+  if (!session) throw new UserError("Unauthorized");
   return session;
 }
 
@@ -20,25 +21,29 @@ export async function createSavedLocation(data: {
   address: string;
   fullName?: string;
 }) {
-  const session = await getSession();
+  return runAction("createSavedLocation", async () => {
+    const session = await getSession();
 
-  const [loc] = await db
-    .insert(savedLocation)
-    .values({ ...data, userId: session.user.id })
-    .returning();
+    const [loc] = await db
+      .insert(savedLocation)
+      .values({ ...data, userId: session.user.id })
+      .returning();
 
-  return loc;
+    return loc;
+  });
 }
 
 /**
  * Get all saved locations for the current user, newest first.
  */
 export async function getSavedLocations() {
-  const session = await getSession();
+  return runAction("getSavedLocations", async () => {
+    const session = await getSession();
 
-  return db
-    .select()
-    .from(savedLocation)
-    .where(eq(savedLocation.userId, session.user.id))
-    .orderBy(desc(savedLocation.createdAt));
+    return db
+      .select()
+      .from(savedLocation)
+      .where(eq(savedLocation.userId, session.user.id))
+      .orderBy(desc(savedLocation.createdAt));
+  });
 }
