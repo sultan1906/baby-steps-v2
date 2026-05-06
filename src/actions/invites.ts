@@ -29,7 +29,7 @@ function generateToken() {
 function buildInviteUrl(token: string) {
   const base = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
   if (!base) {
-    throw new UserError("NEXT_PUBLIC_APP_URL is not configured");
+    throw new Error("NEXT_PUBLIC_APP_URL is not configured");
   }
   return `${base}/invite/${token}`;
 }
@@ -58,7 +58,7 @@ async function sendInviteEmail(args: {
 }) {
   const from = process.env.RESEND_FROM_EMAIL;
   if (!from) {
-    throw new UserError("Email is not configured (RESEND_FROM_EMAIL missing)");
+    throw new Error("Email is not configured (RESEND_FROM_EMAIL missing)");
   }
 
   const html = await render(

@@ -5,7 +5,7 @@ import { step, baby } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq, and } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { UserError, runAction } from "@/lib/errors";
 import type { StepInput } from "@/types";
@@ -21,7 +21,14 @@ async function getSession() {
  */
 export async function createStep(data: StepInput) {
   return runAction("createStep", async () => {
-    await getSession();
+    const session = await getSession();
+
+    const [owned] = await db
+      .select({ id: baby.id })
+      .from(baby)
+      .where(and(eq(baby.id, data.babyId), eq(baby.userId, session.user.id)))
+      .limit(1);
+    if (!owned) throw new UserError("Not found or unauthorized");
 
     const [s] = await db.insert(step).values(data).returning();
 
@@ -37,7 +44,17 @@ export async function createStep(data: StepInput) {
  */
 export async function createBulkSteps(steps: StepInput[]) {
   return runAction("createBulkSteps", async () => {
-    await getSession();
+    const session = await getSession();
+    if (steps.length === 0) return [];
+
+    const babyIds = Array.from(new Set(steps.map((s) => s.babyId)));
+    const owned = await db
+      .select({ id: baby.id })
+      .from(baby)
+      .where(and(inArray(baby.id, babyIds), eq(baby.userId, session.user.id)));
+    if (owned.length !== babyIds.length) {
+      throw new UserError("Not found or unauthorized");
+    }
 
     const created = await db.insert(step).values(steps).returning();
 

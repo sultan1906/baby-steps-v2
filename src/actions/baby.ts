@@ -91,7 +91,12 @@ export async function deleteBaby(id: string) {
   return runAction("deleteBaby", async () => {
     const session = await getSession();
 
-    await db.delete(baby).where(and(eq(baby.id, id), eq(baby.userId, session.user.id)));
+    const deleted = await db
+      .delete(baby)
+      .where(and(eq(baby.id, id), eq(baby.userId, session.user.id)))
+      .returning({ id: baby.id });
+
+    if (deleted.length === 0) throw new UserError("Baby not found");
 
     const cookieStore = await cookies();
     cookieStore.delete("babysteps_current_baby");
