@@ -79,7 +79,7 @@ async function sendInviteEmail(args: {
 
   if (error) {
     console.error("Resend invite email failed", { to: args.to, error });
-    throw new Error(`Couldn't send invite email: ${error.message ?? JSON.stringify(error)}`);
+    throw new Error(error.message || "Couldn't send invite email");
   }
 }
 

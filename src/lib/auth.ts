@@ -41,10 +41,8 @@ function getAuth() {
             html,
           });
           if (error) {
-            console.error("Resend reset-password email failed", { to: user.email, error });
-            throw new Error(
-              `Couldn't send reset-password email: ${error.message ?? JSON.stringify(error)}`
-            );
+            console.error("Resend reset-password email failed", { userId: user.id, error });
+            throw new Error("Couldn't send reset-password email");
           }
         },
       },
@@ -64,10 +62,8 @@ function getAuth() {
             html,
           });
           if (error) {
-            console.error("Resend verification email failed", { to: user.email, error });
-            throw new Error(
-              `Couldn't send verification email: ${error.message ?? JSON.stringify(error)}`
-            );
+            console.error("Resend verification email failed", { userId: user.id, error });
+            throw new Error("Couldn't send verification email");
           }
         },
       },
