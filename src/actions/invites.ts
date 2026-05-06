@@ -79,7 +79,7 @@ async function sendInviteEmail(args: {
 
   if (error) {
     console.error("Resend invite email failed", { to: args.to, error });
-    throw new Error(error.message || "Couldn't send invite email");
+    throw new Error(`Couldn't send invite email: ${error.message ?? JSON.stringify(error)}`);
   }
 }
 
@@ -391,22 +391,30 @@ export async function acceptInvite(token: string): Promise<{ inviterId: string }
         UPDATE ${invite}
         SET status = 'accepted',
             accepted_by_user_id = ${session.user.id},
-            accepted_at = ${now}
+            accepted_at = now()
         WHERE id = ${row.id} AND status = 'pending'
         RETURNING id
       ),
-      mutual_follows AS (
+      follow_a AS (
         INSERT INTO ${follow} (id, follower_id, following_id, status, created_at, updated_at)
-        SELECT ${followIdA}, ${row.inviterId}, ${session.user.id}, 'accepted', now(), now()
-        FROM accepted_invite
-        UNION ALL
-        SELECT ${followIdB}, ${session.user.id}, ${row.inviterId}, 'accepted', now(), now()
+        SELECT ${followIdA}, ${row.inviterId}, ${session.user.id}, 'accepted'::follow_status, now(), now()
         FROM accepted_invite
         ON CONFLICT (follower_id, following_id)
-        DO UPDATE SET status = 'accepted', updated_at = now()
-        RETURNING id
+        DO UPDATE SET status = 'accepted'::follow_status, updated_at = now()
+        RETURNING 1
+      ),
+      follow_b AS (
+        INSERT INTO ${follow} (id, follower_id, following_id, status, created_at, updated_at)
+        SELECT ${followIdB}, ${session.user.id}, ${row.inviterId}, 'accepted'::follow_status, now(), now()
+        FROM accepted_invite
+        ON CONFLICT (follower_id, following_id)
+        DO UPDATE SET status = 'accepted'::follow_status, updated_at = now()
+        RETURNING 1
       )
-      SELECT (SELECT count(*) FROM accepted_invite)::int AS accepted_count
+      SELECT
+        (SELECT count(*) FROM accepted_invite)::int AS accepted_count,
+        (SELECT count(*) FROM follow_a)::int AS follow_a_count,
+        (SELECT count(*) FROM follow_b)::int AS follow_b_count
     `);
     const acceptedCount = Number(
       (result as unknown as { rows?: { accepted_count: number }[] }).rows?.[0]?.accepted_count ??

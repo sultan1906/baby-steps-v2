@@ -34,12 +34,18 @@ function getAuth() {
 
         sendResetPassword: async ({ user, url }) => {
           const html = await render(ResetPasswordTemplate({ resetUrl: url, userName: user.name }));
-          await getResend().emails.send({
+          const { error } = await getResend().emails.send({
             from: process.env.RESEND_FROM_EMAIL!,
             to: user.email,
             subject: "Reset your Baby Steps password",
             html,
           });
+          if (error) {
+            console.error("Resend reset-password email failed", { to: user.email, error });
+            throw new Error(
+              `Couldn't send reset-password email: ${error.message ?? JSON.stringify(error)}`
+            );
+          }
         },
       },
 
@@ -51,12 +57,18 @@ function getAuth() {
           const html = await render(
             VerifyEmailTemplate({ verificationUrl: url, userName: user.name })
           );
-          await getResend().emails.send({
+          const { error } = await getResend().emails.send({
             from: process.env.RESEND_FROM_EMAIL!,
             to: user.email,
             subject: "Verify your Baby Steps email",
             html,
           });
+          if (error) {
+            console.error("Resend verification email failed", { to: user.email, error });
+            throw new Error(
+              `Couldn't send verification email: ${error.message ?? JSON.stringify(error)}`
+            );
+          }
         },
       },
 
