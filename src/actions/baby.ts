@@ -8,11 +8,12 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { cookies } from "next/headers";
 import { eq, and, desc, isNull } from "drizzle-orm";
+import { UserError, runAction } from "@/lib/errors";
 import type { NewBaby } from "@/db/schema";
 
 async function getSession() {
   const session = await auth.api.getSession({ headers: await headers() });
-  if (!session) throw new Error("Unauthorized");
+  if (!session) throw new UserError("Unauthorized");
   return session;
 }
 
@@ -21,40 +22,42 @@ async function getSession() {
  * then set the current baby cookie.
  */
 export async function createBaby(data: { name: string; birthdate: string; photoUrl?: string }) {
-  const session = await getSession();
+  return runAction("createBaby", async () => {
+    const session = await getSession();
 
-  const [newBaby] = await db
-    .insert(baby)
-    .values({
-      userId: session.user.id,
-      name: data.name,
-      birthdate: data.birthdate,
-      photoUrl: data.photoUrl,
-    })
-    .returning();
+    const [newBaby] = await db
+      .insert(baby)
+      .values({
+        userId: session.user.id,
+        name: data.name,
+        birthdate: data.birthdate,
+        photoUrl: data.photoUrl,
+      })
+      .returning();
 
-  // Auto-create "Arrival" milestone step
-  await db.insert(step).values({
-    babyId: newBaby.id,
-    date: data.birthdate,
-    isMajor: true,
-    type: "milestone",
-    title: "Arrival",
-    caption: "The journey begins today.",
+    // Auto-create "Arrival" milestone step
+    await db.insert(step).values({
+      babyId: newBaby.id,
+      date: data.birthdate,
+      isMajor: true,
+      type: "milestone",
+      title: "Arrival",
+      caption: "The journey begins today.",
+    });
+
+    await db
+      .update(user)
+      .set({ onboardedAt: new Date() })
+      .where(and(eq(user.id, session.user.id), isNull(user.onboardedAt)));
+
+    // Set current baby cookie
+    const cookieStore = await cookies();
+    const { name, value, options } = currentBabyCookieConfig(newBaby.id);
+    cookieStore.set(name, value, options);
+
+    revalidatePath("/timeline");
+    return newBaby;
   });
-
-  await db
-    .update(user)
-    .set({ onboardedAt: new Date() })
-    .where(and(eq(user.id, session.user.id), isNull(user.onboardedAt)));
-
-  // Set current baby cookie
-  const cookieStore = await cookies();
-  const { name, value, options } = currentBabyCookieConfig(newBaby.id);
-  cookieStore.set(name, value, options);
-
-  revalidatePath("/timeline");
-  return newBaby;
 }
 
 /**
@@ -65,17 +68,21 @@ export async function updateBaby(
   id: string,
   data: Partial<Pick<NewBaby, "name" | "birthdate" | "photoUrl">>
 ) {
-  const session = await getSession();
+  return runAction("updateBaby", async () => {
+    const session = await getSession();
 
-  const [updated] = await db
-    .update(baby)
-    .set(data)
-    .where(and(eq(baby.id, id), eq(baby.userId, session.user.id)))
-    .returning();
+    const [updated] = await db
+      .update(baby)
+      .set(data)
+      .where(and(eq(baby.id, id), eq(baby.userId, session.user.id)))
+      .returning();
 
-  revalidatePath("/settings");
-  revalidatePath("/timeline");
-  return updated;
+    if (!updated) throw new UserError("Baby not found");
+
+    revalidatePath("/settings");
+    revalidatePath("/timeline");
+    return updated;
+  });
 }
 
 /**
@@ -83,35 +90,46 @@ export async function updateBaby(
  * Clears the current baby cookie.
  */
 export async function deleteBaby(id: string) {
-  const session = await getSession();
+  return runAction("deleteBaby", async () => {
+    const session = await getSession();
 
-  await db.delete(baby).where(and(eq(baby.id, id), eq(baby.userId, session.user.id)));
+    const deleted = await db
+      .delete(baby)
+      .where(and(eq(baby.id, id), eq(baby.userId, session.user.id)))
+      .returning({ id: baby.id });
 
-  const cookieStore = await cookies();
-  cookieStore.delete("babysteps_current_baby");
+    if (deleted.length === 0) throw new UserError("Baby not found");
 
-  revalidatePath("/timeline");
-  revalidatePath("/settings");
+    const cookieStore = await cookies();
+    cookieStore.delete("babysteps_current_baby");
+
+    revalidatePath("/timeline");
+    revalidatePath("/settings");
+  });
 }
 
 /**
  * List all babies for the current user, newest first.
  */
 export async function listBabies() {
-  const session = await getSession();
-  return db
-    .select()
-    .from(baby)
-    .where(eq(baby.userId, session.user.id))
-    .orderBy(desc(baby.createdAt));
+  return runAction("listBabies", async () => {
+    const session = await getSession();
+    return db
+      .select()
+      .from(baby)
+      .where(eq(baby.userId, session.user.id))
+      .orderBy(desc(baby.createdAt));
+  });
 }
 
 export async function markOnboardedAsFollower() {
-  const session = await getSession();
-  await db
-    .update(user)
-    .set({ onboardedAt: new Date() })
-    .where(and(eq(user.id, session.user.id), isNull(user.onboardedAt)));
+  return runAction("markOnboardedAsFollower", async () => {
+    const session = await getSession();
+    await db
+      .update(user)
+      .set({ onboardedAt: new Date() })
+      .where(and(eq(user.id, session.user.id), isNull(user.onboardedAt)));
+  });
 }
 
 /**
@@ -119,19 +137,21 @@ export async function markOnboardedAsFollower() {
  * Validates the baby belongs to the current user.
  */
 export async function switchBaby(babyId: string) {
-  const session = await getSession();
+  return runAction("switchBaby", async () => {
+    const session = await getSession();
 
-  const [found] = await db
-    .select()
-    .from(baby)
-    .where(and(eq(baby.id, babyId), eq(baby.userId, session.user.id)))
-    .limit(1);
+    const [found] = await db
+      .select()
+      .from(baby)
+      .where(and(eq(baby.id, babyId), eq(baby.userId, session.user.id)))
+      .limit(1);
 
-  if (!found) throw new Error("Baby not found");
+    if (!found) throw new UserError("Baby not found");
 
-  const cookieStore = await cookies();
-  const { name, value, options } = currentBabyCookieConfig(babyId);
-  cookieStore.set(name, value, options);
+    const cookieStore = await cookies();
+    const { name, value, options } = currentBabyCookieConfig(babyId);
+    cookieStore.set(name, value, options);
 
-  revalidatePath("/timeline");
+    revalidatePath("/timeline");
+  });
 }
