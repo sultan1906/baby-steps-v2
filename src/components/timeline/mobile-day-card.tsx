@@ -219,7 +219,7 @@ export function MobileDayCard({
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.35, ease: "easeOut" }}
     >
-      <div className="relative rounded-3xl overflow-hidden shadow-sm aspect-square">
+      <div className="relative rounded-3xl overflow-hidden shadow-sm aspect-video">
         {/* Photo carousel as background */}
         <CardCarousel
           steps={steps}
