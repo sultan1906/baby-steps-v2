@@ -10,7 +10,6 @@ interface VerticalMonthSelectorProps {
   navigableMonths: Set<number>;
   activeMonth: number;
   onMonthSelect: (monthIndex: number) => void;
-  totalDays: number;
 }
 
 export function VerticalMonthSelector({
@@ -18,7 +17,6 @@ export function VerticalMonthSelector({
   navigableMonths,
   activeMonth,
   onMonthSelect,
-  totalDays,
 }: VerticalMonthSelectorProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const birthdateDate = parseISO(birthdate);
@@ -73,7 +71,6 @@ export function VerticalMonthSelector({
           );
         })}
       </div>
-      <div className="text-center text-[11px] text-stone-400 pb-2">{totalDays} days total</div>
     </div>
   );
 }
