@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { parseISO, differenceInCalendarMonths } from "date-fns";
 import { MoreHorizontal, Plus, Play, Eye, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { getDayNumber, formatShortDate, getMonthPillLabel } from "@/lib/date-utils";
+import { getDayNumber, getMonthPillLabel } from "@/lib/date-utils";
 import { deleteStep } from "@/actions/steps";
 import { toast } from "sonner";
 import {
@@ -144,7 +144,6 @@ export function MobileDayCard({
   const birthdateDate = parseISO(birthdate);
   const dateDate = parseISO(date);
   const dayNumber = getDayNumber(birthdateDate, dateDate);
-  const shortDate = formatShortDate(date);
   const monthIndex = differenceInCalendarMonths(dateDate, birthdateDate);
   const monthLabel = getMonthPillLabel(monthIndex);
   const hasMedia = steps.some((s) => s.photoUrl);
@@ -164,16 +163,9 @@ export function MobileDayCard({
         transition={{ duration: 0.35, ease: "easeOut" }}
       >
         <div className="relative rounded-3xl overflow-hidden bg-white/70 backdrop-blur-sm border border-stone-100/60 shadow-sm">
-          {/* Date badge */}
-          <div className="absolute top-3 left-3 z-10 bg-white/90 backdrop-blur-sm rounded-xl px-2.5 py-1 shadow-sm">
-            <span className="text-xs font-semibold text-stone-600">{shortDate}</span>
-          </div>
-
-          <div className="px-4 pt-12 pb-4">
+          <div className="px-4 pt-4 pb-4">
             <div className="text-2xl font-bold text-stone-800">{dayNumber} Days</div>
-            <div className="text-xs text-stone-400 mt-0.5">
-              {shortDate} &middot; {monthLabel}
-            </div>
+            <div className="text-xs text-stone-400 mt-0.5">{monthLabel}</div>
 
             {displayDescription && (
               <p className="text-sm text-stone-600 mt-2 leading-relaxed line-clamp-2">
@@ -227,7 +219,7 @@ export function MobileDayCard({
       viewport={{ once: true, margin: "-40px" }}
       transition={{ duration: 0.35, ease: "easeOut" }}
     >
-      <div className="relative rounded-3xl overflow-hidden shadow-sm aspect-[4/5]">
+      <div className="relative rounded-3xl overflow-hidden shadow-sm aspect-square">
         {/* Photo carousel as background */}
         <CardCarousel
           steps={steps}
@@ -275,9 +267,7 @@ export function MobileDayCard({
         {/* Gradient overlay at bottom */}
         <div className="absolute inset-x-0 bottom-0 z-[5] pointer-events-none bg-gradient-to-t from-black/70 via-black/30 to-transparent pt-20 pb-4 px-4">
           <div className="text-2xl font-bold text-white">{dayNumber} Days</div>
-          <div className="text-xs text-white/70 mt-0.5">
-            {shortDate} &middot; {monthLabel}
-          </div>
+          <div className="text-xs text-white/70 mt-0.5">{monthLabel}</div>
           {displayDescription && (
             <p className="text-sm text-white/80 mt-1.5 leading-relaxed line-clamp-2">
               {displayDescription}

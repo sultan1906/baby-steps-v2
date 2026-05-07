@@ -39,15 +39,19 @@ export function TimelineDayEntry({
   const [activeIndex, setActiveIndex] = useState(0);
 
   if (isMobile) {
+    const mobileShortDate = formatShortDate(date);
     return (
       <>
         <div className="flex">
           {/* Left axis column */}
-          <div className="relative w-8 flex-shrink-0 flex justify-center">
+          <div className="relative w-14 flex-shrink-0">
             <div
-              className={`absolute ${isFirst ? "top-[10px]" : "top-0"} bottom-0 w-0.5 bg-emerald-400/40`}
+              className={`absolute left-1 ${isFirst ? "top-[10px]" : "top-0"} bottom-0 w-0.5 bg-emerald-400/40`}
             />
-            <div className="relative z-10 mt-3 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+            <div className="absolute left-0 top-3 z-10 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+            <span className="absolute right-1 top-2.5 text-[11px] font-medium text-stone-500">
+              {mobileShortDate}
+            </span>
           </div>
           {/* Card content */}
           <div className="flex-1 min-w-0 pr-1">
@@ -62,8 +66,8 @@ export function TimelineDayEntry({
         </div>
         {isLast && (
           <div className="flex">
-            <div className="relative w-8 flex-shrink-0 flex justify-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+            <div className="relative w-14 flex-shrink-0">
+              <div className="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
             </div>
           </div>
         )}
