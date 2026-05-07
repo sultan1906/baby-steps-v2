@@ -9,12 +9,7 @@ import { MonthDivider } from "@/components/timeline/month-divider";
 import { TimelineDayEntry } from "@/components/timeline/timeline-day-entry";
 import { StoryViewModal } from "@/components/timeline/story-view-modal";
 import { EmptyState } from "@/components/shared/empty-state";
-import {
-  getCurrentMonthIndex,
-  getTotalMonths,
-  isDateInMonth,
-  getDayNumber,
-} from "@/lib/date-utils";
+import { getCurrentMonthIndex, getTotalMonths, isDateInMonth } from "@/lib/date-utils";
 import type { Step, Baby } from "@/types";
 
 interface FollowedTimelineClientProps {
@@ -62,7 +57,6 @@ export function FollowedTimelineClient({
   }, [steps, baby.birthdate, totalMonths]);
 
   const allDayGroups = useMemo(() => monthSections.flatMap((s) => s.dayGroups), [monthSections]);
-  const totalDays = getDayNumber(birthdateDate, new Date());
 
   useEffect(() => {
     const visibleMonths = new Set<number>();
@@ -151,7 +145,6 @@ export function FollowedTimelineClient({
           navigableMonths={new Set(monthSections.map((s) => s.monthIndex))}
           activeMonth={activeMonth}
           onMonthSelect={scrollToMonth}
-          totalDays={totalDays}
         />
       </div>
 
