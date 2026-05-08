@@ -64,9 +64,6 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
     return sections;
   }, [steps, baby.birthdate, totalMonths]);
 
-  // Flat dayGroups for StoryViewModal next-day navigation across months
-  const allDayGroups = useMemo(() => monthSections.flatMap((s) => s.dayGroups), [monthSections]);
-
   // IntersectionObserver to detect which month is in view
   useEffect(() => {
     const visibleMonths = new Set<number>();
@@ -203,18 +200,6 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
     setStorySteps([]);
   };
 
-  const goToNextDay = useCallback(() => {
-    if (!storyDate) return;
-    const idx = allDayGroups.findIndex(([d]) => d === storyDate);
-    if (idx >= 0 && idx < allDayGroups.length - 1) {
-      const [nextDate, nextSteps] = allDayGroups[idx + 1];
-      setStoryDate(nextDate);
-      setStorySteps(nextSteps);
-    } else {
-      closeStory();
-    }
-  }, [storyDate, allDayGroups]);
-
   return (
     <div className="min-h-screen bg-background">
       {/* Sticky header + month selector */}
@@ -285,7 +270,6 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
           date={storyDate}
           open={!!storyDate}
           onClose={closeStory}
-          onNextDay={goToNextDay}
         />
       )}
     </div>
