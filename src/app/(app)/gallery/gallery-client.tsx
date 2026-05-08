@@ -28,14 +28,13 @@ import { NewAlbumNameDialog } from "@/components/gallery/new-album-name-dialog";
 import { RenameAlbumDialog } from "@/components/gallery/rename-album-dialog";
 import { DeleteAlbumDialog } from "@/components/gallery/delete-album-dialog";
 import { cn } from "@/lib/utils";
-import { formatShortDate, getDayNumber } from "@/lib/date-utils";
+import { formatShortDate, getDayNumber, getMonthBuckets } from "@/lib/date-utils";
 import { parseISO } from "date-fns";
 import { createAlbum, renameAlbum, deleteAlbum } from "@/actions/albums";
 import type { Step, Baby, AlbumWithMeta } from "@/types";
 
 type Tab = "photos" | "albums";
 type ViewMode = "grid" | "list";
-type Filter = "all" | "milestones";
 type CreateMode = "off" | "select-photos" | "select-cover";
 
 interface GalleryClientProps {
@@ -57,7 +56,7 @@ export function GalleryClient({
 
   const [tab, setTab] = useState<Tab>(initialTab);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [filter, setFilter] = useState<Filter>("all");
+  const [monthFilter, setMonthFilter] = useState<string | "all">("all");
   const [selectedStep, setSelectedStep] = useState<Step | null>(null);
 
   const [createMode, setCreateMode] = useState<CreateMode>("off");
@@ -73,10 +72,26 @@ export function GalleryClient({
     [activeAlbum]
   );
 
+  const monthBuckets = useMemo(() => getMonthBuckets(steps), [steps]);
+  // Derive the effective filter so a selected month that disappears
+  // (e.g. its photos were deleted) falls back to "all" without syncing state.
+  const effectiveMonthFilter =
+    monthFilter === "all" || monthBuckets.some((m) => m.key === monthFilter) ? monthFilter : "all";
+  const activeMonthLabel = useMemo(
+    () =>
+      effectiveMonthFilter === "all"
+        ? null
+        : (monthBuckets.find((m) => m.key === effectiveMonthFilter)?.label ?? null),
+    [monthBuckets, effectiveMonthFilter]
+  );
+
   // Photos shown in the main Photos tab (no album filter — that's a separate view)
   const photosToShow = useMemo(
-    () => (filter === "milestones" ? steps.filter((s) => s.isMajor) : steps),
-    [steps, filter]
+    () =>
+      effectiveMonthFilter === "all"
+        ? steps
+        : steps.filter((s) => s.date.slice(0, 7) === effectiveMonthFilter),
+    [steps, effectiveMonthFilter]
   );
 
   // In select-cover mode, only show selected photos
@@ -379,21 +394,33 @@ export function GalleryClient({
           </div>
         )}
 
-        {/* All / Milestones filter pills (Photos tab, browse only) */}
-        {tab === "photos" && createMode === "off" && (
+        {/* Month filter pills (Photos tab, browse only, only when months exist) */}
+        {tab === "photos" && createMode === "off" && monthBuckets.length > 0 && (
           <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-hide">
-            {(["all", "milestones"] as const).map((f) => (
+            <button
+              key="all-months"
+              onClick={() => setMonthFilter("all")}
+              className={cn(
+                "flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all",
+                effectiveMonthFilter === "all"
+                  ? "gradient-bg-vibrant text-white shadow"
+                  : "bg-white border border-stone-200 text-stone-600"
+              )}
+            >
+              All months
+            </button>
+            {monthBuckets.map((m) => (
               <button
-                key={f}
-                onClick={() => setFilter(f)}
+                key={m.key}
+                onClick={() => setMonthFilter(m.key)}
                 className={cn(
                   "flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all",
-                  filter === f
+                  effectiveMonthFilter === m.key
                     ? "gradient-bg-vibrant text-white shadow"
                     : "bg-white border border-stone-200 text-stone-600"
                 )}
               >
-                {f === "all" ? "All" : "Milestones"}
+                {m.label}
               </button>
             ))}
           </div>
@@ -517,16 +544,16 @@ export function GalleryClient({
             {photosToShow.length === 0 ? (
               <EmptyState
                 icon={Grid3x3}
-                title="No memories yet"
+                title={activeMonthLabel ? `No photos in ${activeMonthLabel}` : "No memories yet"}
                 description={
-                  filter === "milestones"
-                    ? "No milestones marked yet. Add memories and mark special ones!"
+                  activeMonthLabel
+                    ? `Try another month or pick "All months".`
                     : "Start adding memories to see them here."
                 }
               />
             ) : viewMode === "grid" ? (
               <motion.div
-                key={`grid-${filter}`}
+                key={`grid-${effectiveMonthFilter}`}
                 className="grid grid-cols-3 sm:grid-cols-4 gap-2"
                 initial="hidden"
                 animate="visible"
@@ -580,7 +607,7 @@ export function GalleryClient({
               </motion.div>
             ) : (
               <motion.div
-                key={`list-${filter}`}
+                key={`list-${effectiveMonthFilter}`}
                 className="flex flex-col gap-3"
                 initial="hidden"
                 animate="visible"

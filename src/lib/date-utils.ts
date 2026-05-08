@@ -124,6 +124,29 @@ export function isDateInMonth(dateStr: string, birthdate: Date, monthIndex: numb
 }
 
 /**
+ * Bucket steps by calendar month (YYYY-MM), newest first.
+ * Returns one entry per month that actually has at least one step.
+ */
+export function getMonthBuckets(
+  steps: Array<{ date: string }>
+): Array<{ key: string; label: string }> {
+  const monthKeyRe = /^\d{4}-(0[1-9]|1[0-2])$/;
+  const seen = new Set<string>();
+  const keys: string[] = [];
+  for (const s of steps) {
+    const key = s.date.slice(0, 7);
+    if (!monthKeyRe.test(key) || seen.has(key)) continue;
+    seen.add(key);
+    keys.push(key);
+  }
+  keys.sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+  return keys.map((key) => ({
+    key,
+    label: format(parseISO(`${key}-01`), "MMM yyyy"),
+  }));
+}
+
+/**
  * Generate data for the 36-week activity heatmap.
  * Returns array of { start, end, hasActivity } for each week.
  */
