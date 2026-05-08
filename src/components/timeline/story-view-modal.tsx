@@ -76,10 +76,7 @@ export function StoryViewModal({
   const isClosingRef = useRef(false);
 
   const animateClose = () => {
-    if (isClosingRef.current) {
-      onClose();
-      return;
-    }
+    if (isClosingRef.current) return;
     isClosingRef.current = true;
     const target = typeof window !== "undefined" ? window.innerHeight : 800;
     animate(dragY, target, {
@@ -543,7 +540,8 @@ export function StoryViewModal({
                     setDraftDesc(description);
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
                       setEditingDesc(true);
                       setDraftDesc(description);
                     }
