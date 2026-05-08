@@ -12,8 +12,6 @@ import {
   Volume2,
   VolumeX,
   MoreHorizontal,
-  Heart,
-  MessageCircle,
 } from "lucide-react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import Image from "next/image";
@@ -35,6 +33,7 @@ interface StoryViewModalProps {
   date: string;
   open: boolean;
   onClose: () => void;
+  onNextDay?: () => void;
   readOnly?: boolean;
   baby?: { id: string; name: string; birthdate: string };
 }
@@ -44,6 +43,7 @@ export function StoryViewModal({
   date,
   open,
   onClose,
+  onNextDay,
   readOnly,
   baby: babyProp,
 }: StoryViewModalProps) {
@@ -127,6 +127,8 @@ export function StoryViewModal({
     timerRef.current = setTimeout(() => {
       if (currentIndex < localSteps.length - 1) {
         setCurrentIndex((i) => i + 1);
+      } else if (onNextDay) {
+        onNextDay();
       } else {
         onClose();
       }
@@ -142,6 +144,7 @@ export function StoryViewModal({
     confirmDelete,
     localSteps.length,
     onClose,
+    onNextDay,
     currentStep?.type,
   ]);
 
@@ -158,6 +161,8 @@ export function StoryViewModal({
   const nextStep = () => {
     if (currentIndex < localSteps.length - 1) {
       setCurrentIndex((i) => i + 1);
+    } else if (onNextDay) {
+      onNextDay();
     } else {
       onClose();
     }
@@ -554,28 +559,6 @@ export function StoryViewModal({
               )}
 
               {!editingDesc && timeLabel && <p className="text-white/50 text-xs">{timeLabel}</p>}
-
-              {/* Action row */}
-              {!editingDesc && !readOnly && (
-                <div className="flex items-center justify-between mt-4">
-                  <button
-                    aria-label="Favorite"
-                    className="w-9 h-9 -ml-2 flex items-center justify-center text-white/90 hover:text-white transition-colors"
-                  >
-                    <Heart className="w-6 h-6" />
-                  </button>
-                  <button
-                    aria-label={description ? "Edit memory note" : "Add memory note"}
-                    onClick={() => {
-                      setEditingDesc(true);
-                      setDraftDesc(description);
-                    }}
-                    className="w-9 h-9 -mr-2 flex items-center justify-center text-white/90 hover:text-white transition-colors"
-                  >
-                    <MessageCircle className="w-6 h-6" />
-                  </button>
-                </div>
-              )}
             </div>
           </motion.div>
         </motion.div>

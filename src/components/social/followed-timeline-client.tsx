@@ -56,6 +56,8 @@ export function FollowedTimelineClient({
     return sections;
   }, [steps, baby.birthdate, totalMonths]);
 
+  const allDayGroups = useMemo(() => monthSections.flatMap((s) => s.dayGroups), [monthSections]);
+
   useEffect(() => {
     const visibleMonths = new Set<number>();
 
@@ -114,6 +116,18 @@ export function FollowedTimelineClient({
     setStoryDate(null);
     setStorySteps([]);
   };
+
+  const goToNextDay = useCallback(() => {
+    if (!storyDate) return;
+    const idx = allDayGroups.findIndex(([d]) => d === storyDate);
+    if (idx >= 0 && idx < allDayGroups.length - 1) {
+      const [nextDate, nextSteps] = allDayGroups[idx + 1];
+      setStoryDate(nextDate);
+      setStorySteps(nextSteps);
+    } else {
+      closeStory();
+    }
+  }, [storyDate, allDayGroups]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -176,6 +190,7 @@ export function FollowedTimelineClient({
           date={storyDate}
           open={!!storyDate}
           onClose={closeStory}
+          onNextDay={goToNextDay}
           readOnly
           baby={baby}
         />
