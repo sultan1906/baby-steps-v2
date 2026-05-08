@@ -11,11 +11,18 @@ import {
   Play,
   Volume2,
   VolumeX,
+  MoreHorizontal,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import Image from "next/image";
-import { parseISO } from "date-fns";
+import { parseISO, format } from "date-fns";
 import { getDayNumber, formatMemoryDate } from "@/lib/date-utils";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 import { deleteStep, updateStepCaption } from "@/actions/steps";
 import { toast } from "sonner";
 import { useBabyOptional } from "@/components/baby/baby-provider";
@@ -61,11 +68,30 @@ export function StoryViewModal({
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isVideoPaused, setIsVideoPaused] = useState(false);
 
+  // Drag-to-dismiss motion values
+  const dragY = useMotionValue(0);
+  const overlayOpacity = useTransform(dragY, [0, 300], [1, 0.3]);
+  const cardScale = useTransform(dragY, [0, 300], [1, 0.92]);
+  const cardRadius = useTransform(dragY, [0, 80], [0, 24]);
+  const isClosingRef = useRef(false);
+
+  const animateClose = () => {
+    if (isClosingRef.current) return;
+    isClosingRef.current = true;
+    const target = typeof window !== "undefined" ? window.innerHeight : 800;
+    animate(dragY, target, {
+      duration: 0.28,
+      ease: [0.32, 0.72, 0, 1],
+      onComplete: onClose,
+    });
+  };
+
   const currentStep = localSteps[currentIndex];
   const isVideoStep = currentStep?.type === "video";
   const dayNumber = baby ? getDayNumber(parseISO(baby.birthdate), parseISO(date)) : 0;
   const dateLabel = formatMemoryDate(date);
   const description = currentStep?.caption ?? "";
+  const timeLabel = currentStep?.createdAt ? format(new Date(currentStep.createdAt), "h:mm a") : "";
 
   // Reset navigation state when modal opens or date changes
   useEffect(() => {
@@ -75,7 +101,9 @@ export function StoryViewModal({
     setCurrentIndex(0);
     setPendingDeleteId(null);
     setEditingDesc(false);
-  }, [open, date]);
+    dragY.set(0);
+    isClosingRef.current = false;
+  }, [open, date, dragY]);
 
   // Reset draft and exit edit mode when navigating between slides.
   // Intentionally keyed only on slide identity so a remote/optimistic caption
@@ -222,7 +250,10 @@ export function StoryViewModal({
         >
           {/* Blurred background (photos only — skip for video to avoid double decode) */}
           {currentStep?.photoUrl && currentStep.type !== "video" && (
-            <div className="absolute inset-0 pointer-events-none">
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{ opacity: overlayOpacity }}
+            >
               <Image
                 src={currentStep.photoUrl}
                 alt=""
@@ -230,11 +261,23 @@ export function StoryViewModal({
                 sizes="100vw"
                 className="object-cover blur-3xl opacity-50 scale-110"
               />
-            </div>
+            </motion.div>
           )}
 
           {/* Main container */}
-          <div className="relative h-full flex flex-col max-w-lg mx-auto bg-stone-900">
+          <motion.div
+            className="relative h-full flex flex-col max-w-lg mx-auto bg-stone-900 touch-pan-y overflow-hidden"
+            style={{ y: dragY, scale: cardScale, borderRadius: cardRadius }}
+            drag={editingDesc || confirmDelete ? false : "y"}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.8 }}
+            dragDirectionLock
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 120 || info.velocity.y > 500) {
+                animateClose();
+              }
+            }}
+          >
             {/* Progress bars */}
             <div className="absolute top-0 left-0 right-0 z-30 flex gap-1 px-4 pt-4">
               {localSteps.map((s, i) => (
@@ -255,33 +298,39 @@ export function StoryViewModal({
             </div>
 
             {/* Header */}
-            <div className="relative z-30 flex items-center justify-between px-4 py-3 mt-8">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl gradient-bg flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                  {baby?.name[0]}
-                </div>
-                <span className="text-sm text-white/70">
-                  Day {dayNumber} · {dateLabel}
-                </span>
+            <div className="relative z-30 grid grid-cols-[auto_1fr_auto] items-center px-2 py-3 mt-6">
+              <button
+                aria-label="Close"
+                onClick={onClose}
+                className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex flex-col items-center text-center leading-tight">
+                <span className="text-white text-sm font-semibold">Day {dayNumber}</span>
+                <span className="text-white/60 text-[11px] mt-0.5">{dateLabel}</span>
               </div>
-              <div className="flex items-center gap-2">
-                {!readOnly && (
-                  <button
-                    aria-label="Delete photo"
-                    onClick={() => setPendingDeleteId(currentStep?.id ?? null)}
-                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
+              {!readOnly ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    aria-label="More options"
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
                   >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
-                )}
-                <button
-                  aria-label="Close"
-                  onClick={onClose}
-                  className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
+                    <MoreHorizontal className="w-5 h-5" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" sideOffset={6}>
+                    <DropdownMenuItem
+                      onClick={() => setPendingDeleteId(currentStep?.id ?? null)}
+                      variant="destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      Delete photo
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <div className="w-10 h-10" />
+              )}
             </div>
 
             {/* Photo area — clicking background closes (or toggles play/pause for videos) */}
@@ -430,30 +479,28 @@ export function StoryViewModal({
             )}
 
             {/* Bottom overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent px-6 pb-8 pt-20">
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-5 pb-6 pt-24">
               {/* Tags row */}
-              <div className="flex gap-2 mb-4 flex-wrap">
-                {currentStep?.isMajor && (
-                  <div className="flex items-center gap-1 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                    <Award className="w-3 h-3" />
-                    Milestone
-                  </div>
-                )}
-                {currentStep?.locationNickname && (
-                  <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full">
-                    <MapPin className="w-3 h-3" />
-                    {currentStep.locationNickname}
-                  </div>
-                )}
-              </div>
+              {(currentStep?.isMajor || currentStep?.locationNickname) && (
+                <div className="flex gap-2 mb-3 flex-wrap">
+                  {currentStep?.isMajor && (
+                    <div className="flex items-center gap-1 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                      <Award className="w-3 h-3" />
+                      Milestone
+                    </div>
+                  )}
+                  {currentStep?.locationNickname && (
+                    <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full">
+                      <MapPin className="w-3 h-3" />
+                      {currentStep.locationNickname}
+                    </div>
+                  )}
+                </div>
+              )}
 
-              {/* Description */}
-              {readOnly ? (
-                description ? (
-                  <p className="italic text-white/80 text-base leading-relaxed">{description}</p>
-                ) : null
-              ) : editingDesc ? (
-                <div className="bg-black/60 backdrop-blur rounded-2xl p-4">
+              {/* Caption + time */}
+              {editingDesc && !readOnly ? (
+                <div className="bg-black/60 backdrop-blur rounded-2xl p-4 mb-3">
                   <textarea
                     ref={(el) => {
                       (textareaRef as React.RefObject<HTMLTextAreaElement | null>).current = el;
@@ -478,6 +525,12 @@ export function StoryViewModal({
                     </button>
                   </div>
                 </div>
+              ) : readOnly ? (
+                description && (
+                  <p className="text-white text-base font-semibold leading-snug mb-1">
+                    {description}
+                  </p>
+                )
               ) : (
                 <div
                   role="button"
@@ -487,22 +540,25 @@ export function StoryViewModal({
                     setDraftDesc(description);
                   }}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter") {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
                       setEditingDesc(true);
                       setDraftDesc(description);
                     }
                   }}
-                  className="cursor-text"
+                  className="cursor-text mb-1"
                 >
                   {description ? (
-                    <p className="italic text-white/80 text-base leading-relaxed">{description}</p>
+                    <p className="text-white text-base font-semibold leading-snug">{description}</p>
                   ) : (
-                    <p className="text-white/40 text-base italic">+ Add a memory note...</p>
+                    <p className="text-white/40 text-base">Add a memory note...</p>
                   )}
                 </div>
               )}
+
+              {!editingDesc && timeLabel && <p className="text-white/50 text-xs">{timeLabel}</p>}
             </div>
-          </div>
+          </motion.div>
         </motion.div>
       </AnimatePresence>
     </>
