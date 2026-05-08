@@ -130,11 +130,12 @@ export function isDateInMonth(dateStr: string, birthdate: Date, monthIndex: numb
 export function getMonthBuckets(
   steps: Array<{ date: string }>
 ): Array<{ key: string; label: string }> {
+  const monthKeyRe = /^\d{4}-(0[1-9]|1[0-2])$/;
   const seen = new Set<string>();
   const keys: string[] = [];
   for (const s of steps) {
     const key = s.date.slice(0, 7);
-    if (key.length !== 7 || seen.has(key)) continue;
+    if (!monthKeyRe.test(key) || seen.has(key)) continue;
     seen.add(key);
     keys.push(key);
   }

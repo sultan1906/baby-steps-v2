@@ -73,18 +73,25 @@ export function GalleryClient({
   );
 
   const monthBuckets = useMemo(() => getMonthBuckets(steps), [steps]);
+  // Derive the effective filter so a selected month that disappears
+  // (e.g. its photos were deleted) falls back to "all" without syncing state.
+  const effectiveMonthFilter =
+    monthFilter === "all" || monthBuckets.some((m) => m.key === monthFilter) ? monthFilter : "all";
   const activeMonthLabel = useMemo(
     () =>
-      monthFilter === "all"
+      effectiveMonthFilter === "all"
         ? null
-        : (monthBuckets.find((m) => m.key === monthFilter)?.label ?? null),
-    [monthBuckets, monthFilter]
+        : (monthBuckets.find((m) => m.key === effectiveMonthFilter)?.label ?? null),
+    [monthBuckets, effectiveMonthFilter]
   );
 
   // Photos shown in the main Photos tab (no album filter — that's a separate view)
   const photosToShow = useMemo(
-    () => (monthFilter === "all" ? steps : steps.filter((s) => s.date.slice(0, 7) === monthFilter)),
-    [steps, monthFilter]
+    () =>
+      effectiveMonthFilter === "all"
+        ? steps
+        : steps.filter((s) => s.date.slice(0, 7) === effectiveMonthFilter),
+    [steps, effectiveMonthFilter]
   );
 
   // In select-cover mode, only show selected photos
@@ -395,7 +402,7 @@ export function GalleryClient({
               onClick={() => setMonthFilter("all")}
               className={cn(
                 "flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all",
-                monthFilter === "all"
+                effectiveMonthFilter === "all"
                   ? "gradient-bg-vibrant text-white shadow"
                   : "bg-white border border-stone-200 text-stone-600"
               )}
@@ -408,7 +415,7 @@ export function GalleryClient({
                 onClick={() => setMonthFilter(m.key)}
                 className={cn(
                   "flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all",
-                  monthFilter === m.key
+                  effectiveMonthFilter === m.key
                     ? "gradient-bg-vibrant text-white shadow"
                     : "bg-white border border-stone-200 text-stone-600"
                 )}
@@ -546,7 +553,7 @@ export function GalleryClient({
               />
             ) : viewMode === "grid" ? (
               <motion.div
-                key={`grid-${monthFilter}`}
+                key={`grid-${effectiveMonthFilter}`}
                 className="grid grid-cols-3 sm:grid-cols-4 gap-2"
                 initial="hidden"
                 animate="visible"
@@ -600,7 +607,7 @@ export function GalleryClient({
               </motion.div>
             ) : (
               <motion.div
-                key={`list-${monthFilter}`}
+                key={`list-${effectiveMonthFilter}`}
                 className="flex flex-col gap-3"
                 initial="hidden"
                 animate="visible"
