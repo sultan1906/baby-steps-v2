@@ -80,13 +80,15 @@ export async function createBulkSteps(steps: StepInput[]) {
         arr.push(s);
         byBaby.set(s.babyId, arr);
       }
-      for (const [babyId, group] of byBaby) {
-        await fanoutPhotoNotifications({
-          actorId: session.user.id,
-          babyId,
-          steps: group,
-        });
-      }
+      await Promise.all(
+        Array.from(byBaby.entries()).map(([babyId, group]) =>
+          fanoutPhotoNotifications({
+            actorId: session.user.id,
+            babyId,
+            steps: group,
+          })
+        )
+      );
     } catch (err) {
       console.error("[action:createBulkSteps] notification fanout failed", err);
     }

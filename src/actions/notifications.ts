@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { notification, follow, user, type Step } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq } from "drizzle-orm";
 import { UserError, runAction } from "@/lib/errors";
 
 async function getSession() {
@@ -47,6 +47,8 @@ export async function fanoutPhotoNotifications(args: {
 
   if (followers.length === 0) return;
 
+  // First photo represents the batch: stable preview thumbnail and link target
+  // shared by every recipient row in this fanout.
   const first = photoSteps[0];
   const rows = followers.map((f) => ({
     userId: f.followerId,
@@ -103,10 +105,10 @@ export async function getUnreadCount(): Promise<number> {
   return runAction("getUnreadCount", async () => {
     const session = await getSession();
     const [row] = await db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({ value: count() })
       .from(notification)
       .where(and(eq(notification.userId, session.user.id), eq(notification.read, false)));
-    return row?.count ?? 0;
+    return row?.value ?? 0;
   });
 }
 

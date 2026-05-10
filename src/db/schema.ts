@@ -234,7 +234,7 @@ export const notification = pgTable(
       .references(() => baby.id, { onDelete: "cascade" }),
     type: text("type").notNull().default("new_photos"),
     photoCount: integer("photo_count").notNull().default(1),
-    stepId: text("step_id").references(() => step.id, { onDelete: "cascade" }),
+    stepId: text("step_id").references(() => step.id, { onDelete: "set null" }),
     previewPhotoUrl: text("preview_photo_url"),
     read: boolean("read").notNull().default(false),
     createdAt: timestamp("created_at").notNull().defaultNow(),
