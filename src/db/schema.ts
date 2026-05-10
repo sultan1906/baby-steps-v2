@@ -4,6 +4,7 @@ import {
   text,
   timestamp,
   boolean,
+  integer,
   index,
   unique,
   uniqueIndex,
@@ -216,6 +217,34 @@ export const follow = pgTable(
   })
 );
 
+export const notification = pgTable(
+  "notification",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    actorId: text("actor_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    babyId: text("baby_id")
+      .notNull()
+      .references(() => baby.id, { onDelete: "cascade" }),
+    type: text("type").notNull().default("new_photos"),
+    photoCount: integer("photo_count").notNull().default(1),
+    stepId: text("step_id").references(() => step.id, { onDelete: "cascade" }),
+    previewPhotoUrl: text("preview_photo_url"),
+    read: boolean("read").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({
+    userCreatedIdx: index("notification_user_created_idx").on(t.userId, t.createdAt),
+    userUnreadIdx: index("notification_user_unread_idx").on(t.userId, t.read),
+  })
+);
+
 export const invite = pgTable(
   "invite",
   {
@@ -312,6 +341,21 @@ export const followRelations = relations(follow, ({ one }) => ({
   }),
 }));
 
+export const notificationRelations = relations(notification, ({ one }) => ({
+  recipient: one(user, {
+    fields: [notification.userId],
+    references: [user.id],
+    relationName: "notificationRecipient",
+  }),
+  actor: one(user, {
+    fields: [notification.actorId],
+    references: [user.id],
+    relationName: "notificationActor",
+  }),
+  baby: one(baby, { fields: [notification.babyId], references: [baby.id] }),
+  step: one(step, { fields: [notification.stepId], references: [step.id] }),
+}));
+
 export const inviteRelations = relations(invite, ({ one }) => ({
   inviter: one(user, {
     fields: [invite.inviterId],
@@ -337,6 +381,8 @@ export type Follow = typeof follow.$inferSelect;
 export type NewFollow = typeof follow.$inferInsert;
 export type Invite = typeof invite.$inferSelect;
 export type NewInvite = typeof invite.$inferInsert;
+export type Notification = typeof notification.$inferSelect;
+export type NewNotification = typeof notification.$inferInsert;
 export type Album = typeof album.$inferSelect;
 export type NewAlbum = typeof album.$inferInsert;
 export type AlbumStep = typeof albumStep.$inferSelect;
