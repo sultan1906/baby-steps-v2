@@ -26,8 +26,21 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth", request.url));
   }
 
-  // Has session → redirect away from auth page
-  if (session && pathname === "/auth") {
+  // Has session → redirect away from auth page (GET navigations only).
+  //
+  // After signin, the client-side AuthPage calls server actions like
+  // listBabies(); those POST back to /auth with a Next-Action header. We
+  // must NOT redirect those — middleware redirects of server-action POSTs
+  // turn into a client navigation that rejects the action's promise, which
+  // surfaces to the user as "Something went wrong. Please try again." This
+  // is why invite-driven signins were failing while the same flow worked
+  // for already-authenticated users.
+  if (
+    session &&
+    pathname === "/auth" &&
+    request.method === "GET" &&
+    !request.headers.get("next-action")
+  ) {
     return NextResponse.redirect(new URL("/timeline", request.url));
   }
 
