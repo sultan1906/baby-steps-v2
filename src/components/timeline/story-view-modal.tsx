@@ -33,7 +33,6 @@ interface StoryViewModalProps {
   date: string;
   open: boolean;
   onClose: () => void;
-  onNextDay?: () => void;
   readOnly?: boolean;
   baby?: { id: string; name: string; birthdate: string };
 }
@@ -43,7 +42,6 @@ export function StoryViewModal({
   date,
   open,
   onClose,
-  onNextDay,
   readOnly,
   baby: babyProp,
 }: StoryViewModalProps) {
@@ -70,7 +68,7 @@ export function StoryViewModal({
 
   // Drag-to-dismiss motion values
   const dragY = useMotionValue(0);
-  const overlayOpacity = useTransform(dragY, [0, 300], [1, 0.3]);
+  const overlayOpacity = useTransform(dragY, [0, 300], [1, 0]);
   const cardScale = useTransform(dragY, [0, 300], [1, 0.92]);
   const cardRadius = useTransform(dragY, [0, 80], [0, 24]);
   const isClosingRef = useRef(false);
@@ -124,8 +122,6 @@ export function StoryViewModal({
     timerRef.current = setTimeout(() => {
       if (currentIndex < localSteps.length - 1) {
         setCurrentIndex((i) => i + 1);
-      } else if (onNextDay) {
-        onNextDay();
       } else {
         onClose();
       }
@@ -141,7 +137,6 @@ export function StoryViewModal({
     confirmDelete,
     localSteps.length,
     onClose,
-    onNextDay,
     currentStep?.type,
   ]);
 
@@ -158,8 +153,6 @@ export function StoryViewModal({
   const nextStep = () => {
     if (currentIndex < localSteps.length - 1) {
       setCurrentIndex((i) => i + 1);
-    } else if (onNextDay) {
-      onNextDay();
     } else {
       onClose();
     }
@@ -243,11 +236,17 @@ export function StoryViewModal({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] bg-black"
+          className="fixed inset-0 z-[100]"
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
         >
+          {/* Black dimming layer — fades during drag to reveal the page underneath */}
+          <motion.div
+            className="absolute inset-0 bg-black pointer-events-none"
+            style={{ opacity: overlayOpacity }}
+          />
+
           {/* Blurred background (photos only — skip for video to avoid double decode) */}
           {currentStep?.photoUrl && currentStep.type !== "video" && (
             <motion.div
@@ -259,14 +258,14 @@ export function StoryViewModal({
                 alt=""
                 fill
                 sizes="100vw"
-                className="object-cover blur-3xl opacity-50 scale-110"
+                className="object-cover blur-3xl opacity-80 scale-110"
               />
             </motion.div>
           )}
 
           {/* Main container */}
           <motion.div
-            className="relative h-full flex flex-col max-w-lg mx-auto bg-stone-900 touch-pan-y overflow-hidden"
+            className="relative h-full flex flex-col max-w-lg mx-auto touch-pan-y overflow-hidden"
             style={{ y: dragY, scale: cardScale, borderRadius: cardRadius }}
             drag={editingDesc || confirmDelete ? false : "y"}
             dragConstraints={{ top: 0, bottom: 0 }}
@@ -278,27 +277,14 @@ export function StoryViewModal({
               }
             }}
           >
-            {/* Progress bars */}
-            <div className="absolute top-0 left-0 right-0 z-30 flex gap-1 px-4 pt-4">
-              {localSteps.map((s, i) => (
-                <div key={s.id} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
-                  <motion.div
-                    className="h-full bg-white rounded-full"
-                    initial={{ width: i < currentIndex ? "100%" : "0%" }}
-                    animate={{
-                      width: i < currentIndex ? "100%" : i === currentIndex ? "100%" : "0%",
-                    }}
-                    transition={
-                      i === currentIndex ? { duration: 5, ease: "linear" } : { duration: 0 }
-                    }
-                    key={`${s.id}-${currentIndex}`}
-                  />
-                </div>
-              ))}
-            </div>
+            {/* Top fade — keeps progress bars + header readable without slamming into solid black */}
+            <div
+              aria-hidden
+              className="absolute top-0 left-0 right-0 h-32 z-20 pointer-events-none bg-gradient-to-b from-black/45 via-black/15 to-transparent backdrop-blur-[2px] [mask-image:linear-gradient(to_bottom,black,transparent)]"
+            />
 
             {/* Header */}
-            <div className="relative z-30 grid grid-cols-[auto_1fr_auto] items-center px-2 py-3 mt-6">
+            <div className="relative z-30 grid grid-cols-[auto_1fr_auto] items-center px-2 py-3 mt-2">
               <button
                 aria-label="Close"
                 onClick={onClose}
@@ -331,6 +317,25 @@ export function StoryViewModal({
               ) : (
                 <div className="w-10 h-10" />
               )}
+            </div>
+
+            {/* Progress bars — sit under the date header */}
+            <div className="relative z-30 flex gap-1 px-4 pt-1 pb-2">
+              {localSteps.map((s, i) => (
+                <div key={s.id} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-white rounded-full"
+                    initial={{ width: i < currentIndex ? "100%" : "0%" }}
+                    animate={{
+                      width: i < currentIndex ? "100%" : i === currentIndex ? "100%" : "0%",
+                    }}
+                    transition={
+                      i === currentIndex ? { duration: 5, ease: "linear" } : { duration: 0 }
+                    }
+                    key={`${s.id}-${currentIndex}`}
+                  />
+                </div>
+              ))}
             </div>
 
             {/* Photo area — clicking background closes (or toggles play/pause for videos) */}
@@ -478,8 +483,8 @@ export function StoryViewModal({
               </div>
             )}
 
-            {/* Bottom overlay */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent px-5 pb-6 pt-24">
+            {/* Bottom overlay — soft dim + backdrop blur so the photo fades into a blurred edge instead of solid black */}
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/55 via-black/25 to-transparent backdrop-blur-[2px] [mask-image:linear-gradient(to_top,black,transparent)] px-5 pb-6 pt-24">
               {/* Tags row */}
               {(currentStep?.isMajor || currentStep?.locationNickname) && (
                 <div className="flex gap-2 mb-3 flex-wrap">
