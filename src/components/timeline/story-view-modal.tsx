@@ -283,27 +283,8 @@ export function StoryViewModal({
               className="absolute top-0 left-0 right-0 h-32 z-20 pointer-events-none bg-gradient-to-b from-black/45 via-black/15 to-transparent backdrop-blur-[2px] [mask-image:linear-gradient(to_bottom,black,transparent)]"
             />
 
-            {/* Progress bars */}
-            <div className="absolute top-0 left-0 right-0 z-30 flex gap-1 px-4 pt-4">
-              {localSteps.map((s, i) => (
-                <div key={s.id} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
-                  <motion.div
-                    className="h-full bg-white rounded-full"
-                    initial={{ width: i < currentIndex ? "100%" : "0%" }}
-                    animate={{
-                      width: i < currentIndex ? "100%" : i === currentIndex ? "100%" : "0%",
-                    }}
-                    transition={
-                      i === currentIndex ? { duration: 5, ease: "linear" } : { duration: 0 }
-                    }
-                    key={`${s.id}-${currentIndex}`}
-                  />
-                </div>
-              ))}
-            </div>
-
             {/* Header */}
-            <div className="relative z-30 grid grid-cols-[auto_1fr_auto] items-center px-2 py-3 mt-6">
+            <div className="relative z-30 grid grid-cols-[auto_1fr_auto] items-center px-2 py-3 mt-2">
               <button
                 aria-label="Close"
                 onClick={onClose}
@@ -336,6 +317,25 @@ export function StoryViewModal({
               ) : (
                 <div className="w-10 h-10" />
               )}
+            </div>
+
+            {/* Progress bars — sit under the date header */}
+            <div className="relative z-30 flex gap-1 px-4 pt-1 pb-2">
+              {localSteps.map((s, i) => (
+                <div key={s.id} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
+                  <motion.div
+                    className="h-full bg-white rounded-full"
+                    initial={{ width: i < currentIndex ? "100%" : "0%" }}
+                    animate={{
+                      width: i < currentIndex ? "100%" : i === currentIndex ? "100%" : "0%",
+                    }}
+                    transition={
+                      i === currentIndex ? { duration: 5, ease: "linear" } : { duration: 0 }
+                    }
+                    key={`${s.id}-${currentIndex}`}
+                  />
+                </div>
+              ))}
             </div>
 
             {/* Photo area — clicking background closes (or toggles play/pause for videos) */}
