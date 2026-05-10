@@ -28,6 +28,7 @@ export interface UploadQueueItem {
   date: string; // "YYYY-MM-DD" from EXIF or fallback
   isMajor: boolean;
   mediaType: "photo" | "video";
+  posterUrl?: string; // first-frame poster (videos only) — uploaded alongside the video
   locationId?: string;
   locationNickname?: string;
   caption?: string;
@@ -38,6 +39,7 @@ export interface UploadQueueItem {
 export interface StepInput {
   babyId: string;
   photoUrl?: string;
+  posterUrl?: string;
   date: string; // "YYYY-MM-DD"
   locationId?: string;
   locationNickname?: string;

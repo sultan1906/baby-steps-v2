@@ -144,15 +144,22 @@ export async function deleteStep(stepId: string) {
     const session = await getSession();
 
     const [found] = await db
-      .select({ id: step.id, photoUrl: step.photoUrl })
+      .select({ id: step.id, photoUrl: step.photoUrl, posterUrl: step.posterUrl })
       .from(step)
       .innerJoin(baby, eq(step.babyId, baby.id))
       .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
 
     if (!found) throw new UserError("Not found or unauthorized");
 
-    if (found.photoUrl) {
-      await del(found.photoUrl);
+    const blobsToDelete = [found.photoUrl, found.posterUrl].filter((u): u is string => Boolean(u));
+    const results = await Promise.allSettled(blobsToDelete.map((u) => del(u)));
+    for (const [i, r] of results.entries()) {
+      if (r.status === "rejected") {
+        console.warn("[action:deleteStep] blob delete failed", {
+          url: blobsToDelete[i],
+          error: r.reason,
+        });
+      }
     }
 
     await db.delete(step).where(eq(step.id, stepId));
