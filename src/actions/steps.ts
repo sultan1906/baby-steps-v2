@@ -8,6 +8,7 @@ import { headers } from "next/headers";
 import { eq, and, inArray } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { UserError, runAction } from "@/lib/errors";
+import { fanoutPhotoNotifications } from "./notifications";
 import type { StepInput } from "@/types";
 
 async function getSession() {
@@ -31,6 +32,18 @@ export async function createStep(data: StepInput) {
     if (!owned) throw new UserError("Not found or unauthorized");
 
     const [s] = await db.insert(step).values(data).returning();
+
+    if (s.photoUrl) {
+      try {
+        await fanoutPhotoNotifications({
+          actorId: session.user.id,
+          babyId: s.babyId,
+          steps: [s],
+        });
+      } catch (err) {
+        console.error("[action:createStep] notification fanout failed", err);
+      }
+    }
 
     revalidatePath("/timeline");
     revalidatePath("/gallery");
@@ -57,6 +70,28 @@ export async function createBulkSteps(steps: StepInput[]) {
     }
 
     const created = await db.insert(step).values(steps).returning();
+
+    // Fan out one notification per (baby, follower) batch — group photos by babyId.
+    try {
+      const photoSteps = created.filter((s) => !!s.photoUrl);
+      const byBaby = new Map<string, typeof photoSteps>();
+      for (const s of photoSteps) {
+        const arr = byBaby.get(s.babyId) ?? [];
+        arr.push(s);
+        byBaby.set(s.babyId, arr);
+      }
+      await Promise.all(
+        Array.from(byBaby.entries()).map(([babyId, group]) =>
+          fanoutPhotoNotifications({
+            actorId: session.user.id,
+            babyId,
+            steps: group,
+          })
+        )
+      );
+    } catch (err) {
+      console.error("[action:createBulkSteps] notification fanout failed", err);
+    }
 
     revalidatePath("/timeline");
     revalidatePath("/gallery");

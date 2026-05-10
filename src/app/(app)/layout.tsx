@@ -7,6 +7,7 @@ import { getPendingIncomingInviteCount } from "@/actions/invites";
 import { consumePendingInvite } from "@/lib/post-auth-invite";
 import { BabyProvider } from "@/components/baby/baby-provider";
 import { BottomNav } from "@/components/shared/bottom-nav";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { QueryProvider } from "@/components/shared/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -68,6 +69,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
             <main className="flex-1 overflow-y-auto">{children}</main>
             <BottomNav followerMode />
           </div>
+          <NotificationBell />
           <Toaster position="top-center" />
         </BabyProvider>
       </QueryProvider>
@@ -92,6 +94,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <main className="flex-1 overflow-y-auto">{children}</main>
           <BottomNav />
         </div>
+        <NotificationBell />
         <Toaster position="top-center" />
       </BabyProvider>
     </QueryProvider>
