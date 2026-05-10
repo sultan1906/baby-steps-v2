@@ -151,11 +151,15 @@ export async function deleteStep(stepId: string) {
 
     if (!found) throw new UserError("Not found or unauthorized");
 
-    if (found.photoUrl) {
-      await del(found.photoUrl);
-    }
-    if (found.posterUrl) {
-      await del(found.posterUrl);
+    const blobsToDelete = [found.photoUrl, found.posterUrl].filter((u): u is string => Boolean(u));
+    const results = await Promise.allSettled(blobsToDelete.map((u) => del(u)));
+    for (const [i, r] of results.entries()) {
+      if (r.status === "rejected") {
+        console.warn("[action:deleteStep] blob delete failed", {
+          url: blobsToDelete[i],
+          error: r.reason,
+        });
+      }
     }
 
     await db.delete(step).where(eq(step.id, stepId));

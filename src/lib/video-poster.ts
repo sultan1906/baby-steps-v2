@@ -40,9 +40,14 @@ export async function generateVideoPoster(file: File): Promise<Blob | null> {
     video.addEventListener("seeked", () => {
       try {
         const canvas = document.createElement("canvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        if (!canvas.width || !canvas.height) {
+        // Cap the longest edge so 4K source clips don't blow up memory or
+        // produce unnecessarily large poster JPEGs (especially on iOS).
+        const MAX_EDGE = 1280;
+        const longest = Math.max(video.videoWidth, video.videoHeight);
+        const scale = longest > 0 ? Math.min(1, MAX_EDGE / longest) : 1;
+        canvas.width = Math.max(1, Math.round(video.videoWidth * scale));
+        canvas.height = Math.max(1, Math.round(video.videoHeight * scale));
+        if (!video.videoWidth || !video.videoHeight) {
           clearTimeout(timeout);
           finish(null);
           return;

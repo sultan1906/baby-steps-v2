@@ -130,6 +130,7 @@ async function uploadOne(
   try {
     // For videos, generate a poster thumbnail in parallel with the video upload
     // so the timeline shows a real frame instead of a white box on iOS Safari.
+    // Poster gen is best-effort — never let it block or fail the video upload.
     const posterPromise =
       item.mediaType === "video"
         ? generateVideoPoster(item.file).catch(() => null)
@@ -137,15 +138,20 @@ async function uploadOne(
 
     const fd = new FormData();
     fd.append("file", item.file);
-    const videoUploadPromise = fetch("/api/upload", {
+    const res = await fetch("/api/upload", {
       method: "POST",
       body: fd,
       signal: item.controller?.signal,
     });
-
-    const [posterBlob, res] = await Promise.all([posterPromise, videoUploadPromise]);
     if (!res.ok) throw new Error("Upload failed");
     const { url } = await res.json();
+
+    // Give the poster a brief grace period to finish, but don't stall the
+    // queue if a slow device hasn't decoded yet.
+    const posterBlob = await Promise.race<Blob | null>([
+      posterPromise,
+      new Promise((resolve) => setTimeout(() => resolve(null), 1500)),
+    ]);
 
     let posterUrl: string | undefined;
     if (posterBlob) {

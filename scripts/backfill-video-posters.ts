@@ -42,30 +42,41 @@ function runFfmpeg(input: string, output: string): Promise<void> {
   });
 }
 
+const FETCH_TIMEOUT_MS = 30_000;
+
 async function backfillOne(stepId: string, photoUrl: string, workDir: string): Promise<string> {
   const inputPath = join(workDir, `${stepId}.mp4`);
   const outputPath = join(workDir, `${stepId}.jpg`);
 
-  const res = await fetch(photoUrl);
-  if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-  await writeFile(inputPath, Buffer.from(await res.arrayBuffer()));
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    let res: Response;
+    try {
+      res = await fetch(photoUrl, { signal: controller.signal });
+    } finally {
+      clearTimeout(timer);
+    }
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    await writeFile(inputPath, Buffer.from(await res.arrayBuffer()));
 
-  await runFfmpeg(inputPath, outputPath);
+    await runFfmpeg(inputPath, outputPath);
 
-  const jpeg = await readFile(outputPath);
-  // Mirror the upload route's path scheme: memories/<userId>/posters/...
-  // We don't have userId here without a join, but the blob path is cosmetic
-  // since the public URL is what's stored. Use the step id for traceability.
-  const blob = await put(`memories/backfill/posters/${stepId}-${Date.now()}.jpg`, jpeg, {
-    access: "public",
-    contentType: "image/jpeg",
-    addRandomSuffix: true,
-  });
+    const jpeg = await readFile(outputPath);
+    // Mirror the upload route's path scheme: memories/<userId>/posters/...
+    // We don't have userId here without a join, but the blob path is cosmetic
+    // since the public URL is what's stored. Use the step id for traceability.
+    const blob = await put(`memories/backfill/posters/${stepId}-${Date.now()}.jpg`, jpeg, {
+      access: "public",
+      contentType: "image/jpeg",
+      addRandomSuffix: true,
+    });
 
-  await unlink(inputPath).catch(() => {});
-  await unlink(outputPath).catch(() => {});
-
-  return blob.url;
+    return blob.url;
+  } finally {
+    await unlink(inputPath).catch(() => {});
+    await unlink(outputPath).catch(() => {});
+  }
 }
 
 async function main() {
