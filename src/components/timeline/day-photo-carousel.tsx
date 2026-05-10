@@ -71,6 +71,7 @@ export function DayPhotoCarousel({ steps, onTap, onIndexChange }: DayPhotoCarous
                 <div className="relative aspect-square rounded-xl overflow-hidden bg-stone-100">
                   <video
                     src={step.photoUrl}
+                    poster={step.posterUrl ?? undefined}
                     preload="metadata"
                     playsInline
                     muted

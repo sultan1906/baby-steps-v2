@@ -88,6 +88,7 @@ function CardCarousel({
                 <>
                   <video
                     src={step.photoUrl}
+                    poster={step.posterUrl ?? undefined}
                     preload="metadata"
                     playsInline
                     muted

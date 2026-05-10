@@ -134,6 +134,7 @@ export const step = pgTable(
       .notNull()
       .references(() => baby.id, { onDelete: "cascade" }),
     photoUrl: text("photo_url"), // Vercel Blob CDN URL
+    posterUrl: text("poster_url"), // Video first-frame thumbnail (videos only)
     date: text("date").notNull(), // "YYYY-MM-DD"
     locationId: text("location_id").references(() => savedLocation.id, {
       onDelete: "set null",

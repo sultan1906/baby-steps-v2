@@ -144,7 +144,7 @@ export async function deleteStep(stepId: string) {
     const session = await getSession();
 
     const [found] = await db
-      .select({ id: step.id, photoUrl: step.photoUrl })
+      .select({ id: step.id, photoUrl: step.photoUrl, posterUrl: step.posterUrl })
       .from(step)
       .innerJoin(baby, eq(step.babyId, baby.id))
       .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
@@ -153,6 +153,9 @@ export async function deleteStep(stepId: string) {
 
     if (found.photoUrl) {
       await del(found.photoUrl);
+    }
+    if (found.posterUrl) {
+      await del(found.posterUrl);
     }
 
     await db.delete(step).where(eq(step.id, stepId));

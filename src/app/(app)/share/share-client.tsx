@@ -109,6 +109,7 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                     <>
                       <video
                         src={s.photoUrl}
+                        poster={s.posterUrl ?? undefined}
                         preload="metadata"
                         playsInline
                         muted

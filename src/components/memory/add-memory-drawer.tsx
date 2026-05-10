@@ -54,6 +54,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
         .map((item) => ({
           babyId: baby.id,
           photoUrl: item.preview,
+          posterUrl: item.posterUrl,
           date: item.date,
           isMajor: item.isMajor,
           locationId: item.locationId,

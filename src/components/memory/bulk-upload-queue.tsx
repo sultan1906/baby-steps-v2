@@ -6,6 +6,7 @@ import exifr from "exifr";
 import { format, parseISO, isBefore } from "date-fns";
 import type { UploadQueueItem } from "@/types";
 import { toast } from "sonner";
+import { generateVideoPoster } from "@/lib/video-poster";
 
 interface BulkUploadQueueProps {
   babyBirthdate: string;
@@ -127,15 +128,44 @@ async function uploadOne(
   onQueueChange: Dispatch<SetStateAction<UploadQueueItem[]>>
 ) {
   try {
+    // For videos, generate a poster thumbnail in parallel with the video upload
+    // so the timeline shows a real frame instead of a white box on iOS Safari.
+    const posterPromise =
+      item.mediaType === "video"
+        ? generateVideoPoster(item.file).catch(() => null)
+        : Promise.resolve(null);
+
     const fd = new FormData();
     fd.append("file", item.file);
-    const res = await fetch("/api/upload", {
+    const videoUploadPromise = fetch("/api/upload", {
       method: "POST",
       body: fd,
       signal: item.controller?.signal,
     });
+
+    const [posterBlob, res] = await Promise.all([posterPromise, videoUploadPromise]);
     if (!res.ok) throw new Error("Upload failed");
     const { url } = await res.json();
+
+    let posterUrl: string | undefined;
+    if (posterBlob) {
+      try {
+        const posterFd = new FormData();
+        posterFd.append("file", new File([posterBlob], "poster.jpg", { type: "image/jpeg" }));
+        const posterRes = await fetch("/api/upload?kind=poster", {
+          method: "POST",
+          body: posterFd,
+          signal: item.controller?.signal,
+        });
+        if (posterRes.ok) {
+          const data = await posterRes.json();
+          posterUrl = data.url as string;
+        }
+      } catch {
+        // Poster upload failure is non-fatal; the video still saves without one.
+      }
+    }
+
     onQueueChange((prev) =>
       prev.map((i) =>
         i.id === item.id
@@ -143,6 +173,7 @@ async function uploadOne(
               ...i,
               status: "done",
               preview: url,
+              posterUrl,
               progress: 100,
               objectUrl: undefined,
               controller: undefined,

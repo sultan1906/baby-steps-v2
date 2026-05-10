@@ -365,6 +365,7 @@ export function StoryViewModal({
                       <video
                         ref={videoRef}
                         src={currentStep.photoUrl}
+                        poster={currentStep.posterUrl ?? undefined}
                         autoPlay
                         muted={isVideoMuted}
                         loop

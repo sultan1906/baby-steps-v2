@@ -30,7 +30,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `File type ${file.type} is not allowed` }, { status: 400 });
   }
 
-  const pathname = `memories/${session.user.id}/${Date.now()}-${file.name}`;
+  const kind = request.nextUrl.searchParams.get("kind");
+  const subdir = kind === "poster" ? "posters/" : "";
+  const pathname = `memories/${session.user.id}/${subdir}${Date.now()}-${file.name}`;
 
   const blob = await put(pathname, file, {
     access: "public",

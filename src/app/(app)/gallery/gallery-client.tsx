@@ -267,6 +267,7 @@ export function GalleryClient({
                       <>
                         <video
                           src={s.photoUrl}
+                          poster={s.posterUrl ?? undefined}
                           preload="metadata"
                           playsInline
                           muted
@@ -489,6 +490,7 @@ export function GalleryClient({
                     s.type === "video" ? (
                       <video
                         src={s.photoUrl}
+                        poster={s.posterUrl ?? undefined}
                         preload="metadata"
                         playsInline
                         muted
@@ -575,6 +577,7 @@ export function GalleryClient({
                         <>
                           <video
                             src={s.photoUrl}
+                            poster={s.posterUrl ?? undefined}
                             preload="metadata"
                             playsInline
                             muted
@@ -630,6 +633,7 @@ export function GalleryClient({
                           <>
                             <video
                               src={s.photoUrl}
+                              poster={s.posterUrl ?? undefined}
                               preload="metadata"
                               playsInline
                               muted

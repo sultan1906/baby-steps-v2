@@ -1,0 +1,1 @@
+ALTER TABLE "step" ADD COLUMN "poster_url" text;
