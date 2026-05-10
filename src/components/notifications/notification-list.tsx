@@ -48,10 +48,14 @@ export function NotificationList({ items, loading, onItemClick }: NotificationLi
           .join("")
           .toUpperCase();
 
+        const params = new URLSearchParams({ babyId: n.babyId });
+        if (n.stepId) params.set("stepId", n.stepId);
+        const href = `/following/${n.actor.id}?${params.toString()}`;
+
         return (
           <li key={n.id}>
             <Link
-              href="/following"
+              href={href}
               onClick={onItemClick}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 hover:bg-muted/40 active:bg-muted/60 transition-colors border-b border-stone-100/70 last:border-b-0",

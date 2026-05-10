@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { parseISO } from "date-fns";
 import { CalendarX2 } from "lucide-react";
 import { FollowedTimelineHeader } from "./followed-timeline-header";
@@ -34,8 +35,12 @@ export function FollowedTimelineClient({
   const [activeMonth, setActiveMonth] = useState(currentAgeMonths);
 
   const monthRefs = useRef(new Map<number, HTMLElement>());
+  const dayRefs = useRef(new Map<string, HTMLElement>());
   const isScrollingTo = useRef(false);
   const scrollingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const searchParams = useSearchParams();
+  const focusStepId = searchParams.get("stepId");
+  const handledFocusRef = useRef<string | null>(null);
 
   const monthSections = useMemo(() => {
     const bd = parseISO(baby.birthdate);
@@ -105,6 +110,25 @@ export function FollowedTimelineClient({
     };
   }, []);
 
+  // Deep-link: scroll to the focused step's day (do not open the story modal).
+  useEffect(() => {
+    if (!focusStepId) return;
+    if (handledFocusRef.current === focusStepId) return;
+    const target = steps.find((s) => s.id === focusStepId);
+    if (!target) return;
+    handledFocusRef.current = focusStepId;
+    requestAnimationFrame(() => {
+      const el = dayRefs.current.get(target.date);
+      if (!el) return;
+      isScrollingTo.current = true;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (scrollingTimerRef.current) clearTimeout(scrollingTimerRef.current);
+      scrollingTimerRef.current = setTimeout(() => {
+        isScrollingTo.current = false;
+      }, 800);
+    });
+  }, [focusStepId, steps]);
+
   const openStory = (date: string, daySteps: Step[]) => {
     setStoryDate(date);
     setStorySteps(daySteps);
@@ -153,16 +177,25 @@ export function FollowedTimelineClient({
             >
               <MonthDivider monthIndex={section.monthIndex} birthdate={baby.birthdate} />
               {section.dayGroups.map(([date, daySteps], i) => (
-                <TimelineDayEntry
+                <div
                   key={date}
-                  date={date}
-                  steps={daySteps}
-                  birthdate={baby.birthdate}
-                  isFirst={i === 0}
-                  isLast={i === section.dayGroups.length - 1}
-                  readOnly
-                  onOpenStory={openStory}
-                />
+                  ref={(el) => {
+                    if (el) dayRefs.current.set(date, el);
+                    else dayRefs.current.delete(date);
+                  }}
+                  data-day={date}
+                  style={{ scrollMarginTop: 120 }}
+                >
+                  <TimelineDayEntry
+                    date={date}
+                    steps={daySteps}
+                    birthdate={baby.birthdate}
+                    isFirst={i === 0}
+                    isLast={i === section.dayGroups.length - 1}
+                    readOnly
+                    onOpenStory={openStory}
+                  />
+                </div>
               ))}
             </section>
           ))
