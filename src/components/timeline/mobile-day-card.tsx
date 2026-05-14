@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { parseISO, differenceInCalendarMonths } from "date-fns";
 import { MoreHorizontal, Plus, Play, Eye, Trash2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { getDayNumber, getMonthPillLabel } from "@/lib/date-utils";
 import { deleteStep } from "@/actions/steps";
 import { toast } from "sonner";
@@ -82,7 +82,7 @@ function CardCarousel({
         className="absolute inset-0 flex overflow-x-auto snap-x snap-mandatory scrollbar-hide"
       >
         {steps.map((step) => (
-          <div key={step.id} className="snap-center flex-shrink-0 w-full h-full relative">
+          <div key={step.id} className="snap-center flex-shrink-0 size-full relative">
             {step.photoUrl ? (
               step.type === "video" ? (
                 <>
@@ -92,11 +92,11 @@ function CardCarousel({
                     preload="metadata"
                     playsInline
                     muted
-                    className="w-full h-full object-cover"
+                    className="size-full object-cover"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-12 h-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
-                      <Play className="w-5 h-5 text-white fill-white ml-0.5" />
+                    <div className="size-12 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
+                      <Play className="size-5 text-white fill-white ml-0.5" />
                     </div>
                   </div>
                 </>
@@ -110,7 +110,7 @@ function CardCarousel({
                 />
               )
             ) : (
-              <div className="w-full h-full gradient-bg" />
+              <div className="size-full gradient-bg" />
             )}
           </div>
         ))}
@@ -119,10 +119,10 @@ function CardCarousel({
       {/* Dot indicators */}
       {steps.length > 1 && (
         <div className="absolute bottom-3 right-14 flex gap-1.5 z-10">
-          {steps.map((_, i) => (
+          {steps.map((s, i) => (
             <div
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+              key={s.id}
+              className={`size-1.5 rounded-full transition-all duration-200 ${
                 i === activeIndex ? "bg-white w-3" : "bg-white/50"
               }`}
             />
@@ -140,7 +140,7 @@ export function MobileDayCard({
   readOnly,
   onOpenStory,
 }: MobileDayCardProps) {
-  const router = useRouter();
+  const { refresh } = useRouter();
   const [activeIndex, setActiveIndex] = useState(0);
   const birthdateDate = parseISO(birthdate);
   const dateDate = parseISO(date);
@@ -156,7 +156,7 @@ export function MobileDayCard({
   // Empty state card (no media)
   if (!hasMedia) {
     return (
-      <motion.div
+      <m.div
         className="mb-4"
         initial={{ opacity: 0, y: 16 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -180,8 +180,8 @@ export function MobileDayCard({
                 onClick={() => onOpenStory(date, steps)}
                 className="mt-3 flex items-center gap-2 text-sm text-stone-400"
               >
-                <div className="w-7 h-7 rounded-full gradient-bg flex items-center justify-center">
-                  <Plus className="w-3.5 h-3.5 text-white" />
+                <div className="size-7 rounded-full gradient-bg flex items-center justify-center">
+                  <Plus className="size-3.5 text-white" />
                 </div>
                 Tap to add a memory
               </button>
@@ -196,24 +196,24 @@ export function MobileDayCard({
                 aria-label="Day actions"
                 className="p-1 text-stone-400 hover:text-stone-600 transition-colors rounded-full bg-white/80 backdrop-blur-sm"
               >
-                <MoreHorizontal className="w-4 h-4" />
+                <MoreHorizontal className="size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="bottom">
                 <DropdownMenuItem onClick={() => onOpenStory(date, steps)}>
-                  <Eye className="w-4 h-4 mr-2" />
+                  <Eye className="size-4 mr-2" />
                   View day
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </div>
-      </motion.div>
+      </m.div>
     );
   }
 
   // Photo card
   return (
-    <motion.div
+    <m.div
       className="mb-4"
       initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -237,11 +237,11 @@ export function MobileDayCard({
               aria-label="Day actions"
               className="p-1.5 text-white/80 hover:text-white transition-colors rounded-full bg-black/20 backdrop-blur-sm"
             >
-              <MoreHorizontal className="w-4 h-4" />
+              <MoreHorizontal className="size-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" side="bottom">
               <DropdownMenuItem onClick={() => onOpenStory(date, steps)}>
-                <Eye className="w-4 h-4 mr-2" />
+                <Eye className="size-4 mr-2" />
                 View day
               </DropdownMenuItem>
               {canDelete && (
@@ -251,13 +251,13 @@ export function MobileDayCard({
                     try {
                       await deleteStep(activeStep.id);
                       toast.success("Photo deleted");
-                      router.refresh();
+                      refresh();
                     } catch {
                       toast.error("Failed to delete photo");
                     }
                   }}
                 >
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="size-4 mr-2" />
                   Delete photo
                 </DropdownMenuItem>
               )}
@@ -276,6 +276,6 @@ export function MobileDayCard({
           )}
         </div>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

@@ -228,6 +228,8 @@ export function TimelineClient({ steps, baby }: TimelineClientProps) {
           <>
             {/* Scrub overlay on the green line area — pointer-events only for scrub gestures */}
             <div
+              aria-hidden="true"
+              role="presentation"
               className="absolute left-0 top-0 bottom-0 w-14 z-20 cursor-grab active:cursor-grabbing"
               style={{ touchAction: "none" }}
               onTouchStart={onScrubStart}

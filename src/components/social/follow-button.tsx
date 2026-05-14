@@ -48,7 +48,7 @@ export function FollowButton({
           className
         )}
       >
-        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+        <Loader2 className="size-3.5 animate-spin" />
       </button>
     );
   }
@@ -69,7 +69,7 @@ export function FollowButton({
         className
       )}
     >
-      <UserCheck className="w-3.5 h-3.5" />
+      <UserCheck className="size-3.5" />
       {hovering ? "Unfollow" : "Following"}
     </button>
   );

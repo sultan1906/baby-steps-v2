@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function SettingsPage() {
-  const router = useRouter();
+  const { push, refresh } = useRouter();
   const ctx = useBabyOptional();
   const baby = ctx?.baby ?? null;
   const babies = ctx?.babies ?? [];
@@ -44,6 +44,10 @@ export default function SettingsPage() {
   const [birthdate, setBirthdate] = useState(baby?.birthdate ?? "");
   const [photoPreview, setPhotoPreview] = useState<string | null>(baby?.photoUrl ?? null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [maxBirthdate, setMaxBirthdate] = useState<string>("");
+  useEffect(() => {
+    setMaxBirthdate(new Date().toISOString().split("T")[0]);
+  }, []);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -107,7 +111,7 @@ export default function SettingsPage() {
 
   const handleSwitchBaby = async (babyId: string) => {
     await switchBaby(babyId);
-    router.refresh();
+    refresh();
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -144,7 +148,7 @@ export default function SettingsPage() {
       setSaved(true);
       setPhotoFile(null);
       setTimeout(() => setSaved(false), 2000);
-      router.refresh();
+      refresh();
     } catch {
       toast.error("Failed to save changes");
     } finally {
@@ -157,7 +161,7 @@ export default function SettingsPage() {
     setDeleting(true);
     try {
       await deleteBaby(baby.id);
-      router.push("/following");
+      push("/following");
     } finally {
       setDeleting(false);
     }
@@ -199,7 +203,7 @@ export default function SettingsPage() {
       setParentPhotoFile(null);
       setParentSaved(true);
       setTimeout(() => setParentSaved(false), 2000);
-      router.refresh();
+      refresh();
     } catch {
       toast.error("Failed to save profile");
     } finally {
@@ -209,7 +213,7 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     await authClient.signOut();
-    router.push("/auth");
+    push("/auth");
   };
 
   return (
@@ -218,7 +222,7 @@ export default function SettingsPage() {
       <div className="sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-stone-100/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <BackButton />
-          <h1 className="font-bold text-stone-800 text-lg">Settings</h1>
+          <h1 className="font-semibold text-stone-800 text-lg">Settings</h1>
         </div>
       </div>
 
@@ -226,24 +230,24 @@ export default function SettingsPage() {
         {/* My Profile Card */}
         <div className="premium-card p-6">
           <div className="flex items-center gap-2 mb-5">
-            <User className="w-5 h-5 text-rose-500" />
-            <h2 className="font-bold text-stone-800">My Profile</h2>
+            <User className="size-5 text-rose-500" />
+            <h2 className="font-semibold text-stone-800">My Profile</h2>
           </div>
 
           {/* Avatar editor */}
           <div className="flex justify-center mb-6">
             <div className="relative">
-              <div className="w-28 h-28 rounded-full overflow-hidden ring-4 ring-stone-50 shadow-lg">
+              <div className="size-28 rounded-full overflow-hidden ring-4 ring-stone-50 shadow-lg">
                 {parentPhotoPreview ? (
                   <Image
                     src={parentPhotoPreview}
                     alt={parentName || "Profile"}
                     width={112}
                     height={112}
-                    className="object-cover w-full h-full"
+                    className="object-cover size-full"
                   />
                 ) : (
-                  <div className="w-full h-full gradient-bg flex items-center justify-center text-white font-bold text-3xl">
+                  <div className="size-full gradient-bg flex items-center justify-center text-white font-bold text-3xl">
                     {parentName?.[0]?.toUpperCase() ?? "?"}
                   </div>
                 )}
@@ -251,9 +255,9 @@ export default function SettingsPage() {
               <button
                 type="button"
                 onClick={() => parentFileRef.current?.click()}
-                className="absolute bottom-0 right-0 w-8 h-8 gradient-bg-vibrant rounded-full flex items-center justify-center border-2 border-white shadow-md"
+                className="absolute bottom-0 right-0 size-8 gradient-bg-vibrant rounded-full flex items-center justify-center border-2 border-white shadow-md"
               >
-                <Camera className="w-3.5 h-3.5 text-white" />
+                <Camera className="size-3.5 text-white" />
               </button>
               <input
                 ref={parentFileRef}
@@ -310,7 +314,7 @@ export default function SettingsPage() {
                 Location
               </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+                <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-stone-400" />
                 <input
                   id="settings-parent-location"
                   type="text"
@@ -331,7 +335,7 @@ export default function SettingsPage() {
             className="w-full mt-5 gradient-bg-vibrant text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition"
           >
             {parentSaving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="size-4 animate-spin" />
             ) : parentSaved ? (
               "Saved ✓"
             ) : (
@@ -344,24 +348,24 @@ export default function SettingsPage() {
         {baby && (
           <div className="premium-card p-6">
             <div className="flex items-center gap-2 mb-5">
-              <Heart className="w-5 h-5 text-rose-500" />
-              <h2 className="font-bold text-stone-800">Baby Profile</h2>
+              <Heart className="size-5 text-rose-500" />
+              <h2 className="font-semibold text-stone-800">Baby Profile</h2>
             </div>
 
             {/* Avatar editor */}
             <div className="flex justify-center mb-6">
               <label className="relative cursor-pointer group">
-                <div className="w-32 h-32 rounded-[2.5rem] overflow-hidden ring-4 ring-stone-50 shadow-lg">
+                <div className="size-32 rounded-[2.5rem] overflow-hidden ring-4 ring-stone-50 shadow-lg">
                   {photoPreview ? (
                     <Image
                       src={photoPreview}
                       alt={baby.name}
                       width={128}
                       height={128}
-                      className="object-cover w-full h-full"
+                      className="object-cover size-full"
                     />
                   ) : (
-                    <div className="w-full h-full gradient-bg flex items-center justify-center text-white font-bold text-4xl">
+                    <div className="size-full gradient-bg flex items-center justify-center text-white font-bold text-4xl">
                       {baby.name[0]?.toUpperCase()}
                     </div>
                   )}
@@ -369,11 +373,11 @@ export default function SettingsPage() {
                 <div
                   role="button"
                   tabIndex={0}
-                  className="absolute bottom-0 right-0 w-9 h-9 gradient-bg-vibrant rounded-2xl flex items-center justify-center border-2 border-white shadow-md"
+                  className="absolute bottom-0 right-0 size-9 gradient-bg-vibrant rounded-2xl flex items-center justify-center border-2 border-white shadow-md"
                   onClick={() => fileRef.current?.click()}
                   onKeyDown={(e) => e.key === "Enter" && fileRef.current?.click()}
                 >
-                  <Camera className="w-4 h-4 text-white" />
+                  <Camera className="size-4 text-white" />
                 </div>
                 <input
                   ref={fileRef}
@@ -413,7 +417,7 @@ export default function SettingsPage() {
                   id="settings-birth-date"
                   type="date"
                   value={birthdate}
-                  max={new Date().toISOString().split("T")[0]}
+                  max={maxBirthdate || undefined}
                   onChange={(e) => setBirthdate(e.target.value)}
                   className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-700 focus:outline-none focus:ring-2 focus:ring-rose-300"
                 />
@@ -428,7 +432,7 @@ export default function SettingsPage() {
                 className="flex-1 gradient-bg-vibrant text-white font-bold py-3 rounded-2xl flex items-center justify-center gap-2 disabled:opacity-50 transition"
               >
                 {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="size-4 animate-spin" />
                 ) : saved ? (
                   "Saved ✓"
                 ) : (
@@ -438,7 +442,7 @@ export default function SettingsPage() {
 
               <AlertDialog>
                 <AlertDialogTrigger className="flex items-center gap-2 px-4 py-3 bg-stone-50 text-stone-600 rounded-2xl border border-stone-200 hover:bg-rose-50 hover:text-rose-500 hover:border-rose-200 transition-colors text-sm font-medium">
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="size-4" />
                   Delete
                 </AlertDialogTrigger>
                 <AlertDialogContent className="rounded-3xl">
@@ -457,7 +461,7 @@ export default function SettingsPage() {
                       disabled={deleting}
                       className="px-4 py-2 rounded-xl bg-red-500 text-white font-bold hover:bg-red-600 transition-colors flex items-center gap-2"
                     >
-                      {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Delete"}
+                      {deleting ? <Loader2 className="size-4 animate-spin" /> : "Delete"}
                     </button>
                   </AlertDialogFooter>
                 </AlertDialogContent>
@@ -469,8 +473,8 @@ export default function SettingsPage() {
         {/* Your Babies Card */}
         <div className="premium-card p-6">
           <div className="flex items-center gap-2 mb-4">
-            <BabyIcon className="w-5 h-5 text-rose-400" />
-            <h2 className="font-bold text-stone-800">Your Babies</h2>
+            <BabyIcon className="size-5 text-rose-400" />
+            <h2 className="font-semibold text-stone-800">Your Babies</h2>
           </div>
 
           {babies.length > 0 ? (
@@ -483,7 +487,7 @@ export default function SettingsPage() {
                 >
                   <BabyAvatar name={b.name} photoUrl={b.photoUrl} size={32} />
                   <span className="flex-1 text-left text-stone-700 font-medium ml-3">{b.name}</span>
-                  {baby && b.id === baby.id && <Check className="w-4 h-4 text-rose-500" />}
+                  {baby && b.id === baby.id && <Check className="size-4 text-rose-500" />}
                 </button>
               ))}
             </div>
@@ -497,30 +501,30 @@ export default function SettingsPage() {
         {/* Account Card */}
         <div className="premium-card p-6 mb-8">
           <div className="flex items-center gap-2 mb-4">
-            <User className="w-5 h-5 text-stone-400" />
-            <h2 className="font-bold text-stone-800">Account</h2>
+            <User className="size-5 text-stone-400" />
+            <h2 className="font-semibold text-stone-800">Account</h2>
           </div>
 
           {/* Menu rows */}
           <div className="divide-y divide-stone-100">
             <div className="flex items-center py-3 cursor-pointer hover:bg-stone-50 rounded-xl px-2 -mx-2 transition-colors">
-              <div className="w-8 h-8 rounded-xl bg-amber-100 flex items-center justify-center mr-3">
-                <Bell className="w-4 h-4 text-amber-500" />
+              <div className="size-8 rounded-xl bg-amber-100 flex items-center justify-center mr-3">
+                <Bell className="size-4 text-amber-500" />
               </div>
               <span className="flex-1 text-stone-700 font-medium">Notifications</span>
-              <ChevronRight className="w-4 h-4 text-stone-400" />
+              <ChevronRight className="size-4 text-stone-400" />
             </div>
             <button
-              onClick={() => router.push("/settings/privacy")}
+              onClick={() => push("/settings/privacy")}
               className="flex items-center w-full py-3 cursor-pointer hover:bg-stone-50 rounded-xl px-2 -mx-2 transition-colors"
             >
-              <div className="w-8 h-8 rounded-xl bg-blue-100 flex items-center justify-center mr-3">
-                <Shield className="w-4 h-4 text-blue-500" />
+              <div className="size-8 rounded-xl bg-blue-100 flex items-center justify-center mr-3">
+                <Shield className="size-4 text-blue-500" />
               </div>
               <span className="flex-1 text-left text-stone-700 font-medium">
                 Privacy & Security
               </span>
-              <ChevronRight className="w-4 h-4 text-stone-400" />
+              <ChevronRight className="size-4 text-stone-400" />
             </button>
           </div>
 
@@ -529,7 +533,7 @@ export default function SettingsPage() {
             onClick={handleLogout}
             className="w-full mt-4 flex items-center justify-center gap-2 py-4 border-2 border-dashed border-stone-200 rounded-2xl text-stone-600 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50 transition-colors font-medium"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="size-4" />
             Logout from Babysteps
           </button>
         </div>

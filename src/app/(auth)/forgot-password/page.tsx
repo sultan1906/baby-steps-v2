@@ -33,10 +33,10 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-stone-100/50 text-center">
-        <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center mx-auto mb-6">
-          <MailCheck className="w-8 h-8 text-rose-500" />
+        <div className="size-16 rounded-full bg-rose-50 flex items-center justify-center mx-auto mb-6">
+          <MailCheck className="size-8 text-rose-500" />
         </div>
-        <h2 className="text-xl font-bold text-stone-800 mb-2">Reset link sent</h2>
+        <h2 className="text-xl font-semibold text-stone-800 mb-2">Reset link sent</h2>
         <p className="text-stone-500 text-sm">
           Check your inbox at <span className="font-medium text-stone-700">{email}</span> for the
           reset link.
@@ -53,18 +53,18 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-stone-100/50 relative">
-      <a
+      <Link
         href="/auth"
-        className="absolute top-6 left-6 w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors"
+        className="absolute top-6 left-6 size-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
-      </a>
+        <ArrowLeft className="size-4" />
+      </Link>
 
-      <div className="w-14 h-14 rounded-full gradient-bg flex items-center justify-center mx-auto mb-6 mt-4">
-        <Mail className="w-7 h-7 text-white" />
+      <div className="size-14 rounded-full gradient-bg flex items-center justify-center mx-auto mb-6 mt-4">
+        <Mail className="size-7 text-white" />
       </div>
 
-      <h1 className="text-2xl font-bold text-stone-800 text-center mb-1">Forgot Password?</h1>
+      <h1 className="text-2xl font-semibold text-stone-800 text-center mb-1">Forgot Password?</h1>
       <p className="text-stone-400 text-sm text-center mb-6 leading-relaxed">
         Enter your email and we&apos;ll send you a link to reset your password.
       </p>
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div className="relative">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-stone-400" />
           <input
             type="email"
             placeholder="Email address"
@@ -89,7 +89,7 @@ export default function ForgotPasswordPage() {
           disabled={loading}
           className="gradient-bg-vibrant text-white font-bold py-3.5 rounded-[1.75rem] flex items-center justify-center gap-2 mt-1 disabled:opacity-70 transition"
         >
-          {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Send Reset Link"}
+          {loading ? <Loader2 className="size-5 animate-spin" /> : "Send Reset Link"}
         </button>
       </form>
     </div>

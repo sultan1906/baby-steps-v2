@@ -29,11 +29,11 @@ export function FollowedTimelineHeader({
   baby,
   babies,
 }: FollowedTimelineHeaderProps) {
-  const router = useRouter();
+  const { push } = useRouter();
   const ageLabel = getAgeLabel(parseISO(baby.birthdate));
 
   const handleSwitchBaby = (babyId: string) => {
-    router.push(`/following/${userId}?babyId=${babyId}`);
+    push(`/following/${userId}?babyId=${babyId}`);
   };
 
   return (
@@ -42,16 +42,16 @@ export function FollowedTimelineHeader({
         {/* Left: Back + User info */}
         <div className="flex items-center gap-3">
           <button
-            onClick={() => router.push("/following")}
-            className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-600 hover:bg-stone-200 transition-colors"
+            onClick={() => push("/following")}
+            className="size-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-600 hover:bg-stone-200 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="size-4" />
           </button>
           <UserAvatar name={userName} image={userImage} size={32} />
           <div>
             <div className="font-bold text-stone-800 leading-tight text-sm">{userName}</div>
             <div className="flex items-center gap-1 text-xs text-stone-400">
-              <Eye className="w-3 h-3" />
+              <Eye className="size-3" />
               <span>Viewing as follower</span>
             </div>
           </div>
@@ -69,7 +69,7 @@ export function FollowedTimelineHeader({
                 <div className="text-sm font-medium text-stone-700">{baby.name}</div>
                 <div className="text-xs text-stone-400">{ageLabel}</div>
               </div>
-              <ChevronDown className="w-3 h-3 text-stone-400" />
+              <ChevronDown className="size-3 text-stone-400" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52 rounded-2xl p-1">
               {babies.map((b) => (
@@ -80,7 +80,7 @@ export function FollowedTimelineHeader({
                 >
                   <BabyAvatar name={b.name} photoUrl={b.photoUrl} size={32} />
                   <span className="flex-1 font-medium text-stone-800">{b.name}</span>
-                  {b.id === baby.id && <Check className="w-4 h-4 text-rose-500" />}
+                  {b.id === baby.id && <Check className="size-4 text-rose-500" />}
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>

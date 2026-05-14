@@ -32,30 +32,32 @@ export async function POST(request: NextRequest) {
 
   const babyId = crypto.randomUUID();
 
-  const [[newBaby]] = await db.batch([
-    db
-      .insert(baby)
-      .values({
-        id: babyId,
-        userId: session.user.id,
-        name: data.name,
-        birthdate: data.birthdate,
-        photoUrl: data.photoUrl,
-      })
-      .returning(),
-    // Auto-create "Arrival" milestone step
-    db.insert(step).values({
-      babyId,
-      date: data.birthdate,
-      isMajor: true,
-      type: "milestone",
-      title: "Arrival",
-      caption: "The journey begins today.",
-    }),
+  const [[[newBaby]], cookieStore] = await Promise.all([
+    db.batch([
+      db
+        .insert(baby)
+        .values({
+          id: babyId,
+          userId: session.user.id,
+          name: data.name,
+          birthdate: data.birthdate,
+          photoUrl: data.photoUrl,
+        })
+        .returning(),
+      // Auto-create "Arrival" milestone step
+      db.insert(step).values({
+        babyId,
+        date: data.birthdate,
+        isMajor: true,
+        type: "milestone",
+        title: "Arrival",
+        caption: "The journey begins today.",
+      }),
+    ]),
+    cookies(),
   ]);
 
   // Set current baby cookie
-  const cookieStore = await cookies();
   const { name, value, options } = currentBabyCookieConfig(newBaby.id);
   cookieStore.set(name, value, options);
 

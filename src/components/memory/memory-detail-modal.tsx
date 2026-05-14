@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { X, MapPin, Calendar, Share2, Award, Play, Volume2, VolumeX } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import Image from "next/image";
 import { parseISO } from "date-fns";
 import { getDayNumber, formatMemoryDate } from "@/lib/date-utils";
@@ -59,14 +59,14 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
   return (
     <>
       <AnimatePresence>
-        <motion.div
+        <m.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 z-50 bg-stone-900/40 backdrop-blur-md flex items-center justify-center p-4"
           onClick={onClose}
         >
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
@@ -76,15 +76,28 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
             {/* Close button */}
             <button
               onClick={onClose}
-              className="absolute top-6 right-6 z-10 w-10 h-10 rounded-full bg-stone-50 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-colors"
+              className="absolute top-6 right-6 z-10 size-10 rounded-full bg-stone-50 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="size-5" />
             </button>
 
             {/* Photo/video area */}
             <div
               className="relative aspect-[4/3] overflow-hidden"
               onClick={isVideo ? handleVideoTap : undefined}
+              onKeyDown={
+                isVideo
+                  ? (e) => {
+                      if (e.key === " " || e.key === "Enter") {
+                        e.preventDefault();
+                        handleVideoTap();
+                      }
+                    }
+                  : undefined
+              }
+              role={isVideo ? "button" : undefined}
+              tabIndex={isVideo ? 0 : undefined}
+              aria-label={isVideo ? "Toggle video playback" : undefined}
             >
               {step.photoUrl ? (
                 step.type === "video" ? (
@@ -95,7 +108,7 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
                     muted={isVideoMuted}
                     loop
                     playsInline
-                    className="absolute inset-0 w-full h-full object-cover"
+                    className="absolute inset-0 size-full object-cover"
                   />
                 ) : (
                   <Image
@@ -107,7 +120,7 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
                   />
                 )
               ) : (
-                <div className="w-full h-full gradient-bg" />
+                <div className="size-full gradient-bg" />
               )}
               {/* Video indicators */}
               {isVideo && (
@@ -118,18 +131,14 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
                       e.stopPropagation();
                       toggleMute();
                     }}
-                    className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+                    className="absolute top-4 right-4 z-10 size-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
                   >
-                    {isVideoMuted ? (
-                      <VolumeX className="w-4 h-4" />
-                    ) : (
-                      <Volume2 className="w-4 h-4" />
-                    )}
+                    {isVideoMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
                   </button>
                   {isVideoPaused && (
                     <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                      <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
-                        <Play className="w-8 h-8 text-white fill-white ml-1" />
+                      <div className="size-16 rounded-full bg-black/40 flex items-center justify-center">
+                        <Play className="size-8 text-white fill-white ml-1" />
                       </div>
                     </div>
                   )}
@@ -145,7 +154,7 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
               {/* Milestone badge */}
               {step.isMajor && (
                 <div className="absolute bottom-4 right-6 bg-amber-100 text-amber-800 text-sm font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5">
-                  <Award className="w-3.5 h-3.5" />
+                  <Award className="size-3.5" />
                   Milestone
                 </div>
               )}
@@ -157,12 +166,12 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
               <div className="flex gap-2 flex-wrap mb-4">
                 {step.locationNickname && (
                   <div className="flex items-center gap-1.5 bg-stone-50 border border-stone-200 rounded-2xl px-3 py-1.5 text-sm text-stone-600">
-                    <MapPin className="w-3.5 h-3.5" />
+                    <MapPin className="size-3.5" />
                     {step.locationNickname}
                   </div>
                 )}
                 <div className="flex items-center gap-1.5 bg-stone-50 border border-stone-200 rounded-2xl px-3 py-1.5 text-sm text-stone-600">
-                  <Calendar className="w-3.5 h-3.5" />
+                  <Calendar className="size-3.5" />
                   {dateLabel}
                 </div>
               </div>
@@ -197,13 +206,13 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
                   onClick={handleShare}
                   className="flex-1 gradient-bg-vibrant py-3.5 rounded-2xl text-white font-bold flex items-center justify-center gap-2"
                 >
-                  <Share2 className="w-4 h-4" />
+                  <Share2 className="size-4" />
                   Share Memory
                 </button>
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </AnimatePresence>
     </>
   );

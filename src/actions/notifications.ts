@@ -37,6 +37,9 @@ export async function fanoutPhotoNotifications(args: {
   babyId: string;
   steps: Pick<Step, "id" | "photoUrl">[];
 }) {
+  const session = await getSession();
+  if (session.user.id !== args.actorId) throw new UserError("Unauthorized");
+
   const photoSteps = args.steps.filter((s) => !!s.photoUrl);
   if (photoSteps.length === 0) return;
 

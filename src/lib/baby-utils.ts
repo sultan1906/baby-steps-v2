@@ -18,13 +18,10 @@ async function getCurrentBabyId(): Promise<string | null> {
  * Prefers the baby stored in the cookie; falls back to the most recently created baby.
  */
 export async function getCurrentBaby(userId: string) {
-  const babyId = await getCurrentBabyId();
-
-  const babies = await db
-    .select()
-    .from(baby)
-    .where(eq(baby.userId, userId))
-    .orderBy(desc(baby.createdAt));
+  const [babyId, babies] = await Promise.all([
+    getCurrentBabyId(),
+    db.select().from(baby).where(eq(baby.userId, userId)).orderBy(desc(baby.createdAt)),
+  ]);
 
   if (babies.length === 0) return null;
   if (!babyId) return babies[0];

@@ -72,7 +72,7 @@ export function NotificationBell() {
         onClick={() => handleOpenChange(true)}
         className={cn(
           "fixed top-3 right-3 z-50",
-          "w-10 h-10 rounded-full bg-white/85 backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.06)]",
+          "size-10 rounded-full bg-white/85 backdrop-blur-md shadow-[0_2px_10px_rgba(0,0,0,0.06)]",
           "border border-stone-200/70",
           "flex items-center justify-center",
           "hover:bg-white active:scale-95 transition",
@@ -80,7 +80,7 @@ export function NotificationBell() {
         )}
         style={{ marginTop: "env(safe-area-inset-top)" }}
       >
-        <Bell className="w-5 h-5 text-stone-700" />
+        <Bell className="size-5 text-stone-700" />
         {unread > 0 && (
           <span
             className={cn(

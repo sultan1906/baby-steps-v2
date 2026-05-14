@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { MoreVertical, Pencil, Trash2 } from "lucide-react";
 import {
   DropdownMenu,
@@ -19,10 +19,10 @@ interface AlbumFolderCardProps {
 }
 
 export function AlbumFolderCard({ album, onRename, onDelete }: AlbumFolderCardProps) {
-  const router = useRouter();
+  const { push } = useRouter();
 
   return (
-    <motion.div
+    <m.div
       variants={{
         hidden: { opacity: 0, scale: 0.92 },
         visible: { opacity: 1, scale: 1 },
@@ -35,7 +35,7 @@ export function AlbumFolderCard({ album, onRename, onDelete }: AlbumFolderCardPr
 
       <button
         type="button"
-        onClick={() => router.push(`/gallery?album=${album.id}`)}
+        onClick={() => push(`/gallery?album=${album.id}`)}
         className="relative w-full aspect-square rounded-2xl overflow-hidden bg-white border border-stone-100 shadow-sm hover:shadow-md transition cursor-pointer text-left"
       >
         <div className="absolute inset-0">
@@ -48,7 +48,7 @@ export function AlbumFolderCard({ album, onRename, onDelete }: AlbumFolderCardPr
               className="object-cover group-hover:scale-105 transition-transform duration-500"
             />
           ) : (
-            <div className="w-full h-full gradient-bg" />
+            <div className="size-full gradient-bg" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
         </div>
@@ -64,22 +64,22 @@ export function AlbumFolderCard({ album, onRename, onDelete }: AlbumFolderCardPr
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label="Album actions"
-          className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-white/90 hover:bg-white text-stone-600 shadow flex items-center justify-center backdrop-blur-sm"
+          className="absolute top-1.5 right-1.5 size-7 rounded-full bg-white/90 hover:bg-white text-stone-600 shadow flex items-center justify-center backdrop-blur-sm"
           onClick={(e) => e.stopPropagation()}
         >
-          <MoreVertical className="w-3.5 h-3.5" />
+          <MoreVertical className="size-3.5" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" sideOffset={6}>
           <DropdownMenuItem onClick={() => onRename(album)}>
-            <Pencil className="w-4 h-4" />
+            <Pencil className="size-4" />
             Rename
           </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={() => onDelete(album)}>
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="size-4" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-    </motion.div>
+    </m.div>
   );
 }

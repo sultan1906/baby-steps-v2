@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans } from "next/font/google";
 import "./globals.css";
+import { MotionProvider } from "@/components/shared/motion-provider";
 
 const notoSans = Noto_Sans({
   variable: "--font-sans",
@@ -33,7 +34,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={notoSans.variable}>
-      <body className="antialiased font-sans">{children}</body>
+      <body className="antialiased font-sans">
+        <MotionProvider>{children}</MotionProvider>
+      </body>
     </html>
   );
 }

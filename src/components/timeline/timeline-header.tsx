@@ -48,16 +48,16 @@ export function TimelineHeader() {
             href="/gallery"
             className="hidden md:block text-stone-400 hover:text-rose-500 transition-colors"
           >
-            <Images className="w-5 h-5" />
+            <Images className="size-5" />
           </Link>
           <Link href="/share" className="text-stone-400 hover:text-rose-500 transition-colors">
-            <Share2 className="w-5 h-5" />
+            <Share2 className="size-5" />
           </Link>
           <Link
             href="/dashboard"
             className="hidden md:block text-stone-400 hover:text-rose-500 transition-colors"
           >
-            <BarChart2 className="w-5 h-5" />
+            <BarChart2 className="size-5" />
           </Link>
           <Link
             href="/following"
@@ -66,15 +66,15 @@ export function TimelineHeader() {
             }
             className="text-stone-400 hover:text-rose-500 transition-colors relative"
           >
-            <Users className="w-5 h-5" />
+            <Users className="size-5" />
             {pendingInviteCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 gradient-bg-vibrant rounded-full text-white text-[9px] font-bold flex items-center justify-center">
+              <span className="absolute -top-1.5 -right-1.5 size-4 gradient-bg-vibrant rounded-full text-white text-[9px] font-bold flex items-center justify-center">
                 {pendingInviteCount > 9 ? "9+" : pendingInviteCount}
               </span>
             )}
           </Link>
           <Link href="/settings" className="text-stone-400 hover:text-rose-500 transition-colors">
-            <Settings className="w-5 h-5" />
+            <Settings className="size-5" />
           </Link>
         </div>
       </div>

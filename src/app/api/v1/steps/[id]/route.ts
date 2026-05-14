@@ -10,8 +10,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const { session, error } = await getApiSession();
   if (error) return error;
 
-  const { id: stepId } = await params;
-  const data = await request.json();
+  const [{ id: stepId }, data] = await Promise.all([params, request.json()]);
 
   const [found] = await db
     .select({ id: step.id })

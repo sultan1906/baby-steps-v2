@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { m, useScroll, useTransform, useInView } from "framer-motion";
 import {
   ArrowRight,
   Camera,
@@ -112,77 +112,77 @@ function HeroSection() {
       className="relative min-h-svh flex flex-col items-center justify-center overflow-hidden px-6"
     >
       {/* parallax gradient blobs */}
-      <motion.div
+      <m.div
         style={{ y: blobY1, scale: blobScale }}
-        className="absolute -top-32 -left-32 w-[28rem] h-[28rem] rounded-full bg-rose-300/25 blur-[100px]"
+        className="absolute -top-32 -left-32 size-[28rem] rounded-full bg-rose-300/25 blur-[100px]"
       />
-      <motion.div
+      <m.div
         style={{ y: blobY2, scale: blobScale }}
-        className="absolute -bottom-32 -right-32 w-[28rem] h-[28rem] rounded-full bg-amber-300/25 blur-[100px]"
+        className="absolute -bottom-32 -right-32 size-[28rem] rounded-full bg-amber-300/25 blur-[100px]"
       />
       {/* subtle center glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[36rem] h-[36rem] rounded-full bg-rose-200/10 blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[36rem] rounded-full bg-rose-200/10 blur-[120px] pointer-events-none" />
 
       {/* content */}
-      <motion.div
+      <m.div
         className="relative z-10 flex flex-col items-center text-center max-w-lg"
         initial="hidden"
         animate="visible"
         variants={stagger(0.15)}
       >
         {/* logo card */}
-        <motion.div
+        <m.div
           variants={fadeUp}
-          className="w-20 h-20 rounded-[1.5rem] bg-white shadow-lg shadow-rose-200/40 flex items-center justify-center mb-8"
+          className="size-20 rounded-[1.5rem] bg-white shadow-lg shadow-rose-200/40 flex items-center justify-center mb-8"
         >
           <AppLogo size="lg" />
-        </motion.div>
+        </m.div>
 
         {/* title */}
-        <motion.h1
+        <m.h1
           variants={fadeUp}
-          className="text-5xl sm:text-6xl md:text-7xl font-bold tracking-tighter mb-4"
+          className="text-5xl sm:text-6xl md:text-7xl font-semibold tracking-tighter mb-4"
         >
           <span className="gradient-text">Babysteps</span>
-        </motion.h1>
+        </m.h1>
 
         {/* tagline */}
-        <motion.p
+        <m.p
           variants={fadeUp}
           className="text-lg sm:text-xl text-stone-500 font-light mb-12 max-w-xs sm:max-w-sm"
         >
           Every moment, beautifully remembered.
-        </motion.p>
+        </m.p>
 
         {/* CTA */}
-        <motion.div variants={fadeUp} className="w-full max-w-xs">
+        <m.div variants={fadeUp} className="w-full max-w-xs">
           <Link
             href="/auth"
             className="gradient-bg-vibrant w-full py-4 rounded-[3rem] text-white font-bold text-lg flex items-center justify-center gap-2 shadow-[0_8px_30px_rgba(240,98,146,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
           >
             Start Your Journey
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="size-5" />
           </Link>
           <p className="text-xs text-stone-400 mt-5 tracking-wide">
             Free to get started &middot; No credit card required
           </p>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
 
       {/* scroll indicator */}
-      <motion.div
+      <m.div
         className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1.6 }}
       >
-        <motion.div
+        <m.div
           animate={{ y: [0, 8, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
         >
-          <ChevronDown className="w-5 h-5 text-stone-300" />
-        </motion.div>
-      </motion.div>
+          <ChevronDown className="size-5 text-stone-300" />
+        </m.div>
+      </m.div>
     </section>
   );
 }
@@ -193,40 +193,40 @@ function FeaturesSection() {
 
   return (
     <section ref={ref} className="py-24 px-6">
-      <motion.div
+      <m.div
         className="max-w-2xl mx-auto"
         initial="hidden"
         animate={inView ? "visible" : "hidden"}
         variants={stagger(0.1)}
       >
         {/* section header */}
-        <motion.p
+        <m.p
           variants={fadeUp}
           className="text-xs font-bold tracking-[0.2em] uppercase text-stone-400 text-center mb-3"
         >
           Features
-        </motion.p>
-        <motion.h2
+        </m.p>
+        <m.h2
           variants={fadeUp}
-          className="text-2xl sm:text-3xl font-bold text-stone-800 text-center mb-12 tracking-tight"
+          className="text-2xl sm:text-3xl font-semibold text-stone-800 text-center mb-12 tracking-tight"
         >
           Everything you need to treasure
           <br className="hidden sm:block" /> the first year
-        </motion.h2>
+        </m.h2>
 
         {/* cards grid */}
-        <motion.div className="grid grid-cols-1 sm:grid-cols-2 gap-5" variants={stagger(0.1)}>
+        <m.div className="grid grid-cols-1 sm:grid-cols-2 gap-5" variants={stagger(0.1)}>
           {features.map(({ icon: Icon, title, description, color }) => (
-            <motion.div key={title} variants={fadeUpScale} className="premium-card p-8">
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center ${color}`}>
-                <Icon className="w-6 h-6" />
+            <m.div key={title} variants={fadeUpScale} className="premium-card p-8">
+              <div className={`size-14 rounded-full flex items-center justify-center ${color}`}>
+                <Icon className="size-6" />
               </div>
-              <h3 className="font-bold text-stone-800 text-lg mt-5">{title}</h3>
+              <h3 className="font-semibold text-stone-800 text-lg mt-5">{title}</h3>
               <p className="text-stone-500 text-sm leading-relaxed mt-2">{description}</p>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </section>
   );
 }
@@ -237,31 +237,31 @@ function HowItWorksSection() {
 
   return (
     <section ref={ref} className="py-24 px-6 bg-white/40">
-      <motion.div
+      <m.div
         className="max-w-2xl mx-auto"
         initial="hidden"
         animate={inView ? "visible" : "hidden"}
         variants={stagger(0.12)}
       >
-        <motion.p
+        <m.p
           variants={fadeUp}
           className="text-xs font-bold tracking-[0.2em] uppercase text-stone-400 text-center mb-3"
         >
           How it works
-        </motion.p>
-        <motion.h2
+        </m.p>
+        <m.h2
           variants={fadeUp}
-          className="text-2xl sm:text-3xl font-bold text-stone-800 text-center mb-14 tracking-tight"
+          className="text-2xl sm:text-3xl font-semibold text-stone-800 text-center mb-14 tracking-tight"
         >
           Three simple steps
-        </motion.h2>
+        </m.h2>
 
-        <motion.div
+        <m.div
           className="flex flex-col md:flex-row items-start md:items-center justify-center gap-10 md:gap-16"
           variants={stagger(0.15)}
         >
           {steps.map(({ number, icon: Icon, title, description }, i) => (
-            <motion.div
+            <m.div
               key={number}
               variants={fadeUp}
               className="flex flex-col items-center text-center flex-1 max-w-[220px] mx-auto md:mx-0 relative"
@@ -272,17 +272,17 @@ function HowItWorksSection() {
               )}
 
               {/* numbered circle */}
-              <div className="w-12 h-12 rounded-full gradient-bg-vibrant text-white font-bold text-lg flex items-center justify-center shadow-[0_4px_16px_rgba(240,98,146,0.3)]">
+              <div className="size-12 rounded-full gradient-bg-vibrant text-white font-bold text-lg flex items-center justify-center shadow-[0_4px_16px_rgba(240,98,146,0.3)]">
                 {number}
               </div>
 
-              <Icon className="w-5 h-5 text-stone-400 mt-4" />
-              <h3 className="font-bold text-stone-800 mt-3">{title}</h3>
+              <Icon className="size-5 text-stone-400 mt-4" />
+              <h3 className="font-semibold text-stone-800 mt-3">{title}</h3>
               <p className="text-stone-500 text-sm mt-1.5 leading-relaxed">{description}</p>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </section>
   );
 }
@@ -293,33 +293,33 @@ function SocialProofSection() {
 
   return (
     <section ref={ref} className="py-24 px-6">
-      <motion.div
+      <m.div
         className="max-w-md mx-auto text-center"
         initial="hidden"
         animate={inView ? "visible" : "hidden"}
         variants={stagger(0.12)}
       >
-        <motion.div variants={fadeUp}>
-          <Heart className="w-8 h-8 mx-auto text-rose-400 mb-6" />
-        </motion.div>
+        <m.div variants={fadeUp}>
+          <Heart className="size-8 mx-auto text-rose-400 mb-6" />
+        </m.div>
 
-        <motion.p
+        <m.p
           variants={fadeUp}
           className="text-lg sm:text-xl text-stone-600 font-light italic leading-relaxed mb-10"
         >
           &ldquo;Join parents everywhere who are preserving their baby&rsquo;s most precious
           moments.&rdquo;
-        </motion.p>
+        </m.p>
 
-        <motion.div className="flex justify-center gap-10 sm:gap-14" variants={stagger(0.1)}>
+        <m.div className="flex justify-center gap-10 sm:gap-14" variants={stagger(0.1)}>
           {stats.map(({ value, label }) => (
-            <motion.div key={label} variants={fadeUp}>
+            <m.div key={label} variants={fadeUp}>
               <div className="text-2xl sm:text-3xl font-bold gradient-text">{value}</div>
               <div className="text-xs text-stone-400 mt-1 tracking-wide">{label}</div>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </section>
   );
 }
@@ -331,43 +331,43 @@ function FinalCTASection() {
   return (
     <section ref={ref} className="relative py-28 px-6 overflow-hidden">
       {/* background blobs */}
-      <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-rose-300/15 blur-[80px]" />
-      <div className="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-amber-300/15 blur-[80px]" />
+      <div className="absolute -top-20 -left-20 size-80 rounded-full bg-rose-300/15 blur-[80px]" />
+      <div className="absolute -bottom-20 -right-20 size-80 rounded-full bg-amber-300/15 blur-[80px]" />
 
-      <motion.div
+      <m.div
         className="relative z-10 max-w-md mx-auto text-center"
         initial="hidden"
         animate={inView ? "visible" : "hidden"}
         variants={stagger(0.12)}
       >
-        <motion.div variants={fadeUp}>
+        <m.div variants={fadeUp}>
           <AppLogo size="lg" className="mx-auto mb-6" />
-        </motion.div>
+        </m.div>
 
-        <motion.h2
+        <m.h2
           variants={fadeUp}
-          className="text-2xl sm:text-3xl font-bold text-stone-800 tracking-tight mb-4"
+          className="text-2xl sm:text-3xl font-semibold text-stone-800 tracking-tight mb-4"
         >
           Start preserving memories today
-        </motion.h2>
+        </m.h2>
 
-        <motion.p variants={fadeUp} className="text-stone-500 font-light mb-10 max-w-xs mx-auto">
+        <m.p variants={fadeUp} className="text-stone-500 font-light mb-10 max-w-xs mx-auto">
           Every smile, every giggle, every tiny milestone — they grow up so fast.
-        </motion.p>
+        </m.p>
 
-        <motion.div variants={fadeUp} className="max-w-xs mx-auto">
+        <m.div variants={fadeUp} className="max-w-xs mx-auto">
           <Link
             href="/auth"
             className="gradient-bg-vibrant w-full py-4 rounded-[3rem] text-white font-bold text-lg flex items-center justify-center gap-2 shadow-[0_8px_30px_rgba(240,98,146,0.35)] hover:scale-[1.02] active:scale-[0.98] transition-transform"
           >
             Start Your Journey
-            <ArrowRight className="w-5 h-5" />
+            <ArrowRight className="size-5" />
           </Link>
           <p className="text-xs text-stone-400 mt-5 tracking-wide">
             Free to get started &middot; No credit card required
           </p>
-        </motion.div>
-      </motion.div>
+        </m.div>
+      </m.div>
     </section>
   );
 }

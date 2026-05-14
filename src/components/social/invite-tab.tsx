@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Mail, Send, Loader2, Link2, Copy, Check, Trash2, Inbox } from "lucide-react";
 import { toast } from "sonner";
 import { createEmailInvite, createLinkInvite, revokeInvite } from "@/actions/invites";
@@ -12,8 +12,13 @@ interface Props {
 }
 
 export function InviteTab({ initialInvites }: Props) {
-  const router = useRouter();
+  const { refresh: routerRefresh } = useRouter();
   const [invites, setInvites] = useState(initialInvites);
+  const [prevInitialInvites, setPrevInitialInvites] = useState(initialInvites);
+  if (prevInitialInvites !== initialInvites) {
+    setPrevInitialInvites(initialInvites);
+    setInvites(initialInvites);
+  }
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -22,14 +27,10 @@ export function InviteTab({ initialInvites }: Props) {
   const [, startTransition] = useTransition();
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
 
-  useEffect(() => {
-    setInvites(initialInvites);
-  }, [initialInvites]);
-
   const activeLinkInvite = invites.find((i) => i.kind === "link" && !i.isExpired);
 
   const refresh = () => {
-    startTransition(() => router.refresh());
+    startTransition(() => routerRefresh());
   };
 
   const handleSendEmail = async (e: React.FormEvent) => {
@@ -113,8 +114,8 @@ export function InviteTab({ initialInvites }: Props) {
     <div className="space-y-6">
       {/* Email invite form */}
       <div>
-        <h2 className="text-sm font-bold text-stone-700 mb-2 flex items-center gap-1.5">
-          <Mail className="w-4 h-4" />
+        <h2 className="text-sm font-semibold text-stone-700 mb-2 flex items-center gap-1.5">
+          <Mail className="size-4" />
           Invite by email
         </h2>
         <form onSubmit={handleSendEmail} className="space-y-2" noValidate>
@@ -138,10 +139,10 @@ export function InviteTab({ initialInvites }: Props) {
               className="px-4 py-2.5 rounded-xl gradient-bg-vibrant text-white font-bold text-sm flex items-center gap-1.5 transition-transform active:scale-95 disabled:opacity-50"
             >
               {sending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Loader2 className="size-4 animate-spin" />
               ) : (
                 <>
-                  <Send className="w-3.5 h-3.5" />
+                  <Send className="size-3.5" />
                   Send
                 </>
               )}
@@ -156,8 +157,8 @@ export function InviteTab({ initialInvites }: Props) {
 
       {/* Link invite */}
       <div>
-        <h2 className="text-sm font-bold text-stone-700 mb-2 flex items-center gap-1.5">
-          <Link2 className="w-4 h-4" />
+        <h2 className="text-sm font-semibold text-stone-700 mb-2 flex items-center gap-1.5">
+          <Link2 className="size-4" />
           Or share a link
         </h2>
         <button
@@ -166,27 +167,23 @@ export function InviteTab({ initialInvites }: Props) {
           className="w-full px-4 py-3 rounded-xl bg-stone-50 border border-stone-200 text-stone-800 text-sm font-medium flex items-center justify-center gap-2 transition-colors hover:bg-stone-100 disabled:opacity-50"
         >
           {generatingLink ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="size-4 animate-spin" />
           ) : copied ? (
             <>
-              <Check className="w-4 h-4 text-emerald-500" />
+              <Check className="size-4 text-emerald-500" />
               Copied
             </>
           ) : (
             <>
-              <Copy className="w-4 h-4" />
+              <Copy className="size-4" />
               {activeLinkInvite ? "Copy invite link" : "Generate & copy invite link"}
             </>
           )}
         </button>
         {fallbackUrl && (
-          <a
-            href={fallbackUrl}
-            className="block mt-2 px-3 py-2 rounded-lg bg-stone-50 border border-stone-200 text-xs text-stone-700 break-all underline"
-            onClick={(e) => e.preventDefault()}
-          >
+          <code className="block mt-2 px-3 py-2 rounded-lg bg-stone-50 border border-stone-200 text-xs text-stone-700 break-all select-all">
             {fallbackUrl}
-          </a>
+          </code>
         )}
         <p className="text-xs text-stone-400 px-1 mt-2">
           A reusable link — share over WhatsApp, iMessage, or anywhere. Each person who opens it
@@ -196,21 +193,21 @@ export function InviteTab({ initialInvites }: Props) {
 
       {/* Pending invites */}
       <div>
-        <h2 className="text-sm font-bold text-stone-700 mb-2">Pending invites</h2>
+        <h2 className="text-sm font-semibold text-stone-700 mb-2">Pending invites</h2>
         {invites.length === 0 ? (
           <div className="flex flex-col items-center py-8 text-stone-400 border border-dashed border-stone-200 rounded-xl">
-            <Inbox className="w-8 h-8 mb-2" />
+            <Inbox className="size-8 mb-2" />
             <p className="text-sm">No pending invites</p>
           </div>
         ) : (
           <div className="divide-y divide-stone-100 border border-stone-100 rounded-xl overflow-hidden">
             {invites.map((inv) => (
               <div key={inv.id} className="flex items-center gap-3 px-3 py-3 bg-white">
-                <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
+                <div className="size-8 rounded-full bg-stone-100 flex items-center justify-center shrink-0">
                   {inv.kind === "email" ? (
-                    <Mail className="w-4 h-4 text-stone-500" />
+                    <Mail className="size-4 text-stone-500" />
                   ) : (
-                    <Link2 className="w-4 h-4 text-stone-500" />
+                    <Link2 className="size-4 text-stone-500" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -224,9 +221,9 @@ export function InviteTab({ initialInvites }: Props) {
                 <button
                   onClick={() => handleRevoke(inv.id)}
                   aria-label="Revoke invite"
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+                  className="size-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="size-4" />
                 </button>
               </div>
             ))}

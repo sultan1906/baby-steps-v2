@@ -40,12 +40,12 @@ export function FollowedUserCard({ user, onUnfollow }: FollowedUserCardProps) {
         <p className="font-medium text-stone-800 truncate">{user.name}</p>
         {user.location && (
           <p className="flex items-center gap-1 text-xs text-stone-400">
-            <MapPin className="w-3 h-3 shrink-0" />
+            <MapPin className="size-3 shrink-0" />
             <span className="truncate">{user.location}</span>
           </p>
         )}
         <div className="flex items-center gap-1 text-xs text-stone-400">
-          <Baby className="w-3 h-3" />
+          <Baby className="size-3" />
           <span>
             {babyCount} {babyCount === 1 ? "baby" : "babies"}
           </span>
@@ -55,9 +55,9 @@ export function FollowedUserCard({ user, onUnfollow }: FollowedUserCardProps) {
         onClick={handleUnfollow}
         disabled={unfollowing}
         aria-label={`Unfollow ${user.name}`}
-        className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
+        className="size-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50 transition-colors shrink-0"
       >
-        <UserMinus className="w-4 h-4" />
+        <UserMinus className="size-4" />
       </button>
     </Link>
   );

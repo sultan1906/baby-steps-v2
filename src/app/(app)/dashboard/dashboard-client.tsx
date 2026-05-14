@@ -1,7 +1,7 @@
 "use client";
 
 import { Grid3x3, Camera, Award, MessageCircle } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { format } from "date-fns";
 import { BackButton } from "@/components/shared/back-button";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
@@ -63,20 +63,20 @@ export function DashboardClient({ steps }: DashboardClientProps) {
       <div className="sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-stone-100/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <BackButton />
-          <h1 className="font-bold text-stone-800 text-lg">Journey Insights</h1>
+          <h1 className="font-semibold text-stone-800 text-lg">Journey Insights</h1>
         </div>
       </div>
 
       <div className="px-4 pb-28 space-y-4 pt-4">
         {/* Stats grid */}
-        <motion.div
+        <m.div
           className="grid grid-cols-2 gap-4"
           initial="hidden"
           animate="visible"
           variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.08 } } }}
         >
           {statCards.map(({ icon: Icon, label, value, color }) => (
-            <motion.div
+            <m.div
               key={label}
               variants={{
                 hidden: { opacity: 0, y: 20 },
@@ -87,17 +87,17 @@ export function DashboardClient({ steps }: DashboardClientProps) {
             >
               <div
                 className={cn(
-                  "w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3",
+                  "size-12 rounded-full flex items-center justify-center mx-auto mb-3",
                   color
                 )}
               >
-                <Icon className="w-5 h-5" />
+                <Icon className="size-5" />
               </div>
               <div className="text-3xl font-bold text-stone-800 mb-1">{value}</div>
               <div className="text-xs text-stone-400">{label}</div>
-            </motion.div>
+            </m.div>
           ))}
-        </motion.div>
+        </m.div>
 
         {/* Activity Heatmap */}
         <div className="premium-card p-6 mb-8">
@@ -107,8 +107,8 @@ export function DashboardClient({ steps }: DashboardClientProps) {
 
           <TooltipProvider delay={300} closeDelay={0}>
             <div className="grid grid-cols-12 gap-1.5">
-              {heatmapWeeks.map((week, i) => (
-                <Tooltip key={i}>
+              {heatmapWeeks.map((week) => (
+                <Tooltip key={week.start.toISOString()}>
                   <TooltipTrigger
                     aria-label={`${week.count === 0 ? "No memories" : `${week.count} ${week.count === 1 ? "memory" : "memories"}`}, ${format(week.start, "MMM d")} – ${format(week.end, "MMM d")}`}
                     className={cn(

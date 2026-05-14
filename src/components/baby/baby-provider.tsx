@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, use } from "react";
 import type { Baby } from "@/types";
 
 interface SessionUser {
@@ -35,7 +35,7 @@ export function BabyProvider({
 
 /** Returns context or throws — use in pages that REQUIRE a baby */
 export function useBaby(): BabyContextValue & { baby: Baby } {
-  const ctx = useContext(BabyContext);
+  const ctx = use(BabyContext);
   if (!ctx) throw new Error("useBaby must be used within a BabyProvider");
   if (!ctx.baby) throw new Error("useBaby requires a baby to be selected");
   return ctx as BabyContextValue & { baby: Baby };
@@ -43,5 +43,5 @@ export function useBaby(): BabyContextValue & { baby: Baby } {
 
 /** Returns context or null — safe for pages that work without a baby */
 export function useBabyOptional(): BabyContextValue | null {
-  return useContext(BabyContext);
+  return use(BabyContext);
 }

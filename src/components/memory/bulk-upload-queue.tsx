@@ -8,6 +8,26 @@ import type { UploadQueueItem } from "@/types";
 import { toast } from "sonner";
 import { generateVideoPoster } from "@/lib/video-poster";
 
+const EXIF_CONCURRENCY = 6;
+
+async function mapWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let next = 0;
+  const workers = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (true) {
+      const idx = next++;
+      if (idx >= items.length) return;
+      results[idx] = await fn(items[idx]);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
+
 interface BulkUploadQueueProps {
   babyBirthdate: string;
   queue: UploadQueueItem[];
@@ -34,47 +54,47 @@ export function BulkUploadQueue({
 
   const processFiles = useCallback(
     async (files: FileList) => {
-      const newItems: UploadQueueItem[] = [];
+      const fileArr = Array.from(files);
 
-      for (const file of Array.from(files)) {
-        const isVideo = file.type.startsWith("video/");
-
-        // Extract EXIF date (images only — exifr doesn't handle video)
-        let date = format(new Date(file.lastModified), "yyyy-MM-dd");
-        if (!isVideo) {
-          try {
-            const exif = await exifr.parse(file, { pick: ["DateTimeOriginal"] });
-            if (exif?.DateTimeOriginal) {
-              date = format(new Date(exif.DateTimeOriginal), "yyyy-MM-dd");
-            }
-          } catch {
-            // Ignore EXIF errors, use fallback
+      // Extract EXIF dates with bounded concurrency so a 50-photo bulk upload
+      // doesn't open 50 parallel reads.
+      const dates = await mapWithConcurrency(fileArr, EXIF_CONCURRENCY, async (file) => {
+        const fallback = format(new Date(file.lastModified), "yyyy-MM-dd");
+        if (file.type.startsWith("video/")) return fallback;
+        try {
+          const exif = await exifr.parse(file, { pick: ["DateTimeOriginal"] });
+          if (exif?.DateTimeOriginal) {
+            return format(new Date(exif.DateTimeOriginal), "yyyy-MM-dd");
           }
+        } catch {
+          // Ignore EXIF errors, use fallback
         }
+        return fallback;
+      });
 
-        // Validate date is after baby's birthdate
+      const newItems: UploadQueueItem[] = fileArr.map((file, i) => {
+        const isVideo = file.type.startsWith("video/");
+        let date = dates[i];
+
         if (isBefore(parseISO(date), parseISO(babyBirthdate))) {
           toast.error(`"${file.name}" date is before baby's birthdate — using today`);
           date = format(new Date(), "yyyy-MM-dd");
         }
 
-        const id = crypto.randomUUID();
         const objectUrl = URL.createObjectURL(file);
-        const controller = new AbortController();
-
-        newItems.push({
-          id,
+        return {
+          id: crypto.randomUUID(),
           file,
           preview: objectUrl,
           objectUrl,
-          controller,
+          controller: new AbortController(),
           status: "uploading",
           progress: 0,
           date,
           isMajor: false,
           mediaType: isVideo ? "video" : "photo",
-        });
-      }
+        };
+      });
 
       // Insert immediately so the user can edit metadata while uploads run.
       onQueueChange((prev) => [...prev, ...newItems]);
@@ -101,7 +121,7 @@ export function BulkUploadQueue({
           }
           className="flex flex-col items-center justify-center aspect-video rounded-[2rem] border-2 border-dashed border-stone-200 hover:border-rose-300 hover:bg-rose-50/30 cursor-pointer transition-colors"
         >
-          <Camera className="w-8 h-8 text-rose-300 mb-2" />
+          <Camera className="size-8 text-rose-300 mb-2" />
           <span className="text-stone-400 font-medium">Add Photos or Videos</span>
           <span className="text-stone-300 text-sm mt-1">+ Tap to upload</span>
         </div>

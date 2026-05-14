@@ -117,7 +117,7 @@ export function FollowedTimelineClient({
     const target = steps.find((s) => s.id === focusStepId);
     if (!target) return;
     handledFocusRef.current = focusStepId;
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       const el = dayRefs.current.get(target.date);
       if (!el) return;
       isScrollingTo.current = true;
@@ -127,6 +127,13 @@ export function FollowedTimelineClient({
         isScrollingTo.current = false;
       }, 800);
     });
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (scrollingTimerRef.current) {
+        clearTimeout(scrollingTimerRef.current);
+        scrollingTimerRef.current = undefined;
+      }
+    };
   }, [focusStepId, steps]);
 
   const openStory = (date: string, daySteps: Step[]) => {

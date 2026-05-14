@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { step, baby } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
 import { headers } from "next/headers";
 import { eq, and, inArray } from "drizzle-orm";
 import { del } from "@vercel/blob";
@@ -57,8 +58,8 @@ export async function createStep(data: StepInput) {
  */
 export async function createBulkSteps(steps: StepInput[]) {
   return runAction("createBulkSteps", async () => {
-    const session = await getSession();
     if (steps.length === 0) return [];
+    const session = await getSession();
 
     const babyIds = Array.from(new Set(steps.map((s) => s.babyId)));
     const owned = await db
@@ -153,14 +154,16 @@ export async function deleteStep(stepId: string) {
 
     const blobsToDelete = [found.photoUrl, found.posterUrl].filter((u): u is string => Boolean(u));
     const results = await Promise.allSettled(blobsToDelete.map((u) => del(u)));
-    for (const [i, r] of results.entries()) {
-      if (r.status === "rejected") {
-        console.warn("[action:deleteStep] blob delete failed", {
-          url: blobsToDelete[i],
-          error: r.reason,
-        });
+    after(() => {
+      for (const [i, r] of results.entries()) {
+        if (r.status === "rejected") {
+          console.warn("[action:deleteStep] blob delete failed", {
+            url: blobsToDelete[i],
+            error: r.reason,
+          });
+        }
       }
-    }
+    });
 
     await db.delete(step).where(eq(step.id, stepId));
 
