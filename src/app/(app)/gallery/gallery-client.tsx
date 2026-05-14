@@ -244,20 +244,12 @@ export function GalleryClient({
               description="Photos in this album will appear here."
             />
           ) : (
-            <m.div
-              key={`album-${activeAlbum.id}`}
-              className="grid grid-cols-3 sm:grid-cols-4 gap-2"
-              initial="hidden"
-              animate="visible"
-              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.04 } } }}
-            >
+            <div key={`album-${activeAlbum.id}`} className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {albumPhotos.map((s) => (
                 <m.div
                   key={s.id}
-                  variants={{
-                    hidden: { opacity: 0, scale: 0.92 },
-                    visible: { opacity: 1, scale: 1 },
-                  }}
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ type: "spring", stiffness: 260, damping: 22 }}
                   onClick={() => setSelectedStep(s)}
                   className="aspect-square rounded-2xl overflow-hidden relative group cursor-pointer"
@@ -297,7 +289,7 @@ export function GalleryClient({
                   )}
                 </m.div>
               ))}
-            </m.div>
+            </div>
           )}
         </div>
 
@@ -457,13 +449,7 @@ export function GalleryClient({
 
         {/* Selectable photo grid (select-photos / select-cover) */}
         {showSelectableGrid && (
-          <m.div
-            key={`select-${createMode}`}
-            className="grid grid-cols-4 sm:grid-cols-5 gap-1.5"
-            initial="hidden"
-            animate="visible"
-            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.04 } } }}
-          >
+          <div key={`select-${createMode}`} className="grid grid-cols-4 sm:grid-cols-5 gap-1.5">
             {gridSource.map((s) => {
               const isSelected = selectedIds.has(s.id);
               const isCover = coverId === s.id;
@@ -475,10 +461,8 @@ export function GalleryClient({
                 <m.button
                   type="button"
                   key={s.id}
-                  variants={{
-                    hidden: { opacity: 0, scale: 0.9 },
-                    visible: { opacity: 1, scale: 1 },
-                  }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ type: "spring", stiffness: 260, damping: 22 }}
                   onClick={onTap}
                   className={cn(
@@ -537,7 +521,7 @@ export function GalleryClient({
                 </m.button>
               );
             })}
-          </m.div>
+          </div>
         )}
 
         {/* Photos tab — browse mode */}
@@ -554,20 +538,15 @@ export function GalleryClient({
                 }
               />
             ) : viewMode === "grid" ? (
-              <m.div
+              <div
                 key={`grid-${effectiveMonthFilter}`}
                 className="grid grid-cols-3 sm:grid-cols-4 gap-2"
-                initial="hidden"
-                animate="visible"
-                variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
               >
                 {photosToShow.map((s) => (
                   <m.div
                     key={s.id}
-                    variants={{
-                      hidden: { opacity: 0, scale: 0.9 },
-                      visible: { opacity: 1, scale: 1 },
-                    }}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{ type: "spring", stiffness: 260, damping: 22 }}
                     onClick={() => setSelectedStep(s)}
                     className="aspect-square rounded-2xl overflow-hidden relative group cursor-pointer"
@@ -607,22 +586,14 @@ export function GalleryClient({
                     )}
                   </m.div>
                 ))}
-              </m.div>
+              </div>
             ) : (
-              <m.div
-                key={`list-${effectiveMonthFilter}`}
-                className="flex flex-col gap-3"
-                initial="hidden"
-                animate="visible"
-                variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.06 } } }}
-              >
+              <div key={`list-${effectiveMonthFilter}`} className="flex flex-col gap-3">
                 {photosToShow.map((s) => (
                   <m.div
                     key={s.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 16 },
-                      visible: { opacity: 1, y: 0 },
-                    }}
+                    initial={{ opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ type: "spring", stiffness: 260, damping: 22 }}
                     onClick={() => setSelectedStep(s)}
                     className="flex gap-4 bg-white rounded-3xl p-4 items-center border border-stone-100/50 cursor-pointer hover:border-rose-200 transition-colors"
@@ -683,7 +654,7 @@ export function GalleryClient({
                     </div>
                   </m.div>
                 ))}
-              </m.div>
+              </div>
             )}
           </>
         )}
