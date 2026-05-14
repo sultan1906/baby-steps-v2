@@ -81,6 +81,7 @@ export function FollowingClient({
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             onClick={() => push("/timeline")}
+            aria-label="Back to timeline"
             className="size-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-600 hover:bg-stone-200 transition-colors"
           >
             <ArrowLeft className="size-4" />

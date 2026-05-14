@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { format, parseISO } from "date-fns";
 import { MapPin, Lock, Baby } from "lucide-react";
 import { BackButton } from "@/components/shared/back-button";
 import { UserAvatar } from "@/components/social/user-avatar";
@@ -96,12 +97,7 @@ export function ProfileClient({ profile: initial }: ProfileClientProps) {
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-stone-800 truncate">{b.name}</p>
                     <p className="text-xs text-stone-400">
-                      Born{" "}
-                      {new Date(b.birthdate).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      Born {format(parseISO(b.birthdate), "MMM d, yyyy")}
                     </p>
                   </div>
                 </Link>

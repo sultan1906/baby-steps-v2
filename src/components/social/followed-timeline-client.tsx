@@ -38,8 +38,8 @@ export function FollowedTimelineClient({
   const dayRefs = useRef(new Map<string, HTMLElement>());
   const isScrollingTo = useRef(false);
   const scrollingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const { get: getSearchParam } = useSearchParams();
-  const focusStepId = getSearchParam("stepId");
+  const searchParams = useSearchParams();
+  const focusStepId = searchParams.get("stepId");
   const handledFocusRef = useRef<string | null>(null);
 
   const monthSections = useMemo(() => {

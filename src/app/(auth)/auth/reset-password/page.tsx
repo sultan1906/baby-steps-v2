@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useState, Suspense } from "react";
+import { useEffect, useReducer, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Lock, Loader2, CheckCircle2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -26,8 +26,8 @@ function submitReducer(_state: SubmitState, action: SubmitAction): SubmitState {
 
 function ResetPasswordForm() {
   const { push } = useRouter();
-  const { get: getSearchParam } = useSearchParams();
-  const token = getSearchParam("token") ?? "";
+  const searchParams = useSearchParams();
+  const token = searchParams.get("token") ?? "";
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -55,11 +55,16 @@ function ResetPasswordForm() {
       }
 
       dispatch({ type: "success" });
-      setTimeout(() => push("/auth"), 2000);
     } catch {
       dispatch({ type: "error", message: "Something went wrong. Please try again." });
     }
   };
+
+  useEffect(() => {
+    if (submit.status !== "success") return;
+    const timeoutId = window.setTimeout(() => push("/auth"), 2000);
+    return () => window.clearTimeout(timeoutId);
+  }, [push, submit.status]);
 
   if (submit.status === "success") {
     return (
