@@ -200,7 +200,7 @@ export function GalleryClient({
     return (
       <div className="min-h-screen bg-background">
         <div className="sticky top-0 z-30 bg-white/70 backdrop-blur-xl border-b border-stone-100/50">
-          <div className="flex items-center justify-between px-4 py-3 gap-3">
+          <div className="flex items-center justify-between px-4 py-3 pr-8 gap-3">
             <button
               type="button"
               onClick={exitAlbumDetail}
@@ -326,7 +326,7 @@ export function GalleryClient({
     <div className="min-h-screen bg-background">
       {/* Sticky header */}
       <div className="sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-stone-100/50">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-4 py-3 pr-8">
           <div className="flex items-center gap-3">
             <BackButton />
             <h1 className="font-semibold text-stone-800 text-lg">Memory Gallery</h1>
