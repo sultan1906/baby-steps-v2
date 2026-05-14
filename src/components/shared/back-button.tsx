@@ -10,13 +10,13 @@ interface BackButtonProps {
 }
 
 export function BackButton({ href, className }: BackButtonProps) {
-  const router = useRouter();
+  const { push, back } = useRouter();
 
   const handleClick = () => {
     if (href) {
-      router.push(href);
+      push(href);
     } else {
-      router.back();
+      back();
     }
   };
 
@@ -24,11 +24,11 @@ export function BackButton({ href, className }: BackButtonProps) {
     <button
       onClick={handleClick}
       className={cn(
-        "w-10 h-10 rounded-full bg-stone-50 hover:bg-stone-100 flex items-center justify-center text-stone-500 hover:text-stone-700 transition-colors",
+        "size-10 rounded-full bg-stone-50 hover:bg-stone-100 flex items-center justify-center text-stone-500 hover:text-stone-700 transition-colors",
         className
       )}
     >
-      <ArrowLeft className="w-5 h-5" />
+      <ArrowLeft className="size-5" />
     </button>
   );
 }

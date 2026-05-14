@@ -19,31 +19,27 @@ export default async function GalleryPage({ searchParams }: GalleryPageProps) {
   const currentBaby = await getCurrentBaby(session.user.id);
   if (!currentBaby) redirect(await resolveNoBabyDestination(session.user.id));
 
-  const { album: albumIdParam, tab: tabParam } = await searchParams;
-
-  const allSteps = await db
-    .select()
-    .from(step)
-    .where(eq(step.babyId, currentBaby.id))
-    .orderBy(desc(step.date));
-
   const coverStep = step;
-  const albumRows = await db
-    .select({
-      id: album.id,
-      name: album.name,
-      createdAt: album.createdAt,
-      coverPhotoUrl: coverStep.photoUrl,
-      photoCount: sql<number>`(
-        SELECT COUNT(*)::int
-        FROM ${albumStep}
-        WHERE ${albumStep.albumId} = ${album.id}
-      )`.as("photo_count"),
-    })
-    .from(album)
-    .leftJoin(coverStep, eq(album.coverStepId, coverStep.id))
-    .where(eq(album.babyId, currentBaby.id))
-    .orderBy(desc(album.createdAt));
+  const [{ album: albumIdParam, tab: tabParam }, allSteps, albumRows] = await Promise.all([
+    searchParams,
+    db.select().from(step).where(eq(step.babyId, currentBaby.id)).orderBy(desc(step.date)),
+    db
+      .select({
+        id: album.id,
+        name: album.name,
+        createdAt: album.createdAt,
+        coverPhotoUrl: coverStep.photoUrl,
+        photoCount: sql<number>`(
+          SELECT COUNT(*)::int
+          FROM ${albumStep}
+          WHERE ${albumStep.albumId} = ${album.id}
+        )`.as("photo_count"),
+      })
+      .from(album)
+      .leftJoin(coverStep, eq(album.coverStepId, coverStep.id))
+      .where(eq(album.babyId, currentBaby.id))
+      .orderBy(desc(album.createdAt)),
+  ]);
 
   const albums: AlbumWithMeta[] = albumRows.map((a) => ({
     id: a.id,

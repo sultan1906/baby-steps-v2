@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Camera, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { createBaby, markOnboardedAsFollower } from "@/actions/baby";
 import { format } from "date-fns";
 import Image from "next/image";
@@ -21,7 +21,7 @@ const slideVariants = {
 };
 
 export default function OnboardingPage() {
-  const router = useRouter();
+  const { push } = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const [name, setName] = useState("");
@@ -78,7 +78,7 @@ export default function OnboardingPage() {
         colors: ["#F06292", "#FFB74D", "#F8BBD0"],
       });
 
-      router.push("/timeline");
+      push("/timeline");
     } catch {
       setError("Failed to create profile. Please try again.");
     } finally {
@@ -92,7 +92,7 @@ export default function OnboardingPage() {
         {/* Progress pills */}
         <div className="flex gap-2 mb-8">
           <div className="flex-1 h-2 rounded-full gradient-bg" />
-          <motion.div
+          <m.div
             className="flex-1 h-2 rounded-full"
             animate={{
               background: step === 2 ? "linear-gradient(135deg, #E91E8C, #FF9800)" : "#e7e5e4",
@@ -104,15 +104,15 @@ export default function OnboardingPage() {
         {/* Back button (step 2 only) */}
         <AnimatePresence>
           {step === 2 && (
-            <motion.button
+            <m.button
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               onClick={goToStep1}
-              className="absolute top-8 left-8 w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-400"
+              className="absolute top-8 left-8 size-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-400"
             >
-              <ArrowLeft className="w-4 h-4" />
-            </motion.button>
+              <ArrowLeft className="size-4" />
+            </m.button>
           )}
         </AnimatePresence>
 
@@ -120,7 +120,7 @@ export default function OnboardingPage() {
         <div className="relative overflow-x-hidden">
           <AnimatePresence mode="wait" initial={false}>
             {step === 1 ? (
-              <motion.div
+              <m.div
                 key="step1"
                 variants={slideVariants}
                 initial={direction === "back" ? "enterFromLeft" : "enterFromRight"}
@@ -128,7 +128,7 @@ export default function OnboardingPage() {
                 exit={direction === "back" ? "exitToRight" : "exitToLeft"}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               >
-                <h1 className="text-2xl font-bold mb-1">
+                <h1 className="text-2xl font-semibold mb-1">
                   <span className="gradient-text">Hello there!</span>
                 </h1>
                 <p className="text-stone-400 text-sm mb-6">Tell us about your little one</p>
@@ -192,7 +192,7 @@ export default function OnboardingPage() {
                     disabled={!step1Valid}
                     className="gradient-bg-vibrant text-white font-bold py-3.5 rounded-[1.75rem] flex items-center justify-center gap-2 disabled:opacity-50 mt-2 transition"
                   >
-                    Next <ArrowRight className="w-4 h-4" />
+                    Next <ArrowRight className="size-4" />
                   </button>
 
                   <button
@@ -201,7 +201,7 @@ export default function OnboardingPage() {
                       if (!termsAccepted) return;
                       try {
                         await markOnboardedAsFollower();
-                        router.push("/following");
+                        push("/following");
                       } catch {
                         setError("We couldn't save that choice. Please try again.");
                       }
@@ -212,9 +212,9 @@ export default function OnboardingPage() {
                     I&apos;m just here to follow
                   </button>
                 </div>
-              </motion.div>
+              </m.div>
             ) : (
-              <motion.div
+              <m.div
                 key="step2"
                 variants={slideVariants}
                 initial={direction === "back" ? "enterFromLeft" : "enterFromRight"}
@@ -222,7 +222,7 @@ export default function OnboardingPage() {
                 exit={direction === "back" ? "exitToRight" : "exitToLeft"}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               >
-                <h1 className="text-2xl font-bold mb-1 text-stone-800 text-center mt-4">
+                <h1 className="text-2xl font-semibold mb-1 text-stone-800 text-center mt-4">
                   Profile Photo
                 </h1>
                 <p className="text-stone-400 text-sm text-center mb-6">
@@ -232,24 +232,24 @@ export default function OnboardingPage() {
                 {/* Avatar upload */}
                 <div className="flex justify-center mb-6">
                   <label htmlFor="profile-photo" className="relative cursor-pointer group">
-                    <div className="w-40 h-40 rounded-full overflow-hidden border-4 border-stone-50 shadow-lg">
+                    <div className="size-40 rounded-full overflow-hidden border-4 border-stone-50 shadow-lg">
                       {photoPreview ? (
                         <Image
                           src={photoPreview}
                           alt="Preview"
                           width={160}
                           height={160}
-                          className="object-cover w-full h-full"
+                          className="object-cover size-full"
                         />
                       ) : (
-                        <div className="w-full h-full gradient-bg flex items-center justify-center text-white font-bold text-5xl">
+                        <div className="size-full gradient-bg flex items-center justify-center text-white font-bold text-5xl">
                           {name[0]?.toUpperCase() ?? "?"}
                         </div>
                       )}
                     </div>
                     {/* Camera overlay */}
-                    <div className="absolute bottom-0 right-0 w-10 h-10 gradient-bg-vibrant rounded-2xl flex items-center justify-center shadow-md border-2 border-white">
-                      <Camera className="w-5 h-5 text-white" />
+                    <div className="absolute bottom-0 right-0 size-10 gradient-bg-vibrant rounded-2xl flex items-center justify-center shadow-md border-2 border-white">
+                      <Camera className="size-5 text-white" />
                     </div>
                   </label>
                   <input
@@ -272,9 +272,9 @@ export default function OnboardingPage() {
                   disabled={loading}
                   className="gradient-bg-vibrant text-white font-bold py-3.5 rounded-[1.75rem] w-full flex items-center justify-center gap-2 disabled:opacity-70 transition"
                 >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Create Journey 🌱"}
+                  {loading ? <Loader2 className="size-5 animate-spin" /> : "Create Journey 🌱"}
                 </button>
-              </motion.div>
+              </m.div>
             )}
           </AnimatePresence>
         </div>

@@ -57,8 +57,8 @@ export async function createStep(data: StepInput) {
  */
 export async function createBulkSteps(steps: StepInput[]) {
   return runAction("createBulkSteps", async () => {
-    const session = await getSession();
     if (steps.length === 0) return [];
+    const session = await getSession();
 
     const babyIds = Array.from(new Set(steps.map((s) => s.babyId)));
     const owned = await db

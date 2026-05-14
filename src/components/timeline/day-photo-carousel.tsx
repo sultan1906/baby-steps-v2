@@ -75,11 +75,11 @@ export function DayPhotoCarousel({ steps, onTap, onIndexChange }: DayPhotoCarous
                     preload="metadata"
                     playsInline
                     muted
-                    className="w-full h-full object-cover"
+                    className="size-full object-cover"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-10 h-10 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
-                      <Play className="w-4 h-4 text-white fill-white ml-0.5" />
+                    <div className="size-10 rounded-full bg-black/40 flex items-center justify-center backdrop-blur-sm">
+                      <Play className="size-4 text-white fill-white ml-0.5" />
                     </div>
                   </div>
                 </div>
@@ -98,10 +98,10 @@ export function DayPhotoCarousel({ steps, onTap, onIndexChange }: DayPhotoCarous
       {/* Dot indicators */}
       {steps.length > 1 && (
         <div className="flex justify-center gap-1.5 mt-2">
-          {steps.map((_, i) => (
+          {steps.map((s, i) => (
             <div
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full transition-all duration-200 ${
+              key={s.id}
+              className={`size-1.5 rounded-full transition-all duration-200 ${
                 i === activeIndex ? "gradient-bg w-3" : "bg-stone-300"
               }`}
             />

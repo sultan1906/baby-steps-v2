@@ -13,7 +13,7 @@ import {
   VolumeX,
   MoreHorizontal,
 } from "lucide-react";
-import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
+import { m, AnimatePresence, useMotionValue, useTransform, animate } from "framer-motion";
 import Image from "next/image";
 import { parseISO, format } from "date-fns";
 import { getDayNumber, formatMemoryDate } from "@/lib/date-utils";
@@ -231,7 +231,7 @@ export function StoryViewModal({
   return (
     <>
       <AnimatePresence>
-        <motion.div
+        <m.div
           key="story-modal"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -242,14 +242,14 @@ export function StoryViewModal({
           }}
         >
           {/* Black dimming layer — fades during drag to reveal the page underneath */}
-          <motion.div
+          <m.div
             className="absolute inset-0 bg-black pointer-events-none"
             style={{ opacity: overlayOpacity }}
           />
 
           {/* Blurred background (photos only — skip for video to avoid double decode) */}
           {currentStep?.photoUrl && currentStep.type !== "video" && (
-            <motion.div
+            <m.div
               className="absolute inset-0 pointer-events-none"
               style={{ opacity: overlayOpacity }}
             >
@@ -260,11 +260,11 @@ export function StoryViewModal({
                 sizes="100vw"
                 className="object-cover blur-3xl opacity-80 scale-110"
               />
-            </motion.div>
+            </m.div>
           )}
 
           {/* Main container */}
-          <motion.div
+          <m.div
             className="relative h-full flex flex-col max-w-lg mx-auto touch-pan-y overflow-hidden"
             style={{ y: dragY, scale: cardScale, borderRadius: cardRadius }}
             drag={editingDesc || confirmDelete ? false : "y"}
@@ -288,9 +288,9 @@ export function StoryViewModal({
               <button
                 aria-label="Close"
                 onClick={onClose}
-                className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+                className="size-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
               >
-                <X className="w-5 h-5" />
+                <X className="size-5" />
               </button>
               <div className="flex flex-col items-center text-center leading-tight">
                 <span className="text-white text-sm font-semibold">Day {dayNumber}</span>
@@ -300,22 +300,22 @@ export function StoryViewModal({
                 <DropdownMenu>
                   <DropdownMenuTrigger
                     aria-label="More options"
-                    className="w-10 h-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+                    className="size-10 rounded-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
                   >
-                    <MoreHorizontal className="w-5 h-5" />
+                    <MoreHorizontal className="size-5" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" sideOffset={6}>
                     <DropdownMenuItem
                       onClick={() => setPendingDeleteId(currentStep?.id ?? null)}
                       variant="destructive"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="size-4" />
                       Delete photo
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <div className="w-10 h-10" />
+                <div className="size-10" />
               )}
             </div>
 
@@ -323,7 +323,7 @@ export function StoryViewModal({
             <div className="relative z-30 flex gap-1 px-4 pt-1 pb-2">
               {localSteps.map((s, i) => (
                 <div key={s.id} className="flex-1 h-1 rounded-full bg-white/20 overflow-hidden">
-                  <motion.div
+                  <m.div
                     className="h-full bg-white rounded-full"
                     initial={{ width: i < currentIndex ? "100%" : "0%" }}
                     animate={{
@@ -352,7 +352,7 @@ export function StoryViewModal({
               }}
             >
               <AnimatePresence mode="wait">
-                <motion.div
+                <m.div
                   key={currentStep?.id}
                   initial={{ opacity: 0, scale: 1.1 }}
                   animate={{ opacity: 1, scale: 1 }}
@@ -370,7 +370,7 @@ export function StoryViewModal({
                         muted={isVideoMuted}
                         loop
                         playsInline
-                        className="absolute inset-0 w-full h-full object-contain"
+                        className="absolute inset-0 size-full object-contain"
                       />
                     ) : (
                       <Image
@@ -382,11 +382,11 @@ export function StoryViewModal({
                       />
                     )
                   ) : (
-                    <div className="w-full h-full gradient-bg flex items-center justify-center">
+                    <div className="size-full gradient-bg flex items-center justify-center">
                       <span className="text-6xl">🌱</span>
                     </div>
                   )}
-                </motion.div>
+                </m.div>
               </AnimatePresence>
 
               {/* Video indicators */}
@@ -398,18 +398,14 @@ export function StoryViewModal({
                       e.stopPropagation();
                       toggleMute();
                     }}
-                    className="absolute top-4 right-4 z-10 w-9 h-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
+                    className="absolute top-4 right-4 z-10 size-9 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition-colors"
                   >
-                    {isVideoMuted ? (
-                      <VolumeX className="w-4 h-4" />
-                    ) : (
-                      <Volume2 className="w-4 h-4" />
-                    )}
+                    {isVideoMuted ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
                   </button>
                   {isVideoPaused && (
                     <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
-                      <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
-                        <Play className="w-8 h-8 text-white fill-white ml-1" />
+                      <div className="size-16 rounded-full bg-black/40 flex items-center justify-center">
+                        <Play className="size-8 text-white fill-white ml-1" />
                       </div>
                     </div>
                   )}
@@ -446,19 +442,19 @@ export function StoryViewModal({
                   e.stopPropagation();
                   prevStep();
                 }}
-                className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
+                className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 size-12 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
                 disabled={currentIndex === 0}
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="size-6" />
               </button>
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   nextStep();
                 }}
-                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
+                className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 size-12 bg-white/10 hover:bg-white/20 rounded-full items-center justify-center text-white transition-colors"
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="size-6" />
               </button>
             </div>
 
@@ -491,13 +487,13 @@ export function StoryViewModal({
                 <div className="flex gap-2 mb-3 flex-wrap">
                   {currentStep?.isMajor && (
                     <div className="flex items-center gap-1 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                      <Award className="w-3 h-3" />
+                      <Award className="size-3" />
                       Milestone
                     </div>
                   )}
                   {currentStep?.locationNickname && (
                     <div className="flex items-center gap-1 bg-white/20 backdrop-blur-sm text-white text-xs px-3 py-1 rounded-full">
-                      <MapPin className="w-3 h-3" />
+                      <MapPin className="size-3" />
                       {currentStep.locationNickname}
                     </div>
                   )}
@@ -564,8 +560,8 @@ export function StoryViewModal({
 
               {!editingDesc && timeLabel && <p className="text-white/50 text-xs">{timeLabel}</p>}
             </div>
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       </AnimatePresence>
     </>
   );

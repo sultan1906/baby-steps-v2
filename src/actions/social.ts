@@ -63,26 +63,26 @@ export async function getUserProfile(targetUserId: string): Promise<UserProfile 
   return runAction("getUserProfile", async () => {
     const session = await getSession();
 
-    const [targetUser] = await db
-      .select({
-        id: user.id,
-        name: user.name,
-        image: user.image,
-        bio: user.bio,
-        location: user.location,
-      })
-      .from(user)
-      .where(eq(user.id, targetUserId))
-      .limit(1);
+    const [[targetUser], [followRow]] = await Promise.all([
+      db
+        .select({
+          id: user.id,
+          name: user.name,
+          image: user.image,
+          bio: user.bio,
+          location: user.location,
+        })
+        .from(user)
+        .where(eq(user.id, targetUserId))
+        .limit(1),
+      db
+        .select({ status: follow.status })
+        .from(follow)
+        .where(and(eq(follow.followerId, session.user.id), eq(follow.followingId, targetUserId)))
+        .limit(1),
+    ]);
 
     if (!targetUser) return null;
-
-    // Follow status
-    const [followRow] = await db
-      .select({ status: follow.status })
-      .from(follow)
-      .where(and(eq(follow.followerId, session.user.id), eq(follow.followingId, targetUserId)))
-      .limit(1);
 
     const followStatus =
       followRow?.status === "accepted"

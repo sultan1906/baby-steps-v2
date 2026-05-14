@@ -13,8 +13,7 @@ export async function PUT(
   const { session, error } = await getApiSession();
   if (error) return error;
 
-  const { babyId } = await params;
-  const data = await request.json();
+  const [{ babyId }, data] = await Promise.all([params, request.json()]);
 
   const allowedFields = {
     ...(data.name !== undefined && { name: data.name }),

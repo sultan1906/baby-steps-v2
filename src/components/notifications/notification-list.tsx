@@ -17,7 +17,7 @@ export function NotificationList({ items, loading, onItemClick }: NotificationLi
   if (loading && items.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
-        <Bell className="w-8 h-8 mb-2 opacity-40" />
+        <Bell className="size-8 mb-2 opacity-40" />
         <p className="text-sm">Loading…</p>
       </div>
     );
@@ -27,7 +27,7 @@ export function NotificationList({ items, loading, onItemClick }: NotificationLi
     return (
       <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
         <div className="rounded-full bg-stone-100 p-3 mb-3">
-          <Bell className="w-6 h-6 text-stone-400" />
+          <Bell className="size-6 text-stone-400" />
         </div>
         <p className="text-sm font-medium text-foreground mb-1">No new memories yet</p>
         <p className="text-xs text-muted-foreground max-w-[16rem]">
@@ -70,15 +70,15 @@ export function NotificationList({ items, loading, onItemClick }: NotificationLi
                     alt=""
                     width={40}
                     height={40}
-                    className="w-10 h-10 rounded-full object-cover"
+                    className="size-10 rounded-full object-cover"
                   />
                 ) : (
-                  <div className="w-10 h-10 rounded-full gradient-bg flex items-center justify-center text-white text-sm font-semibold">
+                  <div className="size-10 rounded-full gradient-bg flex items-center justify-center text-white text-sm font-semibold">
                     {initials || "·"}
                   </div>
                 )}
                 {!n.read && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-background" />
+                  <span className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full bg-rose-500 ring-2 ring-background" />
                 )}
               </div>
 
@@ -102,7 +102,7 @@ export function NotificationList({ items, loading, onItemClick }: NotificationLi
                   alt=""
                   width={48}
                   height={48}
-                  className="w-12 h-12 rounded-lg object-cover shrink-0"
+                  className="size-12 rounded-lg object-cover shrink-0"
                 />
               )}
             </Link>

@@ -48,7 +48,7 @@ export function BottomNav({ followerMode = false }: BottomNavProps) {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Icon className="w-5 h-5" />
+              <Icon className="size-5" />
               <span>{label}</span>
             </Link>
           ))}
@@ -71,7 +71,7 @@ export function BottomNav({ followerMode = false }: BottomNavProps) {
                 : "text-muted-foreground hover:text-foreground"
             )}
           >
-            <Icon className="w-5 h-5" />
+            <Icon className="size-5" />
             <span>{isMobile ? mobileLabel : label}</span>
           </Link>
         ))}
@@ -108,7 +108,7 @@ export function BottomNav({ followerMode = false }: BottomNavProps) {
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <DisplayIcon className="w-5 h-5" />
+              <DisplayIcon className="size-5" />
               <span>{isMobile ? mobileLabel : label}</span>
             </Link>
           );

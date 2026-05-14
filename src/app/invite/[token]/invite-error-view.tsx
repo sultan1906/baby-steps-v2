@@ -26,10 +26,10 @@ export function InviteErrorView({ status }: { status: Exclude<InvitePreviewStatu
   return (
     <div className="w-full max-w-sm">
       <div className="premium-card p-8 text-center">
-        <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
-          <AlertCircle className="w-6 h-6 text-stone-400" />
+        <div className="size-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
+          <AlertCircle className="size-6 text-stone-400" />
         </div>
-        <h1 className="text-lg font-bold text-stone-800 mb-2">{title}</h1>
+        <h1 className="text-lg font-semibold text-stone-800 mb-2">{title}</h1>
         <p className="text-sm text-stone-500 mb-6 leading-relaxed">{body}</p>
         <Link
           href="/auth"

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface SelectModeActionBarProps {
@@ -21,7 +21,7 @@ export function SelectModeActionBar({
   onSecondary,
 }: SelectModeActionBarProps) {
   return (
-    <motion.div
+    <m.div
       initial={{ y: 80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       exit={{ y: 80, opacity: 0 }}
@@ -51,6 +51,6 @@ export function SelectModeActionBar({
           {primaryLabel}
         </button>
       </div>
-    </motion.div>
+    </m.div>
   );
 }

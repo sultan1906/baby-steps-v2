@@ -19,7 +19,7 @@ interface AddMemoryDrawerProps {
 }
 
 export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
-  const router = useRouter();
+  const { refresh } = useRouter();
   const { baby } = useBaby();
   const isMobile = useMediaQuery("(max-width: 640px)");
   const [open, setOpen] = useState(false);
@@ -79,7 +79,7 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
       });
 
       handleClose();
-      router.refresh();
+      refresh();
     } catch {
       // Error handled by upload queue
     } finally {
@@ -111,14 +111,14 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
       {/* Header */}
       <div className="flex items-center justify-between p-6 border-b border-stone-100/50">
         <div>
-          <h2 className="text-xl font-bold text-stone-800">Capture Memory</h2>
+          <h2 className="text-xl font-semibold text-stone-800">Capture Memory</h2>
           <p className="text-sm text-stone-400">{baby.name}</p>
         </div>
         <button
           onClick={handleClose}
-          className="w-10 h-10 rounded-[1.25rem] bg-stone-50 hover:bg-stone-100 flex items-center justify-center text-stone-500 transition-colors"
+          className="size-10 rounded-[1.25rem] bg-stone-50 hover:bg-stone-100 flex items-center justify-center text-stone-500 transition-colors"
         >
-          <X className="w-5 h-5" />
+          <X className="size-5" />
         </button>
       </div>
 
@@ -152,10 +152,10 @@ export function AddMemoryDrawer({ children }: AddMemoryDrawerProps) {
           className="gradient-bg-vibrant w-full py-4 rounded-[1.75rem] text-white font-bold flex items-center justify-center gap-2 disabled:opacity-50 transition"
         >
           {saving ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="size-5 animate-spin" />
           ) : inFlight ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="size-5 animate-spin" />
               Uploading…
             </>
           ) : doneCount === 1 ? (

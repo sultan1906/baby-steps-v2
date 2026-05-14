@@ -101,7 +101,7 @@ export function BulkUploadQueue({
           }
           className="flex flex-col items-center justify-center aspect-video rounded-[2rem] border-2 border-dashed border-stone-200 hover:border-rose-300 hover:bg-rose-50/30 cursor-pointer transition-colors"
         >
-          <Camera className="w-8 h-8 text-rose-300 mb-2" />
+          <Camera className="size-8 text-rose-300 mb-2" />
           <span className="text-stone-400 font-medium">Add Photos or Videos</span>
           <span className="text-stone-300 text-sm mt-1">+ Tap to upload</span>
         </div>

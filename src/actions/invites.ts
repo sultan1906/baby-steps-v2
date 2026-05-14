@@ -140,19 +140,16 @@ export async function createEmailInvite(
       )
       .limit(1);
 
-    // Inviter info for email
-    const [inviterRow] = await db
-      .select({ name: user.name })
-      .from(user)
-      .where(eq(user.id, session.user.id))
-      .limit(1);
+    // Inviter info for email + babies list (independent reads)
+    const [[inviterRow], babiesRows] = await Promise.all([
+      db.select({ name: user.name }).from(user).where(eq(user.id, session.user.id)).limit(1),
+      db
+        .select({ name: baby.name })
+        .from(baby)
+        .where(eq(baby.userId, session.user.id))
+        .orderBy(desc(baby.createdAt)),
+    ]);
     const inviterName = inviterRow?.name ?? "A friend";
-
-    const babiesRows = await db
-      .select({ name: baby.name })
-      .from(baby)
-      .where(eq(baby.userId, session.user.id))
-      .orderBy(desc(baby.createdAt));
     const babyNames = babiesRows.map((b) => b.name);
 
     if (existingPending) {
@@ -371,9 +368,10 @@ export async function getInvitePreview(token: string): Promise<InvitePreview> {
 
 export async function acceptInvite(token: string): Promise<{ inviterId: string }> {
   return runAction("acceptInvite", async () => {
-    const session = await getSession();
-
-    const [row] = await db.select().from(invite).where(eq(invite.token, token)).limit(1);
+    const [session, [row]] = await Promise.all([
+      getSession(),
+      db.select().from(invite).where(eq(invite.token, token)).limit(1),
+    ]);
 
     if (!row) throw new UserError("Invite not found");
 

@@ -18,7 +18,7 @@ import {
   Trash2,
 } from "lucide-react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { BackButton } from "@/components/shared/back-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { MemoryDetailModal } from "@/components/memory/memory-detail-modal";
@@ -52,7 +52,7 @@ export function GalleryClient({
   activeAlbum,
   initialTab,
 }: GalleryClientProps) {
-  const router = useRouter();
+  const { push, refresh } = useRouter();
 
   const [tab, setTab] = useState<Tab>(initialTab);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
@@ -109,7 +109,7 @@ export function GalleryClient({
 
   function startCreateAlbum() {
     if (activeAlbum) {
-      router.push("/gallery");
+      push("/gallery");
     }
     setTab("albums");
     setCreateMode("select-photos");
@@ -152,7 +152,7 @@ export function GalleryClient({
       });
       exitCreateMode();
       setTab("albums");
-      router.refresh();
+      refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't create album. Try again.");
     }
@@ -163,7 +163,7 @@ export function GalleryClient({
     try {
       await renameAlbum(renameTarget.id, name);
       setRenameTarget(null);
-      router.refresh();
+      refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't rename album. Try again.");
     }
@@ -175,9 +175,9 @@ export function GalleryClient({
       await deleteAlbum(deleteTarget.id);
       setDeleteTarget(null);
       if (activeAlbum?.id === deleteTarget.id) {
-        router.push("/gallery?tab=albums");
+        push("/gallery?tab=albums");
       } else {
-        router.refresh();
+        refresh();
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't delete album. Try again.");
@@ -185,7 +185,7 @@ export function GalleryClient({
   }
 
   function exitAlbumDetail() {
-    router.push("/gallery?tab=albums");
+    push("/gallery?tab=albums");
   }
 
   // What grid renders in select modes vs normal browse
@@ -205,12 +205,12 @@ export function GalleryClient({
               type="button"
               onClick={exitAlbumDetail}
               aria-label="Back to albums"
-              className="w-9 h-9 rounded-full bg-white border border-stone-200 hover:bg-stone-50 flex items-center justify-center text-stone-600 transition"
+              className="size-9 rounded-full bg-white border border-stone-200 hover:bg-stone-50 flex items-center justify-center text-stone-600 transition"
             >
-              <ChevronLeft className="w-5 h-5" />
+              <ChevronLeft className="size-5" />
             </button>
             <div className="flex-1 min-w-0">
-              <h1 className="font-bold text-stone-800 text-lg truncate">{activeAlbum.name}</h1>
+              <h1 className="font-semibold text-stone-800 text-lg truncate">{activeAlbum.name}</h1>
               <p className="text-xs text-stone-500">
                 {albumPhotos.length} {albumPhotos.length === 1 ? "photo" : "photos"}
               </p>
@@ -220,17 +220,17 @@ export function GalleryClient({
                 type="button"
                 onClick={() => albumMeta && setRenameTarget(albumMeta)}
                 aria-label="Rename album"
-                className="w-9 h-9 rounded-full bg-white border border-stone-200 hover:bg-stone-50 flex items-center justify-center text-stone-600 transition"
+                className="size-9 rounded-full bg-white border border-stone-200 hover:bg-stone-50 flex items-center justify-center text-stone-600 transition"
               >
-                <Pencil className="w-4 h-4" />
+                <Pencil className="size-4" />
               </button>
               <button
                 type="button"
                 onClick={() => albumMeta && setDeleteTarget(albumMeta)}
                 aria-label="Delete album"
-                className="w-9 h-9 rounded-full bg-white border border-stone-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 flex items-center justify-center text-stone-600 transition"
+                className="size-9 rounded-full bg-white border border-stone-200 hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 flex items-center justify-center text-stone-600 transition"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="size-4" />
               </button>
             </div>
           </div>
@@ -244,7 +244,7 @@ export function GalleryClient({
               description="Photos in this album will appear here."
             />
           ) : (
-            <motion.div
+            <m.div
               key={`album-${activeAlbum.id}`}
               className="grid grid-cols-3 sm:grid-cols-4 gap-2"
               initial="hidden"
@@ -252,7 +252,7 @@ export function GalleryClient({
               variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.04 } } }}
             >
               {albumPhotos.map((s) => (
-                <motion.div
+                <m.div
                   key={s.id}
                   variants={{
                     hidden: { opacity: 0, scale: 0.92 },
@@ -271,10 +271,10 @@ export function GalleryClient({
                           preload="metadata"
                           playsInline
                           muted
-                          className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                          className="absolute inset-0 size-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
-                        <div className="absolute bottom-2 left-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">
-                          <Play className="w-3.5 h-3.5 text-white fill-white" />
+                        <div className="absolute bottom-2 left-2 size-7 rounded-full bg-black/50 flex items-center justify-center">
+                          <Play className="size-3.5 text-white fill-white" />
                         </div>
                       </>
                     ) : (
@@ -288,16 +288,16 @@ export function GalleryClient({
                       />
                     )
                   ) : (
-                    <div className="w-full h-full gradient-bg" />
+                    <div className="size-full gradient-bg" />
                   )}
                   {s.isMajor && (
-                    <div className="absolute top-3 right-3 w-8 h-8 rounded-2xl gradient-bg flex items-center justify-center shadow">
-                      <Award className="w-3.5 h-3.5 text-white" />
+                    <div className="absolute top-3 right-3 size-8 rounded-2xl gradient-bg flex items-center justify-center shadow">
+                      <Award className="size-3.5 text-white" />
                     </div>
                   )}
-                </motion.div>
+                </m.div>
               ))}
-            </motion.div>
+            </m.div>
           )}
         </div>
 
@@ -337,7 +337,7 @@ export function GalleryClient({
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
             <BackButton />
-            <h1 className="font-bold text-stone-800 text-lg">Memory Gallery</h1>
+            <h1 className="font-semibold text-stone-800 text-lg">Memory Gallery</h1>
           </div>
 
           {/* Right slot: view toggle (Photos tab) or New Album (Albums tab, browse only) */}
@@ -346,20 +346,20 @@ export function GalleryClient({
               <button
                 onClick={() => setViewMode("grid")}
                 className={cn(
-                  "w-8 h-8 flex items-center justify-center rounded-lg transition-all",
+                  "size-8 flex items-center justify-center rounded-lg transition-all",
                   viewMode === "grid" ? "bg-white shadow text-stone-700" : "text-stone-400"
                 )}
               >
-                <Grid3x3 className="w-4 h-4" />
+                <Grid3x3 className="size-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
                 className={cn(
-                  "w-8 h-8 flex items-center justify-center rounded-lg transition-all",
+                  "size-8 flex items-center justify-center rounded-lg transition-all",
                   viewMode === "list" ? "bg-white shadow text-stone-700" : "text-stone-400"
                 )}
               >
-                <List className="w-4 h-4" />
+                <List className="size-4" />
               </button>
             </div>
           )}
@@ -369,7 +369,7 @@ export function GalleryClient({
               onClick={startCreateAlbum}
               className="flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-semibold text-white shadow gradient-bg-vibrant hover:opacity-90 transition"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="size-4" />
               New Album
             </button>
           )}
@@ -457,7 +457,7 @@ export function GalleryClient({
 
         {/* Selectable photo grid (select-photos / select-cover) */}
         {showSelectableGrid && (
-          <motion.div
+          <m.div
             key={`select-${createMode}`}
             className="grid grid-cols-4 sm:grid-cols-5 gap-1.5"
             initial="hidden"
@@ -472,7 +472,7 @@ export function GalleryClient({
                 else setCoverId(s.id);
               };
               return (
-                <motion.button
+                <m.button
                   type="button"
                   key={s.id}
                   variants={{
@@ -494,7 +494,7 @@ export function GalleryClient({
                         preload="metadata"
                         playsInline
                         muted
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="absolute inset-0 size-full object-cover"
                       />
                     ) : (
                       <Image
@@ -506,7 +506,7 @@ export function GalleryClient({
                       />
                     )
                   ) : (
-                    <div className="w-full h-full gradient-bg" />
+                    <div className="size-full gradient-bg" />
                   )}
 
                   {/* Dim overlay on unselected (select-photos) */}
@@ -518,26 +518,26 @@ export function GalleryClient({
                   {createMode === "select-photos" && (
                     <div
                       className={cn(
-                        "absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center border transition",
+                        "absolute top-1 right-1 size-5 rounded-full flex items-center justify-center border transition",
                         isSelected
                           ? "gradient-bg-vibrant border-white text-white shadow"
                           : "bg-white/80 border-white/90 text-transparent"
                       )}
                     >
-                      <Check className="w-3 h-3" strokeWidth={3} />
+                      <Check className="size-3" strokeWidth={3} />
                     </div>
                   )}
 
                   {/* Star indicator for cover */}
                   {createMode === "select-cover" && isCover && (
-                    <div className="absolute top-1 right-1 w-5 h-5 rounded-full gradient-bg-vibrant flex items-center justify-center text-white shadow">
-                      <Star className="w-3 h-3 fill-white" />
+                    <div className="absolute top-1 right-1 size-5 rounded-full gradient-bg-vibrant flex items-center justify-center text-white shadow">
+                      <Star className="size-3 fill-white" />
                     </div>
                   )}
-                </motion.button>
+                </m.button>
               );
             })}
-          </motion.div>
+          </m.div>
         )}
 
         {/* Photos tab — browse mode */}
@@ -554,7 +554,7 @@ export function GalleryClient({
                 }
               />
             ) : viewMode === "grid" ? (
-              <motion.div
+              <m.div
                 key={`grid-${effectiveMonthFilter}`}
                 className="grid grid-cols-3 sm:grid-cols-4 gap-2"
                 initial="hidden"
@@ -562,7 +562,7 @@ export function GalleryClient({
                 variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.05 } } }}
               >
                 {photosToShow.map((s) => (
-                  <motion.div
+                  <m.div
                     key={s.id}
                     variants={{
                       hidden: { opacity: 0, scale: 0.9 },
@@ -581,10 +581,10 @@ export function GalleryClient({
                             preload="metadata"
                             playsInline
                             muted
-                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                            className="absolute inset-0 size-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
-                          <div className="absolute bottom-2 left-2 w-7 h-7 rounded-full bg-black/50 flex items-center justify-center">
-                            <Play className="w-3.5 h-3.5 text-white fill-white" />
+                          <div className="absolute bottom-2 left-2 size-7 rounded-full bg-black/50 flex items-center justify-center">
+                            <Play className="size-3.5 text-white fill-white" />
                           </div>
                         </>
                       ) : (
@@ -598,18 +598,18 @@ export function GalleryClient({
                         />
                       )
                     ) : (
-                      <div className="w-full h-full gradient-bg" />
+                      <div className="size-full gradient-bg" />
                     )}
                     {s.isMajor && (
-                      <div className="absolute top-3 right-3 w-8 h-8 rounded-2xl gradient-bg flex items-center justify-center shadow">
-                        <Award className="w-3.5 h-3.5 text-white" />
+                      <div className="absolute top-3 right-3 size-8 rounded-2xl gradient-bg flex items-center justify-center shadow">
+                        <Award className="size-3.5 text-white" />
                       </div>
                     )}
-                  </motion.div>
+                  </m.div>
                 ))}
-              </motion.div>
+              </m.div>
             ) : (
-              <motion.div
+              <m.div
                 key={`list-${effectiveMonthFilter}`}
                 className="flex flex-col gap-3"
                 initial="hidden"
@@ -617,7 +617,7 @@ export function GalleryClient({
                 variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.06 } } }}
               >
                 {photosToShow.map((s) => (
-                  <motion.div
+                  <m.div
                     key={s.id}
                     variants={{
                       hidden: { opacity: 0, y: 16 },
@@ -627,7 +627,7 @@ export function GalleryClient({
                     onClick={() => setSelectedStep(s)}
                     className="flex gap-4 bg-white rounded-3xl p-4 items-center border border-stone-100/50 cursor-pointer hover:border-rose-200 transition-colors"
                   >
-                    <div className="w-20 h-20 rounded-2xl overflow-hidden relative flex-shrink-0">
+                    <div className="size-20 rounded-2xl overflow-hidden relative flex-shrink-0">
                       {s.photoUrl ? (
                         s.type === "video" ? (
                           <>
@@ -637,10 +637,10 @@ export function GalleryClient({
                               preload="metadata"
                               playsInline
                               muted
-                              className="absolute inset-0 w-full h-full object-cover"
+                              className="absolute inset-0 size-full object-cover"
                             />
-                            <div className="absolute bottom-1 left-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center">
-                              <Play className="w-2.5 h-2.5 text-white fill-white" />
+                            <div className="absolute bottom-1 left-1 size-5 rounded-full bg-black/50 flex items-center justify-center">
+                              <Play className="size-2.5 text-white fill-white" />
                             </div>
                           </>
                         ) : (
@@ -653,13 +653,13 @@ export function GalleryClient({
                           />
                         )
                       ) : (
-                        <div className="w-full h-full gradient-bg" />
+                        <div className="size-full gradient-bg" />
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap mb-1">
                         <span className="text-xs bg-stone-50 text-stone-600 px-2 py-0.5 rounded-lg font-medium">
-                          <Calendar className="w-3 h-3 inline mr-1" />
+                          <Calendar className="size-3 inline mr-1" />
                           {formatShortDate(s.date)}
                         </span>
                         {s.isMajor && (
@@ -670,7 +670,7 @@ export function GalleryClient({
                       </div>
                       {s.locationNickname && (
                         <div className="flex items-center gap-1 text-sm text-stone-500">
-                          <MapPin className="w-3 h-3" />
+                          <MapPin className="size-3" />
                           {s.locationNickname}
                         </div>
                       )}
@@ -681,9 +681,9 @@ export function GalleryClient({
                         Day {getDayNumber(parseISO(baby.birthdate), parseISO(s.date))}
                       </div>
                     </div>
-                  </motion.div>
+                  </m.div>
                 ))}
-              </motion.div>
+              </m.div>
             )}
           </>
         )}

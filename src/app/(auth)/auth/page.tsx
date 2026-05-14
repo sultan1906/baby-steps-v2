@@ -13,7 +13,7 @@ import {
   MailCheck,
   ChevronRight,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { m, AnimatePresence } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
 import { listBabies } from "@/actions/baby";
 
@@ -21,7 +21,7 @@ type AuthState = "signin" | "signup" | "baby-picker";
 type Baby = { id: string; name: string; birthdate: string; photoUrl?: string | null };
 
 export default function AuthPage() {
-  const router = useRouter();
+  const { push } = useRouter();
   const [state, setState] = useState<AuthState>("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -54,7 +54,7 @@ export default function AuthPage() {
         setBabies(userBabies as Baby[]);
         setState("baby-picker");
       } else {
-        router.push(userBabies.length === 1 ? "/timeline" : "/onboarding");
+        push(userBabies.length === 1 ? "/timeline" : "/onboarding");
       }
     } catch {
       setError("Something went wrong. Please try again.");
@@ -95,14 +95,14 @@ export default function AuthPage() {
   const handleBabySelect = (babyId: string) => {
     // Cookie is set by switchBaby action — just navigate
     document.cookie = `babysteps_current_baby=${babyId}; path=/; max-age=${30 * 24 * 60 * 60}; samesite=lax`;
-    router.push("/timeline");
+    push("/timeline");
   };
 
   // ── Baby Picker State ──────────────────────────────────────────────────────
   if (state === "baby-picker") {
     return (
       <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-stone-100/50">
-        <h1 className="text-2xl font-bold text-stone-800 mb-2">Select Baby</h1>
+        <h1 className="text-2xl font-semibold text-stone-800 mb-2">Select Baby</h1>
         <p className="text-stone-400 text-sm mb-6">Choose who to view</p>
         <div className="flex flex-col gap-3">
           {babies.map((b) => (
@@ -111,18 +111,18 @@ export default function AuthPage() {
               onClick={() => handleBabySelect(b.id)}
               className="flex items-center gap-3 p-4 rounded-2xl bg-white border border-stone-100 hover:border-rose-200 transition-colors text-left"
             >
-              <div className="w-12 h-12 rounded-2xl gradient-bg flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+              <div className="size-12 rounded-2xl gradient-bg flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
                 {b.name[0].toUpperCase()}
               </div>
               <div className="flex-1">
                 <div className="font-semibold text-stone-800">{b.name}</div>
                 <div className="text-xs text-stone-400">Born {b.birthdate}</div>
               </div>
-              <ChevronRight className="w-4 h-4 text-stone-400" />
+              <ChevronRight className="size-4 text-stone-400" />
             </button>
           ))}
           <button
-            onClick={() => router.push("/onboarding")}
+            onClick={() => push("/onboarding")}
             className="flex items-center justify-center gap-2 p-4 rounded-2xl border-2 border-dashed border-stone-200 text-stone-400 hover:border-rose-300 hover:text-rose-400 transition-colors text-sm"
           >
             Add another baby
@@ -136,10 +136,10 @@ export default function AuthPage() {
   if (emailSent) {
     return (
       <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-stone-100/50 text-center">
-        <div className="w-16 h-16 rounded-full bg-rose-50 flex items-center justify-center mx-auto mb-4">
-          <MailCheck className="w-8 h-8 text-rose-500" />
+        <div className="size-16 rounded-full bg-rose-50 flex items-center justify-center mx-auto mb-4">
+          <MailCheck className="size-8 text-rose-500" />
         </div>
-        <h2 className="text-xl font-bold text-stone-800 mb-2">Check your inbox</h2>
+        <h2 className="text-xl font-semibold text-stone-800 mb-2">Check your inbox</h2>
         <p className="text-stone-500 text-sm">
           We sent a verification link to <span className="font-medium text-stone-700">{email}</span>
         </p>
@@ -161,7 +161,7 @@ export default function AuthPage() {
   return (
     <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-stone-100/50">
       {/* Heading */}
-      <h1 className="text-2xl font-bold text-stone-800 mb-1">
+      <h1 className="text-2xl font-semibold text-stone-800 mb-1">
         {isSignUp ? "Create Account" : "Welcome Back"}
       </h1>
       <p className="text-xs text-stone-400 uppercase tracking-widest font-medium mb-6">
@@ -171,15 +171,15 @@ export default function AuthPage() {
       {/* Error banner */}
       <AnimatePresence>
         {error && (
-          <motion.div
+          <m.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             className="flex items-center gap-2 bg-rose-50 border border-rose-200 rounded-2xl p-3 mb-4 text-sm text-rose-600"
           >
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <AlertCircle className="size-4 flex-shrink-0" />
             {error}
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
 
@@ -187,7 +187,7 @@ export default function AuthPage() {
         {/* Name (sign up only) */}
         {isSignUp && (
           <div className="relative">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-stone-400" />
             <input
               type="text"
               placeholder="Your name"
@@ -201,7 +201,7 @@ export default function AuthPage() {
 
         {/* Email */}
         <div className="relative">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-stone-400" />
           <input
             type="email"
             placeholder="Email address"
@@ -214,7 +214,7 @@ export default function AuthPage() {
 
         {/* Password */}
         <div className="relative">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 size-4 text-stone-400" />
           <input
             type="password"
             placeholder="Password"
@@ -245,11 +245,11 @@ export default function AuthPage() {
           className="gradient-bg-vibrant text-white font-bold py-3.5 rounded-[1.75rem] flex items-center justify-center gap-2 mt-1 disabled:opacity-70 transition"
         >
           {loading ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="size-5 animate-spin" />
           ) : (
             <>
               {isSignUp ? "Create Account" : "Sign In"}
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="size-4" />
             </>
           )}
         </button>

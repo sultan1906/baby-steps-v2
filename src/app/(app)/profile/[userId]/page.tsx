@@ -9,8 +9,10 @@ interface Props {
 }
 
 export default async function ProfilePage({ params }: Props) {
-  const { userId } = await params;
-  const session = await auth.api.getSession({ headers: await headers() });
+  const [{ userId }, session] = await Promise.all([
+    params,
+    auth.api.getSession({ headers: await headers() }),
+  ]);
   if (!session) redirect("/auth");
 
   // If viewing own profile, redirect to settings

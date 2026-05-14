@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { FolderHeart } from "lucide-react";
 import { EmptyState } from "@/components/shared/empty-state";
 import { AlbumFolderCard } from "./album-folder-card";
@@ -24,7 +24,7 @@ export function AlbumsGrid({ albums, onRename, onDelete }: AlbumsGridProps) {
   }
 
   return (
-    <motion.div
+    <m.div
       className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-2"
       initial="hidden"
       animate="visible"
@@ -33,6 +33,6 @@ export function AlbumsGrid({ albums, onRename, onDelete }: AlbumsGridProps) {
       {albums.map((album) => (
         <AlbumFolderCard key={album.id} album={album} onRename={onRename} onDelete={onDelete} />
       ))}
-    </motion.div>
+    </m.div>
   );
 }

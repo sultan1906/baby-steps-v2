@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { parseISO } from "date-fns";
 import { MoreHorizontal, Plus, Eye } from "lucide-react";
-import { motion } from "framer-motion";
+import { m } from "framer-motion";
 import { getDayNumber, formatShortDate } from "@/lib/date-utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { DayPhotoCarousel } from "./day-photo-carousel";
@@ -48,7 +48,7 @@ export function TimelineDayEntry({
             <div
               className={`absolute left-1 ${isFirst ? "top-[10px]" : "top-0"} bottom-0 w-0.5 bg-emerald-400/40`}
             />
-            <div className="absolute left-0 top-3 z-10 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+            <div className="absolute left-0 top-3 z-10 size-2.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
             <span className="absolute right-1 top-2.5 text-[11px] font-medium text-stone-500">
               {mobileShortDate}
             </span>
@@ -67,7 +67,7 @@ export function TimelineDayEntry({
         {isLast && (
           <div className="flex">
             <div className="relative w-14 flex-shrink-0">
-              <div className="absolute left-0 top-0 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+              <div className="absolute left-0 top-0 size-2.5 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
             </div>
           </div>
         )}
@@ -83,7 +83,7 @@ export function TimelineDayEntry({
 
   return (
     <>
-      <motion.div
+      <m.div
         className="flex"
         initial={{ opacity: 0, x: -12 }}
         whileInView={{ opacity: 1, x: 0 }}
@@ -97,7 +97,7 @@ export function TimelineDayEntry({
             className={`absolute ${isFirst ? "top-[10px]" : "top-0"} bottom-0 w-0.5 bg-emerald-400/40`}
           />
           {/* Circle node */}
-          <div className="relative z-10 mt-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+          <div className="relative z-10 mt-1 size-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
         </div>
 
         {/* Right content */}
@@ -116,11 +116,11 @@ export function TimelineDayEntry({
                 aria-label={`Open actions for ${shortDate}`}
                 className="p-1 text-stone-400 hover:text-stone-600 transition-colors rounded-full hover:bg-stone-100"
               >
-                <MoreHorizontal className="w-5 h-5" />
+                <MoreHorizontal className="size-5" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" side="bottom">
                 <DropdownMenuItem onClick={() => onOpenStory(date, steps)}>
-                  <Eye className="w-4 h-4 mr-2" />
+                  <Eye className="size-4 mr-2" />
                   View day
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -145,8 +145,8 @@ export function TimelineDayEntry({
               aria-label={`Add a memory for ${shortDate}`}
               className="w-full border-2 border-dashed border-stone-200 rounded-2xl p-6 flex items-center gap-3 cursor-pointer hover:border-rose-300 hover:bg-rose-50/30 transition-colors"
             >
-              <div className="w-8 h-8 rounded-full gradient-bg flex items-center justify-center">
-                <Plus className="w-4 h-4 text-white" />
+              <div className="size-8 rounded-full gradient-bg flex items-center justify-center">
+                <Plus className="size-4 text-white" />
               </div>
               <span className="text-sm text-stone-400">Tap to add a memory</span>
             </button>
@@ -161,13 +161,13 @@ export function TimelineDayEntry({
             </div>
           )}
         </div>
-      </motion.div>
+      </m.div>
 
       {/* End cap circle after the last entry in each month */}
       {isLast && (
         <div className="flex">
           <div className="relative w-10 flex-shrink-0 flex justify-center">
-            <div className="w-3 h-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
+            <div className="size-3 rounded-full bg-emerald-400 border-2 border-white shadow-sm" />
           </div>
         </div>
       )}

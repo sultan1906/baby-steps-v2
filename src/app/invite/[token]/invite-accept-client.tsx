@@ -17,7 +17,7 @@ interface Props {
 }
 
 export function InviteAcceptClient({ token, preview, isSignedIn }: Props) {
-  const router = useRouter();
+  const { push } = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,7 +30,7 @@ export function InviteAcceptClient({ token, preview, isSignedIn }: Props) {
     try {
       const { inviterId } = await acceptInvite(token);
       toast.success(`You're now connected with ${inviter.name}`);
-      router.push(`/profile/${inviterId}?welcome=1`);
+      push(`/profile/${inviterId}?welcome=1`);
     } catch (err) {
       const raw = err instanceof Error ? err.message : "";
       const looksLikeSql = /\b(SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(raw);
@@ -45,7 +45,7 @@ export function InviteAcceptClient({ token, preview, isSignedIn }: Props) {
     <div className="w-full max-w-sm">
       <div className="premium-card p-6 text-center">
         <UserAvatar name={inviter.name} image={inviter.image} size={80} className="mx-auto mb-4" />
-        <h1 className="text-xl font-bold text-stone-800 mb-1">{inviter.name}</h1>
+        <h1 className="text-xl font-semibold text-stone-800 mb-1">{inviter.name}</h1>
         <p className="text-sm text-stone-500 mb-6">
           invited you to follow{" "}
           {babies.length === 0
@@ -80,7 +80,7 @@ export function InviteAcceptClient({ token, preview, isSignedIn }: Props) {
             disabled={loading}
             className="w-full px-6 py-3 rounded-2xl gradient-bg-vibrant text-white font-bold transition-transform active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Accept invite"}
+            {loading ? <Loader2 className="size-4 animate-spin" /> : "Accept invite"}
           </button>
         ) : (
           <div className="space-y-3">

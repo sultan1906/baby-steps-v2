@@ -38,8 +38,8 @@ export function FollowedTimelineClient({
   const dayRefs = useRef(new Map<string, HTMLElement>());
   const isScrollingTo = useRef(false);
   const scrollingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
-  const searchParams = useSearchParams();
-  const focusStepId = searchParams.get("stepId");
+  const { get: getSearchParam } = useSearchParams();
+  const focusStepId = getSearchParam("stepId");
   const handledFocusRef = useRef<string | null>(null);
 
   const monthSections = useMemo(() => {
@@ -117,7 +117,7 @@ export function FollowedTimelineClient({
     const target = steps.find((s) => s.id === focusStepId);
     if (!target) return;
     handledFocusRef.current = focusStepId;
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       const el = dayRefs.current.get(target.date);
       if (!el) return;
       isScrollingTo.current = true;
@@ -127,6 +127,13 @@ export function FollowedTimelineClient({
         isScrollingTo.current = false;
       }, 800);
     });
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (scrollingTimerRef.current) {
+        clearTimeout(scrollingTimerRef.current);
+        scrollingTimerRef.current = undefined;
+      }
+    };
   }, [focusStepId, steps]);
 
   const openStory = (date: string, daySteps: Step[]) => {

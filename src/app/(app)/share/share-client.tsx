@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Download, Share2, Images, Play } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, m } from "framer-motion";
 import { BackButton } from "@/components/shared/back-button";
 import { EmptyState } from "@/components/shared/empty-state";
 import { cn } from "@/lib/utils";
@@ -41,7 +41,7 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
         <div className="sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-stone-100/50">
           <div className="flex items-center gap-3 px-4 py-3">
             <BackButton />
-            <h1 className="font-bold text-stone-800 text-lg">Memory Postcards</h1>
+            <h1 className="font-semibold text-stone-800 text-lg">Memory Postcards</h1>
           </div>
         </div>
         <EmptyState
@@ -79,7 +79,7 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
       <div className="sticky top-0 z-30 bg-white/60 backdrop-blur-xl border-b border-stone-100/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <BackButton />
-          <h1 className="font-bold text-stone-800 text-lg">Memory Postcards</h1>
+          <h1 className="font-semibold text-stone-800 text-lg">Memory Postcards</h1>
         </div>
       </div>
 
@@ -98,7 +98,7 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                 onClick={() => setSelectedStep(s)}
                 onKeyDown={(e) => e.key === "Enter" && setSelectedStep(s)}
                 className={cn(
-                  "relative w-24 h-24 rounded-2xl overflow-hidden cursor-pointer flex-shrink-0 transition-all",
+                  "relative size-24 rounded-2xl overflow-hidden cursor-pointer flex-shrink-0 transition-all",
                   selectedStep?.id === s.id
                     ? "ring-4 ring-[#F06292] scale-110 shadow-lg"
                     : "ring-4 ring-white opacity-70"
@@ -113,17 +113,17 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                         preload="metadata"
                         playsInline
                         muted
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="absolute inset-0 size-full object-cover"
                       />
-                      <div className="absolute bottom-1 left-1 w-5 h-5 rounded-full bg-black/50 flex items-center justify-center">
-                        <Play className="w-2.5 h-2.5 text-white fill-white" />
+                      <div className="absolute bottom-1 left-1 size-5 rounded-full bg-black/50 flex items-center justify-center">
+                        <Play className="size-2.5 text-white fill-white" />
                       </div>
                     </>
                   ) : (
                     <Image src={s.photoUrl} alt="" fill sizes="96px" className="object-cover" />
                   )
                 ) : (
-                  <div className="w-full h-full gradient-bg" />
+                  <div className="size-full gradient-bg" />
                 )}
               </div>
             ))}
@@ -132,7 +132,7 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
 
         <AnimatePresence>
           {selectedStep && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
@@ -188,11 +188,11 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                   {style === "modern" ? (
                     <div className="absolute inset-0 gradient-bg-vibrant" />
                   ) : null}
-                  <div className="relative w-full h-full flex flex-col">
+                  <div className="relative size-full flex flex-col">
                     {/* Photo - top 65% */}
                     <div className="flex-[0_0_65%] p-4 relative">
                       {selectedStep.photoUrl ? (
-                        <div className="relative w-full h-full rounded-[2rem] overflow-hidden shadow-inner">
+                        <div className="relative size-full rounded-[2rem] overflow-hidden shadow-inner">
                           {selectedStep.type === "video" ? (
                             <video
                               src={selectedStep.photoUrl}
@@ -200,7 +200,7 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                               autoPlay
                               playsInline
                               loop
-                              className="absolute inset-0 w-full h-full object-cover"
+                              className="absolute inset-0 size-full object-cover"
                             />
                           ) : (
                             <Image
@@ -213,7 +213,7 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
                           )}
                         </div>
                       ) : (
-                        <div className="w-full h-full rounded-[2rem] bg-white/20" />
+                        <div className="size-full rounded-[2rem] bg-white/20" />
                       )}
                     </div>
                     {/* Text - bottom 35% */}
@@ -236,18 +236,18 @@ export function ShareClient({ steps, baby }: ShareClientProps) {
               {/* Actions */}
               <div className="flex gap-3">
                 <button className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-stone-50 border border-stone-200 rounded-2xl text-stone-700 font-medium text-sm">
-                  <Download className="w-4 h-4" />
+                  <Download className="size-4" />
                   Download
                 </button>
                 <button
                   onClick={handleShare}
                   className="flex-1 gradient-bg-vibrant text-white font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 text-sm"
                 >
-                  <Share2 className="w-4 h-4" />
+                  <Share2 className="size-4" />
                   Share
                 </button>
               </div>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
       </div>

@@ -51,7 +51,7 @@ export function VerticalMonthSelector({
 
           return (
             <button
-              key={i}
+              key={`month-${i}`}
               data-month={i}
               onClick={() => onMonthSelect(i)}
               disabled={isDisabled}

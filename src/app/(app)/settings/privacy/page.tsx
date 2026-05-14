@@ -8,7 +8,7 @@ import { getFollowers, getFollowedUsers, removeFollower, unfollowUser } from "@/
 import type { FollowedUser } from "@/types";
 
 export default function PrivacyPage() {
-  const router = useRouter();
+  const { push } = useRouter();
   const [loading, setLoading] = useState(true);
   const [followers, setFollowers] = useState<
     { id: string; followerId: string; name: string; image: string | null }[]
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-rose-400 animate-spin" />
+        <Loader2 className="size-6 text-rose-400 animate-spin" />
       </div>
     );
   }
@@ -64,13 +64,13 @@ export default function PrivacyPage() {
         <div className="flex items-center gap-3 px-4 py-3">
           <button
             aria-label="Back to settings"
-            onClick={() => router.push("/settings")}
-            className="w-8 h-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-600 hover:bg-stone-200 transition-colors"
+            onClick={() => push("/settings")}
+            className="size-8 rounded-xl bg-stone-100 flex items-center justify-center text-stone-600 hover:bg-stone-200 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="size-4" />
           </button>
-          <Shield className="w-5 h-5 text-blue-500" />
-          <h1 className="font-bold text-stone-800 text-lg">Privacy & Security</h1>
+          <Shield className="size-5 text-blue-500" />
+          <h1 className="font-semibold text-stone-800 text-lg">Privacy & Security</h1>
         </div>
       </div>
 
@@ -78,8 +78,8 @@ export default function PrivacyPage() {
         {/* Profile Visibility Info Card */}
         <div className="premium-card p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Lock className="w-5 h-5 text-amber-500" />
-            <h2 className="font-bold text-stone-800">Profile Visibility</h2>
+            <Lock className="size-5 text-amber-500" />
+            <h2 className="font-semibold text-stone-800">Profile Visibility</h2>
           </div>
           <p className="text-sm text-stone-600">
             Your profile is private. New followers need your approval before they can see your
@@ -90,8 +90,8 @@ export default function PrivacyPage() {
         {/* Followers Card */}
         <div className="premium-card p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-rose-400" />
-            <h2 className="font-bold text-stone-800">
+            <Users className="size-5 text-rose-400" />
+            <h2 className="font-semibold text-stone-800">
               Followers{" "}
               <span className="text-stone-400 font-normal text-sm">({followers.length})</span>
             </h2>
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
                     onClick={() => handleRemoveFollower(f.id)}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 bg-stone-50 hover:bg-red-50 hover:text-red-500 border border-stone-200 hover:border-red-200 transition-colors"
                   >
-                    <UserMinus className="w-3 h-3" />
+                    <UserMinus className="size-3" />
                     Remove
                   </button>
                 </div>
@@ -123,8 +123,8 @@ export default function PrivacyPage() {
         {/* Following Card */}
         <div className="premium-card p-6">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-blue-400" />
-            <h2 className="font-bold text-stone-800">
+            <Users className="size-5 text-blue-400" />
+            <h2 className="font-semibold text-stone-800">
               Following{" "}
               <span className="text-stone-400 font-normal text-sm">({following.length})</span>
             </h2>
@@ -147,7 +147,7 @@ export default function PrivacyPage() {
                     onClick={() => handleUnfollow(f.id)}
                     className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-stone-500 bg-stone-50 hover:bg-red-50 hover:text-red-500 border border-stone-200 hover:border-red-200 transition-colors"
                   >
-                    <UserX className="w-3 h-3" />
+                    <UserX className="size-3" />
                     Unfollow
                   </button>
                 </div>
