@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
       Referer: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
     },
     body: JSON.stringify({ input, sessionToken }),
+    cache: "no-store",
   });
 
   const data = await res.json();

@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
@@ -34,15 +35,17 @@ export default async function FollowedUserPage({ params, searchParams }: Props) 
   }
 
   return (
-    <FollowedTimelineClient
-      targetUser={{
-        id: targetUser.id,
-        name: targetUser.name,
-        image: targetUser.image,
-      }}
-      baby={timeline.baby}
-      steps={timeline.steps}
-      babies={targetUser.babies}
-    />
+    <Suspense fallback={null}>
+      <FollowedTimelineClient
+        targetUser={{
+          id: targetUser.id,
+          name: targetUser.name,
+          image: targetUser.image,
+        }}
+        baby={timeline.baby}
+        steps={timeline.steps}
+        babies={targetUser.babies}
+      />
+    </Suspense>
   );
 }

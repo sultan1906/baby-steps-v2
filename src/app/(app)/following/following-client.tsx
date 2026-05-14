@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { ArrowLeft, Mail, Users, UserCheck, UserMinus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -28,13 +28,20 @@ export function FollowingClient({
 }: FollowingClientProps) {
   const { push, refresh } = useRouter();
   const [activeTab, setActiveTab] = useState<Tab>("following");
-  const [followed, setFollowed] = useState(() => followedUsers);
+  const [followed, setFollowed] = useState(followedUsers);
+  const [prevFollowedUsers, setPrevFollowedUsers] = useState(followedUsers);
+  if (prevFollowedUsers !== followedUsers) {
+    setPrevFollowedUsers(followedUsers);
+    setFollowed(followedUsers);
+  }
   const [followers, setFollowers] = useState(initialFollowers);
+  const [prevInitialFollowers, setPrevInitialFollowers] = useState(initialFollowers);
+  if (prevInitialFollowers !== initialFollowers) {
+    setPrevInitialFollowers(initialFollowers);
+    setFollowers(initialFollowers);
+  }
   const [removingId, setRemovingId] = useState<string | null>(null);
   const [followingFilter, setFollowingFilter] = useState("");
-
-  useEffect(() => setFollowed(followedUsers), [followedUsers]);
-  useEffect(() => setFollowers(initialFollowers), [initialFollowers]);
 
   const filteredFollowed = useMemo(() => {
     const q = followingFilter.trim().toLowerCase();

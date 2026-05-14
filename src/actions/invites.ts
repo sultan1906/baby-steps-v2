@@ -125,23 +125,22 @@ export async function createEmailInvite(
         )
       );
 
-    // Reuse a still-active pending invite if one exists.
-    const [existingPending] = await db
-      .select()
-      .from(invite)
-      .where(
-        and(
-          eq(invite.inviterId, session.user.id),
-          eq(invite.email, email),
-          eq(invite.kind, "email"),
-          eq(invite.status, "pending"),
-          gt(invite.expiresAt, now)
+    // Reuse a still-active pending invite if one exists, while concurrently
+    // fetching inviter + babies info needed for the email.
+    const [[existingPending], [inviterRow], babiesRows] = await Promise.all([
+      db
+        .select()
+        .from(invite)
+        .where(
+          and(
+            eq(invite.inviterId, session.user.id),
+            eq(invite.email, email),
+            eq(invite.kind, "email"),
+            eq(invite.status, "pending"),
+            gt(invite.expiresAt, now)
+          )
         )
-      )
-      .limit(1);
-
-    // Inviter info for email + babies list (independent reads)
-    const [[inviterRow], babiesRows] = await Promise.all([
+        .limit(1),
       db.select({ name: user.name }).from(user).where(eq(user.id, session.user.id)).limit(1),
       db
         .select({ name: baby.name })

@@ -1,9 +1,28 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useReducer, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Lock, Loader2, CheckCircle2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
+
+type SubmitState =
+  | { status: "idle"; error: string }
+  | { status: "submitting"; error: "" }
+  | { status: "error"; error: string }
+  | { status: "success"; error: "" };
+
+type SubmitAction = { type: "submit" } | { type: "error"; message: string } | { type: "success" };
+
+function submitReducer(_state: SubmitState, action: SubmitAction): SubmitState {
+  switch (action.type) {
+    case "submit":
+      return { status: "submitting", error: "" };
+    case "error":
+      return { status: "error", error: action.message };
+    case "success":
+      return { status: "success", error: "" };
+  }
+}
 
 function ResetPasswordForm() {
   const { push } = useRouter();
@@ -12,42 +31,37 @@ function ResetPasswordForm() {
 
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [submit, dispatch] = useReducer(submitReducer, { status: "idle", error: "" });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
 
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      dispatch({ type: "error", message: "Passwords do not match." });
       return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      dispatch({ type: "error", message: "Password must be at least 6 characters." });
       return;
     }
 
-    setLoading(true);
+    dispatch({ type: "submit" });
     try {
       const result = await authClient.resetPassword({ newPassword: password, token });
 
       if (result.error) {
-        setError(result.error.message ?? "Failed to reset password.");
+        dispatch({ type: "error", message: result.error.message ?? "Failed to reset password." });
         return;
       }
 
-      setSuccess(true);
+      dispatch({ type: "success" });
       setTimeout(() => push("/auth"), 2000);
     } catch {
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+      dispatch({ type: "error", message: "Something went wrong. Please try again." });
     }
   };
 
-  if (success) {
+  if (submit.status === "success") {
     return (
       <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-stone-100/50 text-center">
         <div className="size-16 rounded-full bg-green-50 flex items-center justify-center mx-auto mb-4">
@@ -70,7 +84,9 @@ function ResetPasswordForm() {
         Enter and confirm your new password.
       </p>
 
-      {error && <p className="text-rose-500 text-sm bg-rose-50 rounded-2xl p-3 mb-4">{error}</p>}
+      {submit.error && (
+        <p className="text-rose-500 text-sm bg-rose-50 rounded-2xl p-3 mb-4">{submit.error}</p>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         <div className="relative">
@@ -101,10 +117,14 @@ function ResetPasswordForm() {
 
         <button
           type="submit"
-          disabled={loading || !token}
+          disabled={submit.status === "submitting" || !token}
           className="gradient-bg-vibrant text-white font-bold py-3.5 rounded-[1.75rem] flex items-center justify-center gap-2 mt-1 disabled:opacity-70 transition"
         >
-          {loading ? <Loader2 className="size-5 animate-spin" /> : "Reset Password"}
+          {submit.status === "submitting" ? (
+            <Loader2 className="size-5 animate-spin" />
+          ) : (
+            "Reset Password"
+          )}
         </button>
       </form>
     </div>

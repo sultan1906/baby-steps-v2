@@ -85,6 +85,19 @@ export function MemoryDetailModal({ step, baby, open, onClose }: MemoryDetailMod
             <div
               className="relative aspect-[4/3] overflow-hidden"
               onClick={isVideo ? handleVideoTap : undefined}
+              onKeyDown={
+                isVideo
+                  ? (e) => {
+                      if (e.key === " " || e.key === "Enter") {
+                        e.preventDefault();
+                        handleVideoTap();
+                      }
+                    }
+                  : undefined
+              }
+              role={isVideo ? "button" : undefined}
+              tabIndex={isVideo ? 0 : undefined}
+              aria-label={isVideo ? "Toggle video playback" : undefined}
             >
               {step.photoUrl ? (
                 step.type === "video" ? (

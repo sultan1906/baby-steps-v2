@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Mail, Send, Loader2, Link2, Copy, Check, Trash2, Inbox } from "lucide-react";
 import { toast } from "sonner";
 import { createEmailInvite, createLinkInvite, revokeInvite } from "@/actions/invites";
@@ -14,6 +14,11 @@ interface Props {
 export function InviteTab({ initialInvites }: Props) {
   const { refresh: routerRefresh } = useRouter();
   const [invites, setInvites] = useState(initialInvites);
+  const [prevInitialInvites, setPrevInitialInvites] = useState(initialInvites);
+  if (prevInitialInvites !== initialInvites) {
+    setPrevInitialInvites(initialInvites);
+    setInvites(initialInvites);
+  }
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -21,10 +26,6 @@ export function InviteTab({ initialInvites }: Props) {
   const [copied, setCopied] = useState(false);
   const [, startTransition] = useTransition();
   const [fallbackUrl, setFallbackUrl] = useState<string | null>(null);
-
-  useEffect(() => {
-    setInvites(initialInvites);
-  }, [initialInvites]);
 
   const activeLinkInvite = invites.find((i) => i.kind === "link" && !i.isExpired);
 
@@ -180,13 +181,9 @@ export function InviteTab({ initialInvites }: Props) {
           )}
         </button>
         {fallbackUrl && (
-          <a
-            href={fallbackUrl}
-            className="block mt-2 px-3 py-2 rounded-lg bg-stone-50 border border-stone-200 text-xs text-stone-700 break-all underline"
-            onClick={(e) => e.preventDefault()}
-          >
+          <code className="block mt-2 px-3 py-2 rounded-lg bg-stone-50 border border-stone-200 text-xs text-stone-700 break-all select-all">
             {fallbackUrl}
-          </a>
+          </code>
         )}
         <p className="text-xs text-stone-400 px-1 mt-2">
           A reusable link — share over WhatsApp, iMessage, or anywhere. Each person who opens it

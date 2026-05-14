@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -21,5 +22,9 @@ export default async function ProfilePage({ params }: Props) {
   const profile = await getUserProfile(userId);
   if (!profile) redirect("/following");
 
-  return <ProfileClient profile={profile} />;
+  return (
+    <Suspense fallback={null}>
+      <ProfileClient profile={profile} />
+    </Suspense>
+  );
 }

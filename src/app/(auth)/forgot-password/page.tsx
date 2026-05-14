@@ -53,12 +53,12 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="bg-white rounded-[3rem] p-10 shadow-sm border border-stone-100/50 relative">
-      <a
+      <Link
         href="/auth"
         className="absolute top-6 left-6 size-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-400 hover:text-stone-600 transition-colors"
       >
         <ArrowLeft className="size-4" />
-      </a>
+      </Link>
 
       <div className="size-14 rounded-full gradient-bg flex items-center justify-center mx-auto mb-6 mt-4">
         <Mail className="size-7 text-white" />

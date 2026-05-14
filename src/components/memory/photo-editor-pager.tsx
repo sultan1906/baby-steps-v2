@@ -288,10 +288,13 @@ function PhotoEditorPage({
           />
         </div>
         <div className="min-w-0">
-          <label className="text-xs text-stone-500 font-medium block mb-1">Location</label>
+          <span className="text-xs text-stone-500 font-medium block mb-1">Location</span>
           <button
             type="button"
             onClick={onOpenLocationPicker}
+            aria-label={
+              item.locationNickname ? `Location: ${item.locationNickname}` : "Add location"
+            }
             className="w-full flex items-center gap-2 px-3 py-2.5 rounded-2xl bg-stone-50 border border-stone-200 text-stone-500 text-sm hover:border-rose-300 transition-colors truncate"
           >
             <MapPin className="size-4 shrink-0 text-stone-400" />

@@ -44,6 +44,10 @@ export default function SettingsPage() {
   const [birthdate, setBirthdate] = useState(baby?.birthdate ?? "");
   const [photoPreview, setPhotoPreview] = useState<string | null>(baby?.photoUrl ?? null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [maxBirthdate, setMaxBirthdate] = useState<string>("");
+  useEffect(() => {
+    setMaxBirthdate(new Date().toISOString().split("T")[0]);
+  }, []);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -413,7 +417,7 @@ export default function SettingsPage() {
                   id="settings-birth-date"
                   type="date"
                   value={birthdate}
-                  max={new Date().toISOString().split("T")[0]}
+                  max={maxBirthdate || undefined}
                   onChange={(e) => setBirthdate(e.target.value)}
                   className="w-full px-4 py-3 rounded-2xl bg-stone-50 border border-stone-200 text-stone-700 focus:outline-none focus:ring-2 focus:ring-rose-300"
                 />
