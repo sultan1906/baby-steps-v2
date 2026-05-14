@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { MapPin, Lock, Baby } from "lucide-react";
@@ -18,7 +18,7 @@ interface ProfileClientProps {
 export function ProfileClient({ profile: initial }: ProfileClientProps) {
   const { refresh, replace } = useRouter();
   const searchParams = useSearchParams();
-  const { get: getSearchParam } = searchParams;
+  const getSearchParam = useCallback((k: string) => searchParams.get(k), [searchParams]);
   const [followStatus, setFollowStatus] = useState<FollowStatus>(initial.followStatus);
 
   const canSeeBabies = followStatus === "accepted";

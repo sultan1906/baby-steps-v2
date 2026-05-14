@@ -36,6 +36,7 @@ export async function createStep(data: StepInput) {
     if (s.photoUrl) {
       try {
         await fanoutPhotoNotifications({
+          sessionUserId: session.user.id,
           actorId: session.user.id,
           babyId: s.babyId,
           steps: [s],
@@ -83,6 +84,7 @@ export async function createBulkSteps(steps: StepInput[]) {
       await Promise.all(
         Array.from(byBaby.entries()).map(([babyId, group]) =>
           fanoutPhotoNotifications({
+            sessionUserId: session.user.id,
             actorId: session.user.id,
             babyId,
             steps: group,

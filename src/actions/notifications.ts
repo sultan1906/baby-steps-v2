@@ -33,12 +33,12 @@ export type NotificationItem = {
  * roll back the step insert; callers wrap in try/catch.
  */
 export async function fanoutPhotoNotifications(args: {
+  sessionUserId: string;
   actorId: string;
   babyId: string;
   steps: Pick<Step, "id" | "photoUrl">[];
 }) {
-  const session = await getSession();
-  if (session.user.id !== args.actorId) throw new UserError("Unauthorized");
+  if (args.sessionUserId !== args.actorId) throw new UserError("Unauthorized");
 
   const photoSteps = args.steps.filter((s) => !!s.photoUrl);
   if (photoSteps.length === 0) return;
