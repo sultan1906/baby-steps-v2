@@ -12,6 +12,7 @@ import {
   revokeCoParentInvite,
 } from "@/actions/baby-invites";
 import { InviteCoParentDialog } from "./invite-coparent-dialog";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import type { CoParent } from "@/lib/baby-access";
 import type { PendingCoParentInviteItem } from "@/types";
 
@@ -37,6 +38,7 @@ export function CoParentsCard({ babyId, babyName }: Props) {
   const [revokingId, setRevokingId] = useState<string | null>(null);
   const [copiedInviteId, setCopiedInviteId] = useState<string | null>(null);
   const [showInvite, setShowInvite] = useState(false);
+  const [pendingRemove, setPendingRemove] = useState<{ userId: string; name: string } | null>(null);
 
   const [loadError, setLoadError] = useState(false);
 
@@ -67,8 +69,9 @@ export function CoParentsCard({ babyId, babyName }: Props) {
     void reload();
   }, [reload]);
 
-  const handleRemove = async (userId: string, name: string) => {
-    if (!confirm(`Remove ${name} as a co-parent?`)) return;
+  const confirmRemove = async () => {
+    if (!pendingRemove) return;
+    const { userId, name } = pendingRemove;
     setRemovingId(userId);
     try {
       await removeCoParent(babyId, userId);
@@ -76,6 +79,7 @@ export function CoParentsCard({ babyId, babyName }: Props) {
       await reload();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Couldn't remove co-parent");
+      throw err;
     } finally {
       setRemovingId(null);
     }
@@ -163,7 +167,7 @@ export function CoParentsCard({ babyId, babyName }: Props) {
               </span>
               {isOwner && (
                 <button
-                  onClick={() => handleRemove(cp.userId, cp.name)}
+                  onClick={() => setPendingRemove({ userId: cp.userId, name: cp.name })}
                   disabled={removingId === cp.userId}
                   className="size-7 rounded-full flex items-center justify-center text-stone-400 hover:bg-stone-50 hover:text-rose-500 transition-colors disabled:opacity-50"
                   aria-label={`Remove ${cp.name}`}
@@ -251,6 +255,22 @@ export function CoParentsCard({ babyId, babyName }: Props) {
           return url;
         }}
         onCreated={reload}
+      />
+
+      <ConfirmDialog
+        open={pendingRemove !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingRemove(null);
+        }}
+        title={pendingRemove ? `Remove ${pendingRemove.name}?` : "Remove co-parent?"}
+        description={
+          pendingRemove
+            ? `${pendingRemove.name} will lose access to ${babyName}'s memories. You can invite them again later.`
+            : undefined
+        }
+        confirmLabel="Remove"
+        tone="danger"
+        onConfirm={confirmRemove}
       />
     </div>
   );
