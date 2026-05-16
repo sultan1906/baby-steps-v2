@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/db";
-import { baby, babyAccess, step, user } from "@/db/schema";
+import { baby, babyAccess, babyInvite, step, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { currentBabyCookieConfig } from "@/lib/baby-utils";
 import {
@@ -177,7 +177,8 @@ export async function listCoParentsForBaby(babyId: string) {
 
 /**
  * Remove a co-parent from a baby. Owner-only.
- * Also revokes any pending invites this user accepted to keep things tidy.
+ * Also revokes any pending email invites addressed to this user so they cannot
+ * regain access by redeeming a still-pending invite for the same baby.
  */
 export async function removeCoParent(babyId: string, coParentUserId: string) {
   return runAction("removeCoParent", async () => {
@@ -194,6 +195,27 @@ export async function removeCoParent(babyId: string, coParentUserId: string) {
       .returning({ id: babyAccess.id });
 
     if (deleted.length === 0) throw new UserError("Co-parent not found");
+
+    // Revoke any pending email invites for this user on this baby.
+    const [removedUser] = await db
+      .select({ email: user.email })
+      .from(user)
+      .where(eq(user.id, coParentUserId))
+      .limit(1);
+
+    if (removedUser?.email) {
+      await db
+        .update(babyInvite)
+        .set({ status: "revoked" })
+        .where(
+          and(
+            eq(babyInvite.babyId, babyId),
+            eq(babyInvite.email, removedUser.email.toLowerCase()),
+            eq(babyInvite.kind, "email"),
+            eq(babyInvite.status, "pending")
+          )
+        );
+    }
 
     revalidatePath("/settings");
     revalidatePath("/settings/baby");

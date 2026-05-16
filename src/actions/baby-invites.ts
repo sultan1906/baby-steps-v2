@@ -62,7 +62,10 @@ async function sendCoParentEmail(args: {
   });
 
   if (error) {
-    console.error("Resend co-parent invite email failed", { to: args.to, error });
+    console.error("Resend co-parent invite email failed", {
+      error,
+      recipientDomain: args.to.split("@")[1] ?? null,
+    });
     throw new UserError("Couldn't send invite email");
   }
 }
@@ -306,6 +309,7 @@ export async function getCoParentInvitePreview(token: string): Promise<CoParentI
     const now = new Date();
     if (row.status === "revoked") return { status: "revoked" };
     if (row.status === "accepted") return { status: "accepted" };
+    if (row.status === "expired") return { status: "expired" };
     if (row.status === "pending" && row.expiresAt.getTime() <= now.getTime()) {
       return { status: "expired" };
     }
@@ -392,7 +396,10 @@ export async function acceptCoParentInvite(token: string): Promise<{ babyId: str
       const rows =
         (result as unknown as { rows?: unknown[] }).rows ?? (result as unknown as unknown[]);
       if (!Array.isArray(rows) || rows.length === 0) {
-        throw new UserError("This invite is no longer valid");
+        // Race: a concurrent accept (same user, different tab/device) may have
+        // already inserted baby_access. Don't throw if the user effectively has access.
+        const nowHasAccess = await hasBabyAccess(row.babyId, session.user.id);
+        if (!nowHasAccess) throw new UserError("This invite is no longer valid");
       }
     } else {
       // Link kind: invite stays pending so others can still use it.

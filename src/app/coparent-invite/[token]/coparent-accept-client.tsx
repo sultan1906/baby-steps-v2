@@ -31,9 +31,20 @@ export function CoParentAcceptClient({ token, preview, isSignedIn }: Props) {
       toast.success(`You're now co-parenting ${baby.name}`);
       push(`/timeline?coparent=joined`);
     } catch (err) {
+      // Surface only known public messages; everything else gets a generic fallback
+      // so internal details never leak through server-action error text.
       const raw = err instanceof Error ? err.message : "";
-      const safe = !raw || raw.length > 200 ? "Something went wrong. Please try again." : raw;
-      setError(safe);
+      const publicMessages = new Set([
+        "Invite not found",
+        "This invite is no longer valid",
+        "This invite has already been accepted",
+        "This invite has expired",
+        "This invite was sent to a different email address",
+        "This is your own invite",
+        "Please verify your email before accepting this invite",
+        "Unauthorized",
+      ]);
+      setError(publicMessages.has(raw) ? raw : "Something went wrong. Please try again.");
       setLoading(false);
     }
   };

@@ -32,10 +32,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   }
 
   // Redeem any pending co-parent invite stashed before authentication.
-  if (!pathname.startsWith("/timeline")) {
-    const coparentRedirect = await consumePendingCoParentInvite();
-    if (coparentRedirect) redirect(coparentRedirect);
-  }
+  // No pathname guard: the cookie is cleared inside consumePendingCoParentInvite,
+  // so a subsequent layout pass on the redirect target returns null and we don't loop.
+  const coparentRedirect = await consumePendingCoParentInvite();
+  if (coparentRedirect) redirect(coparentRedirect);
 
   const currentBaby = await getCurrentBaby(session.user.id);
 
