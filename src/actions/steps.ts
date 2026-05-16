@@ -1,14 +1,15 @@
 "use server";
 
 import { db } from "@/db";
-import { step, baby } from "@/db/schema";
+import { step } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { headers } from "next/headers";
-import { eq, and, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { UserError, runAction } from "@/lib/errors";
+import { assertBabyAccess, assertBabiesAccessible, hasBabyAccess } from "@/lib/baby-access";
 import { fanoutPhotoNotifications } from "./notifications";
 import type { StepInput } from "@/types";
 
@@ -24,13 +25,7 @@ async function getSession() {
 export async function createStep(data: StepInput) {
   return runAction("createStep", async () => {
     const session = await getSession();
-
-    const [owned] = await db
-      .select({ id: baby.id })
-      .from(baby)
-      .where(and(eq(baby.id, data.babyId), eq(baby.userId, session.user.id)))
-      .limit(1);
-    if (!owned) throw new UserError("Not found or unauthorized");
+    await assertBabyAccess(data.babyId, session.user.id);
 
     const [s] = await db.insert(step).values(data).returning();
 
@@ -62,13 +57,7 @@ export async function createBulkSteps(steps: StepInput[]) {
     const session = await getSession();
 
     const babyIds = Array.from(new Set(steps.map((s) => s.babyId)));
-    const owned = await db
-      .select({ id: baby.id })
-      .from(baby)
-      .where(and(inArray(baby.id, babyIds), eq(baby.userId, session.user.id)));
-    if (owned.length !== babyIds.length) {
-      throw new UserError("Not found or unauthorized");
-    }
+    await assertBabiesAccessible(babyIds, session.user.id);
 
     const created = await db.insert(step).values(steps).returning();
 
@@ -115,12 +104,13 @@ export async function updateStepCaption(stepId: string, caption: string) {
     if (trimmed.length > MAX_CAPTION_LENGTH) throw new UserError("Caption too long");
 
     const [found] = await db
-      .select({ id: step.id })
+      .select({ id: step.id, babyId: step.babyId })
       .from(step)
-      .innerJoin(baby, eq(step.babyId, baby.id))
-      .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
-
+      .where(eq(step.id, stepId))
+      .limit(1);
     if (!found) throw new UserError("Not found or unauthorized");
+    const allowed = await hasBabyAccess(found.babyId, session.user.id);
+    if (!allowed) throw new UserError("Not found or unauthorized");
 
     const [updated] = await db
       .update(step)
@@ -145,12 +135,18 @@ export async function deleteStep(stepId: string) {
     const session = await getSession();
 
     const [found] = await db
-      .select({ id: step.id, photoUrl: step.photoUrl, posterUrl: step.posterUrl })
+      .select({
+        id: step.id,
+        babyId: step.babyId,
+        photoUrl: step.photoUrl,
+        posterUrl: step.posterUrl,
+      })
       .from(step)
-      .innerJoin(baby, eq(step.babyId, baby.id))
-      .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
-
+      .where(eq(step.id, stepId))
+      .limit(1);
     if (!found) throw new UserError("Not found or unauthorized");
+    const allowed = await hasBabyAccess(found.babyId, session.user.id);
+    if (!allowed) throw new UserError("Not found or unauthorized");
 
     const blobsToDelete = [found.photoUrl, found.posterUrl].filter((u): u is string => Boolean(u));
     const results = await Promise.allSettled(blobsToDelete.map((u) => del(u)));

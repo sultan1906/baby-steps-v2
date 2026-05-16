@@ -1,7 +1,7 @@
 import { db } from "@/db";
-import { step, baby } from "@/db/schema";
+import { step } from "@/db/schema";
 import { getApiSession, jsonError } from "@/lib/api-utils";
-import { inArray, eq, and } from "drizzle-orm";
+import { getAccessibleBabyIds } from "@/lib/baby-access";
 import { NextRequest, NextResponse } from "next/server";
 
 /** Bulk create steps */
@@ -14,15 +14,10 @@ export async function POST(request: NextRequest) {
     return jsonError("steps array is required");
   }
 
-  // Verify ownership of all referenced babies
+  // Verify access (owner OR co-parent) for every referenced baby.
   const babyIds = [...new Set(stepsData.map((s: { babyId: string }) => s.babyId))];
-  const ownedBabies = await db
-    .select({ id: baby.id })
-    .from(baby)
-    .where(and(inArray(baby.id, babyIds), eq(baby.userId, session.user.id)));
-
-  const ownedBabyIds = new Set(ownedBabies.map((b) => b.id));
-  if (babyIds.some((id) => !ownedBabyIds.has(id))) {
+  const accessibleIds = new Set(await getAccessibleBabyIds(session.user.id));
+  if (babyIds.some((id) => !accessibleIds.has(id))) {
     return jsonError("Unauthorized babyId(s) in request", 403);
   }
 

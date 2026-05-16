@@ -1,12 +1,13 @@
 "use server";
 
 import { db } from "@/db";
-import { album, albumStep, baby, step } from "@/db/schema";
+import { album, albumStep, step } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { and, eq, inArray } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { UserError, runAction } from "@/lib/errors";
+import { assertBabyAccess, hasBabyAccess } from "@/lib/baby-access";
 import type { Album } from "@/db/schema";
 
 const MAX_NAME_LENGTH = 80;
@@ -38,20 +39,21 @@ export async function createAlbum(input: {
       throw new UserError("Cover must be one of the selected photos");
     }
 
-    const ownedSteps = await db
+    const foundSteps = await db
       .select({ id: step.id, babyId: step.babyId })
       .from(step)
-      .innerJoin(baby, eq(step.babyId, baby.id))
-      .where(and(inArray(step.id, input.stepIds), eq(baby.userId, session.user.id)));
+      .where(inArray(step.id, input.stepIds));
 
-    if (ownedSteps.length !== input.stepIds.length) {
+    if (foundSteps.length !== input.stepIds.length) {
       throw new UserError("One or more photos not found or unauthorized");
     }
 
-    const babyId = ownedSteps[0].babyId;
-    if (!ownedSteps.every((s) => s.babyId === babyId)) {
+    const babyId = foundSteps[0].babyId;
+    if (!foundSteps.every((s) => s.babyId === babyId)) {
       throw new UserError("All photos must belong to the same baby");
     }
+
+    await assertBabyAccess(babyId, session.user.id);
 
     const [created] = await db
       .insert(album)
@@ -76,12 +78,13 @@ export async function renameAlbum(albumId: string, name: string): Promise<Album>
     const trimmed = normalizeName(name);
 
     const [found] = await db
-      .select({ id: album.id })
+      .select({ id: album.id, babyId: album.babyId })
       .from(album)
-      .innerJoin(baby, eq(album.babyId, baby.id))
-      .where(and(eq(album.id, albumId), eq(baby.userId, session.user.id)));
-
+      .where(eq(album.id, albumId))
+      .limit(1);
     if (!found) throw new UserError("Album not found or unauthorized");
+    const allowed = await hasBabyAccess(found.babyId, session.user.id);
+    if (!allowed) throw new UserError("Album not found or unauthorized");
 
     const [updated] = await db
       .update(album)
@@ -99,12 +102,13 @@ export async function deleteAlbum(albumId: string): Promise<void> {
     const session = await getSession();
 
     const [found] = await db
-      .select({ id: album.id })
+      .select({ id: album.id, babyId: album.babyId })
       .from(album)
-      .innerJoin(baby, eq(album.babyId, baby.id))
-      .where(and(eq(album.id, albumId), eq(baby.userId, session.user.id)));
-
+      .where(eq(album.id, albumId))
+      .limit(1);
     if (!found) throw new UserError("Album not found or unauthorized");
+    const allowed = await hasBabyAccess(found.babyId, session.user.id);
+    if (!allowed) throw new UserError("Album not found or unauthorized");
 
     await db.delete(album).where(eq(album.id, albumId));
 

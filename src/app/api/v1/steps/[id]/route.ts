@@ -1,11 +1,12 @@
 import { db } from "@/db";
-import { step, baby } from "@/db/schema";
+import { step } from "@/db/schema";
 import { getApiSession, jsonError } from "@/lib/api-utils";
-import { eq, and } from "drizzle-orm";
+import { hasBabyAccess } from "@/lib/baby-access";
+import { eq } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { NextRequest, NextResponse } from "next/server";
 
-/** Update a step */
+/** Update a step (owner or co-parent of the underlying baby) */
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { session, error } = await getApiSession();
   if (error) return error;
@@ -13,12 +14,13 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   const [{ id: stepId }, data] = await Promise.all([params, request.json()]);
 
   const [found] = await db
-    .select({ id: step.id })
+    .select({ id: step.id, babyId: step.babyId })
     .from(step)
-    .innerJoin(baby, eq(step.babyId, baby.id))
-    .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
-
+    .where(eq(step.id, stepId))
+    .limit(1);
   if (!found) return jsonError("Not found or unauthorized", 404);
+  const allowed = await hasBabyAccess(found.babyId, session.user.id);
+  if (!allowed) return jsonError("Not found or unauthorized", 404);
 
   const allowedFields: Record<string, unknown> = {};
   if (data.date !== undefined) allowedFields.date = data.date;
@@ -45,12 +47,13 @@ export async function DELETE(
   const { id: stepId } = await params;
 
   const [found] = await db
-    .select({ id: step.id, photoUrl: step.photoUrl })
+    .select({ id: step.id, babyId: step.babyId, photoUrl: step.photoUrl })
     .from(step)
-    .innerJoin(baby, eq(step.babyId, baby.id))
-    .where(and(eq(step.id, stepId), eq(baby.userId, session.user.id)));
-
+    .where(eq(step.id, stepId))
+    .limit(1);
   if (!found) return jsonError("Not found or unauthorized", 404);
+  const allowed = await hasBabyAccess(found.babyId, session.user.id);
+  if (!allowed) return jsonError("Not found or unauthorized", 404);
 
   if (found.photoUrl) {
     await del(found.photoUrl);

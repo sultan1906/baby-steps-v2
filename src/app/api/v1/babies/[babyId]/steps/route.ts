@@ -1,10 +1,11 @@
 import { db } from "@/db";
-import { step, baby } from "@/db/schema";
+import { step } from "@/db/schema";
 import { getApiSession, jsonError } from "@/lib/api-utils";
-import { eq, and } from "drizzle-orm";
+import { hasBabyAccess } from "@/lib/baby-access";
+import { eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-/** Get all steps for a baby */
+/** Get all steps for a baby (owner or co-parent) */
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ babyId: string }> }
@@ -14,14 +15,8 @@ export async function GET(
 
   const { babyId } = await params;
 
-  // Verify ownership
-  const [found] = await db
-    .select()
-    .from(baby)
-    .where(and(eq(baby.id, babyId), eq(baby.userId, session.user.id)))
-    .limit(1);
-
-  if (!found) return jsonError("Baby not found", 404);
+  const allowed = await hasBabyAccess(babyId, session.user.id);
+  if (!allowed) return jsonError("Baby not found", 404);
 
   const allSteps = await db
     .select()
@@ -32,7 +27,7 @@ export async function GET(
   return NextResponse.json({ steps: allSteps });
 }
 
-/** Create a single step */
+/** Create a single step (owner or co-parent) */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ babyId: string }> }
@@ -42,14 +37,8 @@ export async function POST(
 
   const { babyId } = await params;
 
-  // Verify ownership
-  const [found] = await db
-    .select()
-    .from(baby)
-    .where(and(eq(baby.id, babyId), eq(baby.userId, session.user.id)))
-    .limit(1);
-
-  if (!found) return jsonError("Baby not found", 404);
+  const allowed = await hasBabyAccess(babyId, session.user.id);
+  if (!allowed) return jsonError("Baby not found", 404);
 
   const data = await request.json();
 

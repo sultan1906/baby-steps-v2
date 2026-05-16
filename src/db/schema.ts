@@ -27,6 +27,8 @@ export const inviteStatusEnum = pgEnum("invite_status", [
   "expired",
 ]);
 
+export const babyAccessRoleEnum = pgEnum("baby_access_role", ["coparent"]);
+
 // ── better-auth required tables ───────────────────────────────────────────────
 // These are managed by the better-auth Drizzle adapter.
 // Column names must match exactly what better-auth expects.
@@ -280,6 +282,68 @@ export const invite = pgTable(
   })
 );
 
+export const babyAccess = pgTable(
+  "baby_access",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    babyId: text("baby_id")
+      .notNull()
+      .references(() => baby.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    role: babyAccessRoleEnum("role").notNull().default("coparent"),
+    addedByUserId: text("added_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    addedAt: timestamp("added_at").notNull().defaultNow(),
+  },
+  (t) => ({
+    uniqueBabyUser: unique("baby_access_unique_baby_user").on(t.babyId, t.userId),
+    babyIdx: index("baby_access_baby_idx").on(t.babyId),
+    userIdx: index("baby_access_user_idx").on(t.userId),
+  })
+);
+
+export const babyInvite = pgTable(
+  "baby_invite",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    babyId: text("baby_id")
+      .notNull()
+      .references(() => baby.id, { onDelete: "cascade" }),
+    inviterId: text("inviter_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    kind: inviteKindEnum("kind").notNull(),
+    email: text("email"),
+    token: text("token").notNull().unique(),
+    status: inviteStatusEnum("status").notNull().default("pending"),
+    expiresAt: timestamp("expires_at").notNull(),
+    acceptedByUserId: text("accepted_by_user_id").references(() => user.id, {
+      onDelete: "set null",
+    }),
+    acceptedAt: timestamp("accepted_at"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => ({
+    babyIdx: index("baby_invite_baby_idx").on(t.babyId, t.status),
+    inviterIdx: index("baby_invite_inviter_idx").on(t.inviterId, t.status),
+    tokenIdx: index("baby_invite_token_idx").on(t.token),
+    uniquePendingEmailPerBaby: uniqueIndex("baby_invite_unique_pending_email")
+      .on(t.babyId, t.email)
+      .where(sql`${t.status} = 'pending' AND ${t.kind} = 'email'`),
+    emailKindCheck: check(
+      "baby_invite_email_kind_check",
+      sql`(${t.kind} = 'email' AND ${t.email} IS NOT NULL) OR (${t.kind} = 'link' AND ${t.email} IS NULL)`
+    ),
+  })
+);
+
 // ── Relations ─────────────────────────────────────────────────────────────────
 
 export const userRelations = relations(user, ({ many }) => ({
@@ -303,6 +367,36 @@ export const babyRelations = relations(baby, ({ one, many }) => ({
   user: one(user, { fields: [baby.userId], references: [user.id] }),
   steps: many(step),
   albums: many(album),
+  accessGrants: many(babyAccess),
+  invites: many(babyInvite),
+}));
+
+export const babyAccessRelations = relations(babyAccess, ({ one }) => ({
+  baby: one(baby, { fields: [babyAccess.babyId], references: [baby.id] }),
+  user: one(user, {
+    fields: [babyAccess.userId],
+    references: [user.id],
+    relationName: "babyAccessUser",
+  }),
+  addedBy: one(user, {
+    fields: [babyAccess.addedByUserId],
+    references: [user.id],
+    relationName: "babyAccessAddedBy",
+  }),
+}));
+
+export const babyInviteRelations = relations(babyInvite, ({ one }) => ({
+  baby: one(baby, { fields: [babyInvite.babyId], references: [baby.id] }),
+  inviter: one(user, {
+    fields: [babyInvite.inviterId],
+    references: [user.id],
+    relationName: "babyInviteInviter",
+  }),
+  acceptedBy: one(user, {
+    fields: [babyInvite.acceptedByUserId],
+    references: [user.id],
+    relationName: "babyInviteAcceptedBy",
+  }),
 }));
 
 export const stepRelations = relations(step, ({ one, many }) => ({
@@ -388,3 +482,7 @@ export type Album = typeof album.$inferSelect;
 export type NewAlbum = typeof album.$inferInsert;
 export type AlbumStep = typeof albumStep.$inferSelect;
 export type NewAlbumStep = typeof albumStep.$inferInsert;
+export type BabyAccess = typeof babyAccess.$inferSelect;
+export type NewBabyAccess = typeof babyAccess.$inferInsert;
+export type BabyInvite = typeof babyInvite.$inferSelect;
+export type NewBabyInvite = typeof babyInvite.$inferInsert;

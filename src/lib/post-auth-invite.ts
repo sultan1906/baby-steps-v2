@@ -1,5 +1,11 @@
 import { acceptInvite } from "@/actions/invites";
+import { acceptCoParentInvite } from "@/actions/baby-invites";
 import { readPendingInviteCookie, clearPendingInviteCookie } from "@/lib/invite-cookie";
+import {
+  readPendingCoParentInviteCookie,
+  clearPendingCoParentInviteCookie,
+} from "@/lib/coparent-invite-cookie";
+import { switchBaby } from "@/actions/baby";
 
 /**
  * If a pending_invite_token cookie is present, try to redeem it.
@@ -16,8 +22,30 @@ export async function consumePendingInvite(): Promise<string | null> {
     await clearPendingInviteCookie();
     return `/profile/${inviterId}?welcome=1`;
   } catch {
-    // Invalid/expired/mismatched — drop the cookie and surface a soft error.
     await clearPendingInviteCookie();
     return `/timeline?invite=invalid`;
+  }
+}
+
+/**
+ * If a pending_coparent_invite_token cookie is present, try to redeem it
+ * and switch the active baby to the newly-shared one.
+ */
+export async function consumePendingCoParentInvite(): Promise<string | null> {
+  const token = await readPendingCoParentInviteCookie();
+  if (!token) return null;
+
+  try {
+    const { babyId } = await acceptCoParentInvite(token);
+    await clearPendingCoParentInviteCookie();
+    try {
+      await switchBaby(babyId);
+    } catch {
+      // non-fatal
+    }
+    return `/timeline?coparent=joined`;
+  } catch {
+    await clearPendingCoParentInviteCookie();
+    return `/timeline?coparent=invalid`;
   }
 }
