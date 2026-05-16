@@ -52,11 +52,10 @@ export async function isBabyOwner(babyId: string, userId: string): Promise<boole
 }
 
 export async function getAccessibleBabyIds(userId: string): Promise<string[]> {
-  const owned = await db.select({ id: baby.id }).from(baby).where(eq(baby.userId, userId));
-  const shared = await db
-    .select({ id: babyAccess.babyId })
-    .from(babyAccess)
-    .where(eq(babyAccess.userId, userId));
+  const [owned, shared] = await Promise.all([
+    db.select({ id: baby.id }).from(baby).where(eq(baby.userId, userId)),
+    db.select({ id: babyAccess.babyId }).from(babyAccess).where(eq(babyAccess.userId, userId)),
+  ]);
   return Array.from(new Set([...owned.map((r) => r.id), ...shared.map((r) => r.id)]));
 }
 

@@ -152,14 +152,18 @@ export async function listCoParentsForBaby(babyId: string) {
     const session = await getSession();
     await assertBabyAccess(babyId, session.user.id);
 
-    const [b] = await db
-      .select({ ownerId: baby.userId })
-      .from(baby)
-      .where(eq(baby.id, babyId))
-      .limit(1);
-    if (!b) throw new UserError("Baby not found");
+    const [babyRow, coParents] = await Promise.all([
+      db
+        .select({ ownerId: baby.userId })
+        .from(baby)
+        .where(eq(baby.id, babyId))
+        .limit(1)
+        .then((rows) => rows[0]),
+      listCoParentsForBabyImpl(babyId),
+    ]);
+    if (!babyRow) throw new UserError("Baby not found");
+    const b = babyRow;
 
-    const coParents = await listCoParentsForBabyImpl(babyId);
     const [owner] = await db
       .select({ id: user.id, name: user.name, email: user.email, image: user.image })
       .from(user)

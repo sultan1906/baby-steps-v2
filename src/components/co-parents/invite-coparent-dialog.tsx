@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Mail, Link2, Copy, Check } from "lucide-react";
@@ -32,6 +32,14 @@ export function InviteCoParentDialog({
   const [submitting, setSubmitting] = useState(false);
   const [linkUrl, setLinkUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open && mode === "email") {
+      const t = setTimeout(() => emailInputRef.current?.focus(), 50);
+      return () => clearTimeout(t);
+    }
+  }, [open, mode]);
 
   const reset = () => {
     setMode("email");
@@ -126,12 +134,12 @@ export function InviteCoParentDialog({
         {mode === "email" ? (
           <form onSubmit={handleEmail} className="flex flex-col gap-3">
             <input
+              ref={emailInputRef}
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="co-parent@example.com"
               required
-              autoFocus
               className="w-full px-4 h-11 rounded-xl bg-stone-50 border border-stone-200 text-sm placeholder:text-stone-400 outline-none transition focus:bg-white focus:border-rose-300"
             />
             <div className="flex justify-end gap-2">
@@ -183,7 +191,7 @@ export function InviteCoParentDialog({
                 </p>
                 <div className="flex justify-end">
                   <Button variant="ghost" onClick={() => handleOpenChange(false)}>
-                    Done
+                    Close
                   </Button>
                 </div>
               </div>

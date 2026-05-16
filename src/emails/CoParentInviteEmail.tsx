@@ -57,7 +57,7 @@ export function CoParentInviteEmail({
             }}
           >
             {inviterName} invited you to co-parent on Baby Steps. You&apos;ll be able to upload,
-            edit and organise photos and memories together — like two parents sharing one journal.
+            edit and organise photos and memories together, like two parents sharing one journal.
           </Text>
 
           <Button

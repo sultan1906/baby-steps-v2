@@ -131,7 +131,7 @@ export function CoParentsCard({ babyId, babyName }: Props) {
           <Loader2 className="size-5 animate-spin text-stone-400" />
         </div>
       ) : loadError ? (
-        <div className="flex items-center justify-between py-3 px-3 rounded-xl bg-rose-50 border border-rose-100">
+        <div className="flex items-center justify-between p-3 rounded-xl bg-rose-50 border border-rose-100">
           <p className="text-sm text-rose-600">Couldn&apos;t load co-parents.</p>
           <button
             onClick={() => void reload()}
