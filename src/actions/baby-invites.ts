@@ -3,7 +3,7 @@
 import { db } from "@/db";
 import { babyAccess, babyInvite, baby, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
-import { assertBabyOwner, hasBabyAccess } from "@/lib/baby-access";
+import { assertBabyOwner, hasBabyAccess, sqlBabyOwned } from "@/lib/baby-access";
 import { getResend } from "@/lib/resend";
 import { CoParentInviteEmail } from "@/emails/CoParentInviteEmail";
 import { render } from "@react-email/components";
@@ -240,19 +240,18 @@ export async function revokeCoParentInvite(inviteId: string): Promise<void> {
   return runAction("revokeCoParentInvite", async () => {
     const session = await getSession();
 
-    const [row] = await db
-      .select({ babyId: babyInvite.babyId })
-      .from(babyInvite)
-      .where(eq(babyInvite.id, inviteId))
-      .limit(1);
-    if (!row) throw new UserError("Invite not found");
-
-    await assertBabyOwner(row.babyId, session.user.id);
-
-    await db
+    const updated = await db
       .update(babyInvite)
       .set({ status: "revoked" })
-      .where(and(eq(babyInvite.id, inviteId), eq(babyInvite.status, "pending")));
+      .where(
+        and(
+          eq(babyInvite.id, inviteId),
+          eq(babyInvite.status, "pending"),
+          sqlBabyOwned(babyInvite.babyId, session.user.id)
+        )
+      )
+      .returning({ id: babyInvite.id });
+    if (updated.length === 0) throw new UserError("Invite not found");
 
     revalidatePath("/settings");
     revalidatePath("/settings/baby");

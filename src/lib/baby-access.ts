@@ -1,7 +1,28 @@
 import { db } from "@/db";
 import { baby, babyAccess, user } from "@/db/schema";
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, sql, type SQL, type SQLWrapper } from "drizzle-orm";
 import { UserError } from "@/lib/errors";
+
+/**
+ * SQL predicate that's true when `userId` can write to the baby referenced by
+ * `babyIdExpr` (owner OR co-parent). Pass either a literal id string or a
+ * Drizzle column reference (e.g. `step.babyId`). Use inside any `where(and(...))`
+ * to make the auth check atomic with the UPDATE/DELETE.
+ */
+export function sqlBabyWritable(babyIdExpr: SQLWrapper | string, userId: string): SQL {
+  return sql`(
+    EXISTS (SELECT 1 FROM ${baby} WHERE ${baby.id} = ${babyIdExpr} AND ${baby.userId} = ${userId})
+    OR EXISTS (SELECT 1 FROM ${babyAccess} WHERE ${babyAccess.babyId} = ${babyIdExpr} AND ${babyAccess.userId} = ${userId})
+  )`;
+}
+
+/**
+ * SQL predicate that's true when `userId` owns the baby referenced by `babyIdExpr`.
+ * Use inside any `where(and(...))` for owner-only atomic UPDATE/DELETE.
+ */
+export function sqlBabyOwned(babyIdExpr: SQLWrapper | string, userId: string): SQL {
+  return sql`EXISTS (SELECT 1 FROM ${baby} WHERE ${baby.id} = ${babyIdExpr} AND ${baby.userId} = ${userId})`;
+}
 
 export type CoParent = {
   accessId: string;
@@ -40,15 +61,6 @@ export async function assertBabyOwner(babyId: string, userId: string): Promise<v
     .where(and(eq(baby.id, babyId), eq(baby.userId, userId)))
     .limit(1);
   if (!owned) throw new UserError("Not found or unauthorized");
-}
-
-export async function isBabyOwner(babyId: string, userId: string): Promise<boolean> {
-  const [owned] = await db
-    .select({ id: baby.id })
-    .from(baby)
-    .where(and(eq(baby.id, babyId), eq(baby.userId, userId)))
-    .limit(1);
-  return Boolean(owned);
 }
 
 export async function getAccessibleBabyIds(userId: string): Promise<string[]> {

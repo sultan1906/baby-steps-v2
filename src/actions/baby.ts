@@ -6,9 +6,10 @@ import { auth } from "@/lib/auth";
 import { currentBabyCookieConfig } from "@/lib/baby-utils";
 import {
   assertBabyAccess,
-  assertBabyOwner,
   listAccessibleBabies,
   listCoParents as listCoParentsForBabyImpl,
+  sqlBabyOwned,
+  sqlBabyWritable,
 } from "@/lib/baby-access";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
@@ -76,10 +77,13 @@ export async function updateBaby(
 ) {
   return runAction("updateBaby", async () => {
     const session = await getSession();
-    await assertBabyAccess(id, session.user.id);
 
-    const [updated] = await db.update(baby).set(data).where(eq(baby.id, id)).returning();
-    if (!updated) throw new UserError("Baby not found");
+    const [updated] = await db
+      .update(baby)
+      .set(data)
+      .where(and(eq(baby.id, id), sqlBabyWritable(baby.id, session.user.id)))
+      .returning();
+    if (!updated) throw new UserError("Not found or unauthorized");
 
     revalidatePath("/settings");
     revalidatePath("/timeline");
@@ -94,9 +98,12 @@ export async function updateBaby(
 export async function deleteBaby(id: string) {
   return runAction("deleteBaby", async () => {
     const session = await getSession();
-    await assertBabyOwner(id, session.user.id);
 
-    await db.delete(baby).where(eq(baby.id, id));
+    const deleted = await db
+      .delete(baby)
+      .where(and(eq(baby.id, id), eq(baby.userId, session.user.id)))
+      .returning({ id: baby.id });
+    if (deleted.length === 0) throw new UserError("Not found or unauthorized");
 
     const cookieStore = await cookies();
     cookieStore.delete("babysteps_current_baby");
@@ -187,7 +194,6 @@ export async function listCoParentsForBaby(babyId: string) {
 export async function removeCoParent(babyId: string, coParentUserId: string) {
   return runAction("removeCoParent", async () => {
     const session = await getSession();
-    await assertBabyOwner(babyId, session.user.id);
 
     if (coParentUserId === session.user.id) {
       throw new UserError("Owner cannot remove themselves");
@@ -195,10 +201,16 @@ export async function removeCoParent(babyId: string, coParentUserId: string) {
 
     const deleted = await db
       .delete(babyAccess)
-      .where(and(eq(babyAccess.babyId, babyId), eq(babyAccess.userId, coParentUserId)))
+      .where(
+        and(
+          eq(babyAccess.babyId, babyId),
+          eq(babyAccess.userId, coParentUserId),
+          sqlBabyOwned(babyAccess.babyId, session.user.id)
+        )
+      )
       .returning({ id: babyAccess.id });
 
-    if (deleted.length === 0) throw new UserError("Co-parent not found");
+    if (deleted.length === 0) throw new UserError("Not found or unauthorized");
 
     // Revoke any pending email invites for this user on this baby.
     const [removedUser] = await db

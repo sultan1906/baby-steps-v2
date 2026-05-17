@@ -1,9 +1,9 @@
 import { db } from "@/db";
 import { baby } from "@/db/schema";
 import { getApiSession, jsonError } from "@/lib/api-utils";
-import { hasBabyAccess, isBabyOwner } from "@/lib/baby-access";
+import { sqlBabyWritable } from "@/lib/baby-access";
 import { cookies } from "next/headers";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 /** Update a baby (owner or co-parent) */
@@ -16,16 +16,17 @@ export async function PUT(
 
   const [{ babyId }, data] = await Promise.all([params, request.json()]);
 
-  const allowed = await hasBabyAccess(babyId, session.user.id);
-  if (!allowed) return jsonError("Baby not found", 404);
-
   const allowedFields = {
     ...(data.name !== undefined && { name: data.name }),
     ...(data.birthdate !== undefined && { birthdate: data.birthdate }),
     ...(data.photoUrl !== undefined && { photoUrl: data.photoUrl }),
   };
 
-  const [updated] = await db.update(baby).set(allowedFields).where(eq(baby.id, babyId)).returning();
+  const [updated] = await db
+    .update(baby)
+    .set(allowedFields)
+    .where(and(eq(baby.id, babyId), sqlBabyWritable(baby.id, session.user.id)))
+    .returning();
 
   if (!updated) return jsonError("Baby not found", 404);
 
@@ -42,10 +43,11 @@ export async function DELETE(
 
   const { babyId } = await params;
 
-  const allowed = await isBabyOwner(babyId, session.user.id);
-  if (!allowed) return jsonError("Baby not found", 404);
-
-  await db.delete(baby).where(eq(baby.id, babyId));
+  const deleted = await db
+    .delete(baby)
+    .where(and(eq(baby.id, babyId), eq(baby.userId, session.user.id)))
+    .returning({ id: baby.id });
+  if (deleted.length === 0) return jsonError("Baby not found", 404);
 
   const cookieStore = await cookies();
   cookieStore.delete("babysteps_current_baby");

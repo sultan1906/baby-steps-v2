@@ -5,9 +5,9 @@ import { album, albumStep, step } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { UserError, runAction } from "@/lib/errors";
-import { assertBabyAccess, hasBabyAccess } from "@/lib/baby-access";
+import { assertBabyAccess, sqlBabyWritable } from "@/lib/baby-access";
 import type { Album } from "@/db/schema";
 
 const MAX_NAME_LENGTH = 80;
@@ -77,20 +77,12 @@ export async function renameAlbum(albumId: string, name: string): Promise<Album>
     const session = await getSession();
     const trimmed = normalizeName(name);
 
-    const [found] = await db
-      .select({ id: album.id, babyId: album.babyId })
-      .from(album)
-      .where(eq(album.id, albumId))
-      .limit(1);
-    if (!found) throw new UserError("Album not found or unauthorized");
-    const allowed = await hasBabyAccess(found.babyId, session.user.id);
-    if (!allowed) throw new UserError("Album not found or unauthorized");
-
     const [updated] = await db
       .update(album)
       .set({ name: trimmed })
-      .where(eq(album.id, albumId))
+      .where(and(eq(album.id, albumId), sqlBabyWritable(album.babyId, session.user.id)))
       .returning();
+    if (!updated) throw new UserError("Album not found or unauthorized");
 
     revalidatePath("/gallery");
     return updated;
@@ -101,16 +93,11 @@ export async function deleteAlbum(albumId: string): Promise<void> {
   return runAction("deleteAlbum", async () => {
     const session = await getSession();
 
-    const [found] = await db
-      .select({ id: album.id, babyId: album.babyId })
-      .from(album)
-      .where(eq(album.id, albumId))
-      .limit(1);
-    if (!found) throw new UserError("Album not found or unauthorized");
-    const allowed = await hasBabyAccess(found.babyId, session.user.id);
-    if (!allowed) throw new UserError("Album not found or unauthorized");
-
-    await db.delete(album).where(eq(album.id, albumId));
+    const deleted = await db
+      .delete(album)
+      .where(and(eq(album.id, albumId), sqlBabyWritable(album.babyId, session.user.id)))
+      .returning({ id: album.id });
+    if (deleted.length === 0) throw new UserError("Album not found or unauthorized");
 
     revalidatePath("/gallery");
   });

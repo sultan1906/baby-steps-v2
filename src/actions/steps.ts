@@ -6,10 +6,10 @@ import { auth } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { headers } from "next/headers";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { UserError, runAction } from "@/lib/errors";
-import { assertBabyAccess, assertBabiesAccessible, hasBabyAccess } from "@/lib/baby-access";
+import { assertBabyAccess, assertBabiesAccessible, sqlBabyWritable } from "@/lib/baby-access";
 import { fanoutPhotoNotifications } from "./notifications";
 import type { StepInput } from "@/types";
 
@@ -103,20 +103,12 @@ export async function updateStepCaption(stepId: string, caption: string) {
     const trimmed = caption.trim();
     if (trimmed.length > MAX_CAPTION_LENGTH) throw new UserError("Caption too long");
 
-    const [found] = await db
-      .select({ id: step.id, babyId: step.babyId })
-      .from(step)
-      .where(eq(step.id, stepId))
-      .limit(1);
-    if (!found) throw new UserError("Not found or unauthorized");
-    const allowed = await hasBabyAccess(found.babyId, session.user.id);
-    if (!allowed) throw new UserError("Not found or unauthorized");
-
     const [updated] = await db
       .update(step)
       .set({ caption: trimmed || null })
-      .where(eq(step.id, stepId))
+      .where(and(eq(step.id, stepId), sqlBabyWritable(step.babyId, session.user.id)))
       .returning();
+    if (!updated) throw new UserError("Not found or unauthorized");
 
     revalidatePath("/timeline");
     revalidatePath("/gallery");
@@ -134,21 +126,15 @@ export async function deleteStep(stepId: string) {
   return runAction("deleteStep", async () => {
     const session = await getSession();
 
-    const [found] = await db
-      .select({
-        id: step.id,
-        babyId: step.babyId,
-        photoUrl: step.photoUrl,
-        posterUrl: step.posterUrl,
-      })
-      .from(step)
-      .where(eq(step.id, stepId))
-      .limit(1);
-    if (!found) throw new UserError("Not found or unauthorized");
-    const allowed = await hasBabyAccess(found.babyId, session.user.id);
-    if (!allowed) throw new UserError("Not found or unauthorized");
+    const [deleted] = await db
+      .delete(step)
+      .where(and(eq(step.id, stepId), sqlBabyWritable(step.babyId, session.user.id)))
+      .returning({ photoUrl: step.photoUrl, posterUrl: step.posterUrl });
+    if (!deleted) throw new UserError("Not found or unauthorized");
 
-    const blobsToDelete = [found.photoUrl, found.posterUrl].filter((u): u is string => Boolean(u));
+    const blobsToDelete = [deleted.photoUrl, deleted.posterUrl].filter((u): u is string =>
+      Boolean(u)
+    );
     const results = await Promise.allSettled(blobsToDelete.map((u) => del(u)));
     after(() => {
       for (const [i, r] of results.entries()) {
@@ -160,8 +146,6 @@ export async function deleteStep(stepId: string) {
         }
       }
     });
-
-    await db.delete(step).where(eq(step.id, stepId));
 
     revalidatePath("/timeline");
     revalidatePath("/gallery");
