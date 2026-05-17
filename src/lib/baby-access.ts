@@ -8,20 +8,28 @@ import { UserError } from "@/lib/errors";
  * `babyIdExpr` (owner OR co-parent). Pass either a literal id string or a
  * Drizzle column reference (e.g. `step.babyId`). Use inside any `where(and(...))`
  * to make the auth check atomic with the UPDATE/DELETE.
+ *
+ * The inner tables are aliased (`b`, `ba`) so the subquery stays correlated to
+ * the outer row even when `babyIdExpr` is the outer `baby.id` column itself —
+ * without an alias the inner `baby` shadows the outer reference and the
+ * predicate degrades to "user owns ANY baby".
  */
 export function sqlBabyWritable(babyIdExpr: SQLWrapper | string, userId: string): SQL {
   return sql`(
-    EXISTS (SELECT 1 FROM ${baby} WHERE ${baby.id} = ${babyIdExpr} AND ${baby.userId} = ${userId})
-    OR EXISTS (SELECT 1 FROM ${babyAccess} WHERE ${babyAccess.babyId} = ${babyIdExpr} AND ${babyAccess.userId} = ${userId})
+    EXISTS (SELECT 1 FROM "baby" AS "b" WHERE "b"."id" = ${babyIdExpr} AND "b"."user_id" = ${userId})
+    OR EXISTS (SELECT 1 FROM "baby_access" AS "ba" WHERE "ba"."baby_id" = ${babyIdExpr} AND "ba"."user_id" = ${userId})
   )`;
 }
 
 /**
  * SQL predicate that's true when `userId` owns the baby referenced by `babyIdExpr`.
  * Use inside any `where(and(...))` for owner-only atomic UPDATE/DELETE.
+ *
+ * Inner `baby` is aliased to `b` to avoid shadowing when callers pass the outer
+ * `baby.id` column reference.
  */
 export function sqlBabyOwned(babyIdExpr: SQLWrapper | string, userId: string): SQL {
-  return sql`EXISTS (SELECT 1 FROM ${baby} WHERE ${baby.id} = ${babyIdExpr} AND ${baby.userId} = ${userId})`;
+  return sql`EXISTS (SELECT 1 FROM "baby" AS "b" WHERE "b"."id" = ${babyIdExpr} AND "b"."user_id" = ${userId})`;
 }
 
 export type CoParent = {

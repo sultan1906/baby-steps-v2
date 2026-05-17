@@ -45,12 +45,13 @@ export async function DELETE(
   const [deleted] = await db
     .delete(step)
     .where(and(eq(step.id, stepId), sqlBabyWritable(step.babyId, session.user.id)))
-    .returning({ photoUrl: step.photoUrl });
+    .returning({ photoUrl: step.photoUrl, posterUrl: step.posterUrl });
   if (!deleted) return jsonError("Not found or unauthorized", 404);
 
-  if (deleted.photoUrl) {
-    await del(deleted.photoUrl);
-  }
+  const blobsToDelete = [deleted.photoUrl, deleted.posterUrl].filter((u): u is string =>
+    Boolean(u)
+  );
+  await Promise.allSettled(blobsToDelete.map((u) => del(u)));
 
   return NextResponse.json({ success: true });
 }

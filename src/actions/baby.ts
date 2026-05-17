@@ -1,20 +1,19 @@
 "use server";
 
 import { db } from "@/db";
-import { baby, babyAccess, babyInvite, step, user } from "@/db/schema";
+import { baby, step, user } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { currentBabyCookieConfig } from "@/lib/baby-utils";
 import {
   assertBabyAccess,
   listAccessibleBabies,
   listCoParents as listCoParentsForBabyImpl,
-  sqlBabyOwned,
   sqlBabyWritable,
 } from "@/lib/baby-access";
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { cookies } from "next/headers";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, isNull, sql } from "drizzle-orm";
 import { UserError, runAction } from "@/lib/errors";
 import type { NewBaby } from "@/db/schema";
 
@@ -199,39 +198,39 @@ export async function removeCoParent(babyId: string, coParentUserId: string) {
       throw new UserError("Owner cannot remove themselves");
     }
 
-    const deleted = await db
-      .delete(babyAccess)
-      .where(
-        and(
-          eq(babyAccess.babyId, babyId),
-          eq(babyAccess.userId, coParentUserId),
-          sqlBabyOwned(babyAccess.babyId, session.user.id)
-        )
-      )
-      .returning({ id: babyAccess.id });
-
-    if (deleted.length === 0) throw new UserError("Not found or unauthorized");
-
-    // Revoke any pending email invites for this user on this baby.
-    const [removedUser] = await db
-      .select({ email: user.email })
-      .from(user)
-      .where(eq(user.id, coParentUserId))
-      .limit(1);
-
-    if (removedUser?.email) {
-      await db
-        .update(babyInvite)
-        .set({ status: "revoked" })
-        .where(
-          and(
-            eq(babyInvite.babyId, babyId),
-            eq(babyInvite.email, removedUser.email.toLowerCase()),
-            eq(babyInvite.kind, "email"),
-            eq(babyInvite.status, "pending")
+    // Single atomic statement: ownership check + access delete + invite revoke
+    // all run together; either all happen or none do.
+    const result = await db.execute(sql`
+      WITH deleted_access AS (
+        DELETE FROM "baby_access"
+        WHERE "baby_id" = ${babyId}
+          AND "user_id" = ${coParentUserId}
+          AND EXISTS (
+            SELECT 1 FROM "baby" AS "b"
+            WHERE "b"."id" = ${babyId} AND "b"."user_id" = ${session.user.id}
           )
-        );
-    }
+        RETURNING "id"
+      ),
+      removed_email AS (
+        SELECT lower("email") AS email FROM "user" WHERE "id" = ${coParentUserId}
+      ),
+      revoked_invites AS (
+        UPDATE "baby_invite"
+        SET "status" = 'revoked'
+        WHERE "baby_id" = ${babyId}
+          AND "kind" = 'email'
+          AND "status" = 'pending'
+          AND lower("email") = (SELECT email FROM removed_email)
+          AND EXISTS (SELECT 1 FROM deleted_access)
+        RETURNING "id"
+      )
+      SELECT (SELECT count(*) FROM deleted_access)::int AS deleted_count
+    `);
+    const rows =
+      (result as unknown as { rows?: { deleted_count: number }[] }).rows ??
+      (result as unknown as { deleted_count: number }[]);
+    const deletedCount = Array.isArray(rows) ? Number(rows[0]?.deleted_count ?? 0) : 0;
+    if (deletedCount === 0) throw new UserError("Not found or unauthorized");
 
     revalidatePath("/settings");
     revalidatePath("/settings/baby");
