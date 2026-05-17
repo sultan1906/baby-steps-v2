@@ -108,3 +108,27 @@ export interface ValidInvitePreview {
 }
 
 export type InvitePreview = ValidInvitePreview | { status: Exclude<InvitePreviewStatus, "valid"> };
+
+// ── Co-parent invite types ──────────────────────────────────────────────────
+
+export interface PendingCoParentInviteItem {
+  id: string;
+  babyId: string;
+  kind: InviteKind;
+  email: string | null;
+  expiresAt: Date;
+  url: string;
+  isExpired: boolean;
+  createdAt: Date;
+}
+
+export interface ValidCoParentInvitePreview {
+  status: "valid";
+  kind: InviteKind;
+  inviter: { id: string; name: string; image: string | null };
+  baby: { id: string; name: string; photoUrl: string | null; birthdate: string };
+}
+
+export type CoParentInvitePreview =
+  | ValidCoParentInvitePreview
+  | { status: Exclude<InvitePreviewStatus, "valid"> };

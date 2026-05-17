@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { getCurrentBaby, resolveNoBabyDestination } from "@/lib/baby-utils";
 import { listBabies } from "@/actions/baby";
 import { getPendingIncomingInviteCount } from "@/actions/invites";
-import { consumePendingInvite } from "@/lib/post-auth-invite";
+import { consumePendingInvite, consumePendingCoParentInvite } from "@/lib/post-auth-invite";
 import { BabyProvider } from "@/components/baby/baby-provider";
 import { BottomNav } from "@/components/shared/bottom-nav";
 import { NotificationBell } from "@/components/notifications/notification-bell";
@@ -30,6 +30,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     const inviteRedirect = await consumePendingInvite();
     if (inviteRedirect) redirect(inviteRedirect);
   }
+
+  // Redeem any pending co-parent invite stashed before authentication.
+  // No pathname guard: the cookie is cleared inside consumePendingCoParentInvite,
+  // so a subsequent layout pass on the redirect target returns null and we don't loop.
+  const coparentRedirect = await consumePendingCoParentInvite();
+  if (coparentRedirect) redirect(coparentRedirect);
 
   const currentBaby = await getCurrentBaby(session.user.id);
 

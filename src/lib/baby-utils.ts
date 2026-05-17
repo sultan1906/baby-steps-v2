@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import { db } from "@/db";
-import { baby, user } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { user } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { listAccessibleBabies } from "@/lib/baby-access";
 
 const COOKIE_NAME = "babysteps_current_baby";
 
@@ -14,14 +15,11 @@ async function getCurrentBabyId(): Promise<string | null> {
 }
 
 /**
- * Get the current baby for a user.
- * Prefers the baby stored in the cookie; falls back to the most recently created baby.
+ * Get the current baby for a user (owner or co-parent).
+ * Prefers the baby stored in the cookie; falls back to the most recently created accessible baby.
  */
 export async function getCurrentBaby(userId: string) {
-  const [babyId, babies] = await Promise.all([
-    getCurrentBabyId(),
-    db.select().from(baby).where(eq(baby.userId, userId)).orderBy(desc(baby.createdAt)),
-  ]);
+  const [babyId, babies] = await Promise.all([getCurrentBabyId(), listAccessibleBabies(userId)]);
 
   if (babies.length === 0) return null;
   if (!babyId) return babies[0];

@@ -23,6 +23,7 @@ import { BabyAvatar } from "@/components/baby/baby-avatar";
 import { useBabyOptional } from "@/components/baby/baby-provider";
 import { updateBaby, deleteBaby, switchBaby } from "@/actions/baby";
 import { getParentProfile, updateParentProfile } from "@/actions/social";
+import { CoParentsCard } from "@/components/co-parents/co-parents-card";
 import { authClient } from "@/lib/auth-client";
 import {
   AlertDialog,
@@ -469,6 +470,8 @@ export default function SettingsPage() {
             </div>
           </div>
         )}
+
+        {baby && <CoParentsCard babyId={baby.id} babyName={baby.name} />}
 
         {/* Your Babies Card */}
         <div className="premium-card p-6">

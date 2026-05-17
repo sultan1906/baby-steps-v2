@@ -2,21 +2,16 @@ import { db } from "@/db";
 import { baby, step } from "@/db/schema";
 import { getApiSession, jsonError } from "@/lib/api-utils";
 import { currentBabyCookieConfig } from "@/lib/baby-utils";
+import { listAccessibleBabies } from "@/lib/baby-access";
 import { cookies } from "next/headers";
-import { eq, desc } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
-/** List all babies for the current user */
+/** List all babies the current user can access (owned + co-parented) */
 export async function GET() {
   const { session, error } = await getApiSession();
   if (error) return error;
 
-  const babies = await db
-    .select()
-    .from(baby)
-    .where(eq(baby.userId, session.user.id))
-    .orderBy(desc(baby.createdAt));
-
+  const babies = await listAccessibleBabies(session.user.id);
   return NextResponse.json(babies);
 }
 
