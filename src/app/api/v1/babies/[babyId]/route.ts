@@ -22,6 +22,10 @@ export async function PUT(
     ...(data.photoUrl !== undefined && { photoUrl: data.photoUrl }),
   };
 
+  if (Object.keys(allowedFields).length === 0) {
+    return jsonError("No fields to update", 400);
+  }
+
   const [updated] = await db
     .update(baby)
     .set(allowedFields)

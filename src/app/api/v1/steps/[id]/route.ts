@@ -22,6 +22,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   if (data.title !== undefined) allowedFields.title = data.title;
   if (data.caption !== undefined) allowedFields.caption = data.caption;
 
+  if (Object.keys(allowedFields).length === 0) {
+    return jsonError("No fields to update", 400);
+  }
+
   const [updated] = await db
     .update(step)
     .set(allowedFields)
